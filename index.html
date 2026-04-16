@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <!-- Contenedor Principal -->
+    <div id="mainContent" class="main-content">
     <!-- Encabezado -->
     <header>
         <nav class="navbar">
@@ -23,6 +25,9 @@
                     <li><a href="#reservas">Reservas</a></li>
                     <li><a href="#contacto">Contacto</a></li>
                 </ul>
+                <div id="userInfo" class="user-info">
+                    <button class="login-btn-navbar" onclick="openLoginModal()">🔐 Iniciar Sesión</button>
+                </div>
             </div>
         </nav>
     </header>
@@ -593,8 +598,144 @@
         </div>
     </footer>
 
+    </div>
+
     <!-- Script para funcionalidad -->
     <script>
+        // ============ SISTEMA DE AUTENTICACIÓN ============
+        const authSystem = {
+            users: JSON.parse(localStorage.getItem('fotovecUsers')) || [],
+            currentUser: JSON.parse(localStorage.getItem('fotovecCurrentUser')) || null,
+
+            register(name, username, email, password) {
+                if (this.users.find(u => u.username === username)) {
+                    return { success: false, message: 'El usuario ya existe' };
+                }
+                if (this.users.find(u => u.email === email)) {
+                    return { success: false, message: 'El email ya está registrado' };
+                }
+                const newUser = {
+                    id: Date.now(),
+                    name,
+                    username,
+                    email,
+                    password, // En producción, esto debería estar encriptado
+                    createdAt: new Date().toLocaleString('es-ES')
+                };
+                this.users.push(newUser);
+                localStorage.setItem('fotovecUsers', JSON.stringify(this.users));
+                return { success: true, message: 'Cuenta creada exitosamente' };
+            },
+
+            login(username, password) {
+                const user = this.users.find(u => 
+                    (u.username === username || u.email === username) && u.password === password
+                );
+                if (user) {
+                    this.currentUser = { id: user.id, name: user.name, username: user.username, email: user.email };
+                    localStorage.setItem('fotovecCurrentUser', JSON.stringify(this.currentUser));
+                    return { success: true, message: 'Inicio de sesión exitoso' };
+                }
+                return { success: false, message: 'Usuario o contraseña incorrectos' };
+            },
+
+            logout() {
+                this.currentUser = null;
+                localStorage.removeItem('fotovecCurrentUser');
+            }
+        };
+
+        // Funciones de interfaz de autenticación
+        function toggleAuth(tab) {
+            document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.auth-toggle-btn').forEach(b => b.classList.remove('active'));
+            
+            document.getElementById(tab + 'Tab').classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const username = document.getElementById('loginUser').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            const result = authSystem.login(username, password);
+            
+            if (result.success) {
+                document.getElementById('authModal').classList.remove('active');
+                showUserProfile();
+                document.getElementById('loginUser').value = '';
+                document.getElementById('loginPassword').value = '';
+                document.getElementById('loginError').textContent = '';
+            } else {
+                document.getElementById('loginError').textContent = result.message;
+            }
+        }
+
+        function handleRegister(e) {
+            e.preventDefault();
+            const name = document.getElementById('registerName').value;
+            const username = document.getElementById('registerUser').value;
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+            const confirm = document.getElementById('registerConfirm').value;
+            
+            if (password !== confirm) {
+                document.getElementById('registerError').textContent = 'Las contraseñas no coinciden';
+                return;
+            }
+            if (password.length < 6) {
+                document.getElementById('registerError').textContent = 'La contraseña debe tener mínimo 6 caracteres';
+                return;
+            }
+            
+            const result = authSystem.register(name, username, email, password);
+            
+            if (result.success) {
+                document.getElementById('registerError').textContent = 'Registro exitoso. Inicia sesión ahora.';
+                document.getElementById('registerError').style.color = 'green';
+                setTimeout(() => toggleAuth('login'), 2000);
+            } else {
+                document.getElementById('registerError').textContent = result.message;
+            }
+        }
+
+        function showUserProfile() {
+            const userInfo = document.getElementById('userInfo');
+            if (userInfo && authSystem.currentUser) {
+                userInfo.innerHTML = `
+                    <div class="user-profile-info">
+                        <span class="user-name">👤 ${authSystem.currentUser.name}</span>
+                        <button class="logout-btn" onclick="logout()">Cerrar Sesión</button>
+                    </div>
+                `;
+            }
+        }
+
+        function openLoginModal() {
+            document.getElementById('authModal').classList.add('active');
+        }
+
+        function logout() {
+            authSystem.logout();
+            document.getElementById('authModal').classList.remove('active');
+            const userInfo = document.getElementById('userInfo');
+            userInfo.innerHTML = `
+                <button class="login-btn-navbar" onclick="openLoginModal()">🔐 Iniciar Sesión</button>
+            `;
+            document.getElementById('loginUser').value = '';
+            document.getElementById('loginPassword').value = '';
+        }
+
+        // Verificar si hay usuario autenticado
+        window.addEventListener('load', function() {
+            if (authSystem.currentUser) {
+                showUserProfile();
+            }
+        });
+
+        // ============ FUNCIONALIDAD DEL SITIO ============
+        
         // Funcionalidad de tabs
         function showTab(tabName) {
             const contents = document.querySelectorAll('.tab-content');
@@ -617,27 +758,33 @@
         }
 
         // Manejo del formulario de reservas
-        document.getElementById('reservasForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            alert('¡Gracias por tu reserva! Te contactaremos pronto para confirmar.');
-            // Aquí iría la lógica real de envío del formulario a un servidor
-        });
+        document.addEventListener('DOMContentLoaded', function() {
+            const reservasForm = document.getElementById('reservasForm');
+            const contactForm = document.getElementById('contactForm');
+            
+            if (reservasForm) {
+                reservasForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    alert('¡Gracias por tu reserva! Te contactaremos pronto para confirmar.');
+                });
+            }
+            
+            if (contactForm) {
+                contactForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    alert('¡Gracias por tu mensaje! Te responderemos pronto.');
+                });
+            }
 
-        // Manejo del formulario de contacto
-        document.getElementById('contactForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            alert('¡Gracias por tu mensaje! Te responderemos pronto.');
-            // Aquí iría la lógica real de envío del formulario a un servidor
-        });
-
-        // Scroll suave para los enlaces de navegación
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                const target = document.querySelector(this.getAttribute('href'));
-                if (target) {
-                    target.scrollIntoView({ behavior: 'smooth' });
-                }
+            // Scroll suave para los enlaces de navegación
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({ behavior: 'smooth' });
+                    }
+                });
             });
         });
     </script>
