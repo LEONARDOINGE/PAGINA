@@ -16,7 +16,12 @@
                 <div class="logo">
                     <h1>FotoTec</h1>
                 </div>
-                <ul class="nav-menu">
+                <button class="menu-toggle" id="menuToggle" onclick="toggleMenu()">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+                <ul class="nav-menu" id="navMenu">
                     <li><a href="#inicio">Inicio</a></li>
                     <li><a href="#promociones">Promociones</a></li>
                     <li><a href="#servicios-detalle">Servicios</a></li>
@@ -24,6 +29,7 @@
                     <li><a href="#papel">Impresiones</a></li>
                     <li><a href="#reservas">Reservas</a></li>
                     <li><a href="#contacto">Contacto</a></li>
+                    <li class="nav-login"><a href="#" onclick="openLoginModal()">🔐 Iniciar Sesión</a></li>
                 </ul>
                 <div id="userInfo" class="user-info">
                     <button class="login-btn-navbar" onclick="openLoginModal()">🔐 Iniciar Sesión</button>
@@ -600,8 +606,90 @@
 
     </div>
 
+    <!-- Modal de Autenticación -->
+    <div id="authModal" class="auth-modal">
+        <div class="auth-container">
+            <div class="auth-box">
+                <h2>FOTOTEC - Bienvenido</h2>
+                
+                <!-- Botones de Toggle entre Login y Registro -->
+                <div class="auth-toggle">
+                    <button class="auth-toggle-btn active" onclick="toggleAuth('login')">Iniciar Sesión</button>
+                    <button class="auth-toggle-btn" onclick="toggleAuth('register')">Registrarse</button>
+                </div>
+
+                <!-- TAB: LOGIN -->
+                <div id="loginTab" class="auth-tab active">
+                    <form onsubmit="handleLogin(event)">
+                        <div class="form-group">
+                            <label for="loginUser">Usuario o Email</label>
+                            <input type="text" id="loginUser" placeholder="Tu usuario o email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="loginPassword">Contraseña</label>
+                            <input type="password" id="loginPassword" placeholder="Tu contraseña" required>
+                        </div>
+                        <div id="loginError" class="error-message"></div>
+                        <button type="submit" class="cta-button">Iniciar Sesión</button>
+                    </form>
+                </div>
+
+                <!-- TAB: REGISTRO -->
+                <div id="registerTab" class="auth-tab">
+                    <form onsubmit="handleRegister(event)">
+                        <div class="form-group">
+                            <label for="registerName">Nombre Completo</label>
+                            <input type="text" id="registerName" placeholder="Tu nombre completo" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="registerUser">Usuario</label>
+                            <input type="text" id="registerUser" placeholder="Elige un usuario" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="registerEmail">Email</label>
+                            <input type="email" id="registerEmail" placeholder="Tu email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="registerPassword">Contraseña</label>
+                            <input type="password" id="registerPassword" placeholder="Mínimo 6 caracteres" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="registerConfirm">Confirmar Contraseña</label>
+                            <input type="password" id="registerConfirm" placeholder="Repite tu contraseña" required>
+                        </div>
+                        <div id="registerError" class="error-message"></div>
+                        <button type="submit" class="cta-button">Registrarse</button>
+                    </form>
+                </div>
+
+                <!-- Cerrar Modal -->
+                <button class="close-modal" onclick="document.getElementById('authModal').classList.remove('active')">&times;</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Script para funcionalidad -->
     <script>
+        // ============ MENÚ HAMBURGUESA ============
+        function toggleMenu() {
+            const menuToggle = document.getElementById('menuToggle');
+            const navMenu = document.getElementById('navMenu');
+            
+            menuToggle.classList.toggle('active');
+            navMenu.classList.toggle('active');
+        }
+
+        // Cerrar menú al hacer clic en un enlace
+        document.addEventListener('DOMContentLoaded', function() {
+            const navLinks = document.querySelectorAll('#navMenu a');
+            navLinks.forEach(link => {
+                link.addEventListener('click', function() {
+                    document.getElementById('menuToggle').classList.remove('active');
+                    document.getElementById('navMenu').classList.remove('active');
+                });
+            });
+        });
+
         // ============ SISTEMA DE AUTENTICACIÓN ============
         const authSystem = {
             users: JSON.parse(localStorage.getItem('fotovecUsers')) || [],
@@ -647,11 +735,20 @@
 
         // Funciones de interfaz de autenticación
         function toggleAuth(tab) {
+            // Remover clases active de todos los tabs
             document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.auth-toggle-btn').forEach(b => b.classList.remove('active'));
             
-            document.getElementById(tab + 'Tab').classList.add('active');
-            event.target.classList.add('active');
+            // Agregar clase active al tab seleccionado
+            const selectedTab = document.getElementById(tab + 'Tab');
+            if (selectedTab) {
+                selectedTab.classList.add('active');
+            }
+            
+            // Agregar clase active al botón clickeado
+            if (event && event.target) {
+                event.target.classList.add('active');
+            }
         }
 
         function handleLogin(e) {
