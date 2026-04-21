@@ -604,68 +604,111 @@
         </div>
     </footer>
 
-    </div>
-
-    <!-- Modal de Autenticación -->
+    <!-- MODAL DE AUTENTICACIÓN -->
     <div id="authModal" class="auth-modal">
         <div class="auth-container">
             <div class="auth-box">
-                <h2>FOTOTEC - Bienvenido</h2>
-                
-                <!-- Botones de Toggle entre Login y Registro -->
-                <div class="auth-toggle">
-                    <button class="auth-toggle-btn active" onclick="toggleAuth('login')">Iniciar Sesión</button>
-                    <button class="auth-toggle-btn" onclick="toggleAuth('register')">Registrarse</button>
+                <!-- PASO 1: Seleccionar tipo de usuario -->
+                <div id="selectUserType" class="auth-step">
+                    <h2>¿Qué tipo de usuario eres?</h2>
+                    <p class="step-description">Selecciona tu tipo de cuenta para continuar</p>
+                    <div class="user-type-buttons">
+                        <button class="user-type-btn" onclick="selectUserType('cliente')">
+                            <span class="icon">👤</span>
+                            <span class="label">Cliente</span>
+                        </button>
+                        <button class="user-type-btn" onclick="selectUserType('administrador')">
+                            <span class="icon">👨‍💼</span>
+                            <span class="label">Administrador</span>
+                        </button>
+                    </div>
+                    <button class="close-modal-btn" onclick="closeAuthModal()">&times;</button>
                 </div>
 
-                <!-- TAB: LOGIN -->
-                <div id="loginTab" class="auth-tab active">
-                    <form onsubmit="handleLogin(event)">
+                <!-- PASO 2: CLIENTE - Registro -->
+                <div id="clientRegisterStep" class="auth-step hidden">
+                    <h2>Crear Cuenta de Cliente</h2>
+                    <p class="step-description">Completa tus datos personales</p>
+                    <form onsubmit="handleClientRegister(event)">
                         <div class="form-group">
-                            <label for="loginUser">Usuario o Email</label>
-                            <input type="text" id="loginUser" placeholder="Tu usuario o email" required>
+                            <label for="clientName">Nombre Completo *</label>
+                            <input type="text" id="clientName" required>
                         </div>
                         <div class="form-group">
-                            <label for="loginPassword">Contraseña</label>
-                            <input type="password" id="loginPassword" placeholder="Tu contraseña" required>
+                            <label for="clientEmail">Correo Electrónico *</label>
+                            <input type="email" id="clientEmail" required>
                         </div>
-                        <div id="loginError" class="error-message"></div>
-                        <button type="submit" class="cta-button">Iniciar Sesión</button>
+                        <div class="form-group">
+                            <label for="clientPhone">Teléfono</label>
+                            <input type="tel" id="clientPhone">
+                        </div>
+                        <div class="form-group">
+                            <label for="clientAddress">Dirección</label>
+                            <input type="text" id="clientAddress">
+                        </div>
+                        <div class="form-group">
+                            <label for="clientUsername">Nombre de Usuario *</label>
+                            <input type="text" id="clientUsername" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="clientPassword">Contraseña *</label>
+                            <input type="password" id="clientPassword" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="clientConfirm">Confirmar Contraseña *</label>
+                            <input type="password" id="clientConfirm" required>
+                        </div>
+                        <div id="clientRegisterError" class="error-message"></div>
+                        <button type="submit" class="auth-btn">Crear Cuenta</button>
                     </form>
+                    <button class="back-btn" onclick="backToSelectType()">← Atrás</button>
+                    <button class="close-modal-btn" onclick="closeAuthModal()">&times;</button>
                 </div>
 
-                <!-- TAB: REGISTRO -->
-                <div id="registerTab" class="auth-tab">
-                    <form onsubmit="handleRegister(event)">
+                <!-- PASO 3: CLIENTE - Login -->
+                <div id="clientLoginStep" class="auth-step hidden">
+                    <h2>Iniciar Sesión - Cliente</h2>
+                    <p class="step-description">Accede a tu cuenta</p>
+                    <form onsubmit="handleClientLogin(event)">
                         <div class="form-group">
-                            <label for="registerName">Nombre Completo</label>
-                            <input type="text" id="registerName" placeholder="Tu nombre completo" required>
+                            <label for="clientLoginUsername">Usuario o Email *</label>
+                            <input type="text" id="clientLoginUsername" required>
                         </div>
                         <div class="form-group">
-                            <label for="registerUser">Usuario</label>
-                            <input type="text" id="registerUser" placeholder="Elige un usuario" required>
+                            <label for="clientLoginPassword">Contraseña *</label>
+                            <input type="password" id="clientLoginPassword" required>
                         </div>
-                        <div class="form-group">
-                            <label for="registerEmail">Email</label>
-                            <input type="email" id="registerEmail" placeholder="Tu email" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="registerPassword">Contraseña</label>
-                            <input type="password" id="registerPassword" placeholder="Mínimo 6 caracteres" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="registerConfirm">Confirmar Contraseña</label>
-                            <input type="password" id="registerConfirm" placeholder="Repite tu contraseña" required>
-                        </div>
-                        <div id="registerError" class="error-message"></div>
-                        <button type="submit" class="cta-button">Registrarse</button>
+                        <div id="clientLoginError" class="error-message"></div>
+                        <button type="submit" class="auth-btn">Iniciar Sesión</button>
                     </form>
+                    <p class="form-info">¿No tienes cuenta? <button class="link-btn" onclick="backToSelectType()">Registrate aquí</button></p>
+                    <button class="back-btn" onclick="backToSelectType()">← Atrás</button>
+                    <button class="close-modal-btn" onclick="closeAuthModal()">&times;</button>
                 </div>
 
-                <!-- Cerrar Modal -->
-                <button class="close-modal" onclick="document.getElementById('authModal').classList.remove('active')">&times;</button>
+                <!-- PASO 4: ADMINISTRADOR - Login -->
+                <div id="adminLoginStep" class="auth-step hidden">
+                    <h2>Iniciar Sesión - Administrador</h2>
+                    <p class="step-description">Acceso restringido</p>
+                    <form onsubmit="handleAdminLogin(event)">
+                        <div class="form-group">
+                            <label for="adminUsername">Usuario *</label>
+                            <input type="text" id="adminUsername" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="adminPassword">Contraseña *</label>
+                            <input type="password" id="adminPassword" required>
+                        </div>
+                        <div id="adminLoginError" class="error-message"></div>
+                        <button type="submit" class="auth-btn">Acceder</button>
+                    </form>
+                    <button class="back-btn" onclick="backToSelectType()">← Atrás</button>
+                    <button class="close-modal-btn" onclick="closeAuthModal()">&times;</button>
+                </div>
             </div>
         </div>
+    </div>
+
     </div>
 
     <!-- Script para funcionalidad -->
@@ -692,39 +735,66 @@
 
         // ============ SISTEMA DE AUTENTICACIÓN ============
         const authSystem = {
-            users: JSON.parse(localStorage.getItem('fotovecUsers')) || [],
+            clients: JSON.parse(localStorage.getItem('fotovecClients')) || [],
+            admins: [
+                { id: 1, username: 'admin', password: '12345' }
+            ],
             currentUser: JSON.parse(localStorage.getItem('fotovecCurrentUser')) || null,
 
-            register(name, username, email, password) {
-                if (this.users.find(u => u.username === username)) {
+            registerClient(name, username, email, phone, address, password) {
+                if (this.clients.find(u => u.username === username)) {
                     return { success: false, message: 'El usuario ya existe' };
                 }
-                if (this.users.find(u => u.email === email)) {
+                if (this.clients.find(u => u.email === email)) {
                     return { success: false, message: 'El email ya está registrado' };
                 }
-                const newUser = {
+                const newClient = {
                     id: Date.now(),
                     name,
                     username,
                     email,
-                    password, // En producción, esto debería estar encriptado
+                    phone,
+                    address,
+                    password,
+                    userType: 'cliente',
                     createdAt: new Date().toLocaleString('es-ES')
                 };
-                this.users.push(newUser);
-                localStorage.setItem('fotovecUsers', JSON.stringify(this.users));
+                this.clients.push(newClient);
+                localStorage.setItem('fotovecClients', JSON.stringify(this.clients));
                 return { success: true, message: 'Cuenta creada exitosamente' };
             },
 
-            login(username, password) {
-                const user = this.users.find(u => 
+            loginClient(username, password) {
+                const client = this.clients.find(u => 
                     (u.username === username || u.email === username) && u.password === password
                 );
-                if (user) {
-                    this.currentUser = { id: user.id, name: user.name, username: user.username, email: user.email };
+                if (client) {
+                    this.currentUser = { 
+                        id: client.id, 
+                        name: client.name, 
+                        username: client.username, 
+                        email: client.email,
+                        userType: 'cliente'
+                    };
                     localStorage.setItem('fotovecCurrentUser', JSON.stringify(this.currentUser));
                     return { success: true, message: 'Inicio de sesión exitoso' };
                 }
                 return { success: false, message: 'Usuario o contraseña incorrectos' };
+            },
+
+            loginAdmin(username, password) {
+                const admin = this.admins.find(a => a.username === username && a.password === password);
+                if (admin) {
+                    this.currentUser = { 
+                        id: admin.id, 
+                        name: 'Administrador', 
+                        username: admin.username,
+                        userType: 'administrador'
+                    };
+                    localStorage.setItem('fotovecCurrentUser', JSON.stringify(this.currentUser));
+                    return { success: true, message: 'Acceso de administrador exitoso' };
+                }
+                return { success: false, message: 'Usuario o contraseña de administrador incorrectos' };
             },
 
             logout() {
@@ -733,95 +803,122 @@
             }
         };
 
-        // Funciones de interfaz de autenticación
-        function toggleAuth(tab) {
-            // Remover clases active de todos los tabs
-            document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.auth-toggle-btn').forEach(b => b.classList.remove('active'));
-            
-            // Agregar clase active al tab seleccionado
-            const selectedTab = document.getElementById(tab + 'Tab');
-            if (selectedTab) {
-                selectedTab.classList.add('active');
-            }
-            
-            // Agregar clase active al botón clickeado
-            if (event && event.target) {
-                event.target.classList.add('active');
+        // Funciones de navegación entre pasos
+        function selectUserType(type) {
+            document.getElementById('selectUserType').classList.add('hidden');
+            if (type === 'cliente') {
+                document.getElementById('clientRegisterStep').classList.remove('hidden');
+            } else if (type === 'administrador') {
+                document.getElementById('adminLoginStep').classList.remove('hidden');
             }
         }
 
-        function handleLogin(e) {
-            e.preventDefault();
-            const username = document.getElementById('loginUser').value;
-            const password = document.getElementById('loginPassword').value;
-            
-            const result = authSystem.login(username, password);
-            
-            if (result.success) {
-                document.getElementById('authModal').classList.remove('active');
-                showUserProfile();
-                document.getElementById('loginUser').value = '';
-                document.getElementById('loginPassword').value = '';
-                document.getElementById('loginError').textContent = '';
-            } else {
-                document.getElementById('loginError').textContent = result.message;
-            }
+        function backToSelectType() {
+            document.querySelectorAll('.auth-step').forEach(step => step.classList.add('hidden'));
+            document.getElementById('selectUserType').classList.remove('hidden');
+            clearAllForms();
         }
 
-        function handleRegister(e) {
+        function openLoginModal() {
+            document.getElementById('authModal').classList.add('active');
+            document.querySelectorAll('.auth-step').forEach(step => step.classList.add('hidden'));
+            document.getElementById('selectUserType').classList.remove('hidden');
+        }
+
+        function closeAuthModal() {
+            document.getElementById('authModal').classList.remove('active');
+            clearAllForms();
+        }
+
+        function clearAllForms() {
+            document.querySelectorAll('input, textarea').forEach(input => {
+                if (input.closest('#authModal')) input.value = '';
+            });
+            document.querySelectorAll('.error-message').forEach(msg => msg.textContent = '');
+        }
+
+        // Funciones de registro e inicio de sesión
+        function handleClientRegister(e) {
             e.preventDefault();
-            const name = document.getElementById('registerName').value;
-            const username = document.getElementById('registerUser').value;
-            const email = document.getElementById('registerEmail').value;
-            const password = document.getElementById('registerPassword').value;
-            const confirm = document.getElementById('registerConfirm').value;
-            
+            const name = document.getElementById('clientName').value;
+            const email = document.getElementById('clientEmail').value;
+            const phone = document.getElementById('clientPhone').value;
+            const address = document.getElementById('clientAddress').value;
+            const username = document.getElementById('clientUsername').value;
+            const password = document.getElementById('clientPassword').value;
+            const confirm = document.getElementById('clientConfirm').value;
+
             if (password !== confirm) {
-                document.getElementById('registerError').textContent = 'Las contraseñas no coinciden';
+                document.getElementById('clientRegisterError').textContent = 'Las contraseñas no coinciden';
                 return;
             }
             if (password.length < 6) {
-                document.getElementById('registerError').textContent = 'La contraseña debe tener mínimo 6 caracteres';
+                document.getElementById('clientRegisterError').textContent = 'La contraseña debe tener mínimo 6 caracteres';
                 return;
             }
-            
-            const result = authSystem.register(name, username, email, password);
-            
+
+            const result = authSystem.registerClient(name, username, email, phone, address, password);
             if (result.success) {
-                document.getElementById('registerError').textContent = 'Registro exitoso. Inicia sesión ahora.';
-                document.getElementById('registerError').style.color = 'green';
-                setTimeout(() => toggleAuth('login'), 2000);
+                document.getElementById('clientRegisterError').textContent = 'Registro exitoso. Ahora inicia sesión';
+                document.getElementById('clientRegisterError').style.color = 'green';
+                setTimeout(() => {
+                    document.getElementById('clientRegisterStep').classList.add('hidden');
+                    document.getElementById('clientLoginStep').classList.remove('hidden');
+                    clearAllForms();
+                }, 2000);
             } else {
-                document.getElementById('registerError').textContent = result.message;
+                document.getElementById('clientRegisterError').textContent = result.message;
+            }
+        }
+
+        function handleClientLogin(e) {
+            e.preventDefault();
+            const username = document.getElementById('clientLoginUsername').value;
+            const password = document.getElementById('clientLoginPassword').value;
+
+            const result = authSystem.loginClient(username, password);
+            if (result.success) {
+                closeAuthModal();
+                showUserProfile();
+            } else {
+                document.getElementById('clientLoginError').textContent = result.message;
+            }
+        }
+
+        function handleAdminLogin(e) {
+            e.preventDefault();
+            const username = document.getElementById('adminUsername').value;
+            const password = document.getElementById('adminPassword').value;
+
+            const result = authSystem.loginAdmin(username, password);
+            if (result.success) {
+                closeAuthModal();
+                showUserProfile();
+            } else {
+                document.getElementById('adminLoginError').textContent = result.message;
             }
         }
 
         function showUserProfile() {
             const userInfo = document.getElementById('userInfo');
             if (userInfo && authSystem.currentUser) {
+                const userType = authSystem.currentUser.userType === 'administrador' ? '👨‍💼' : '👤';
                 userInfo.innerHTML = `
                     <div class="user-profile-info">
-                        <span class="user-name">👤 ${authSystem.currentUser.name}</span>
+                        <span class="user-name">${userType} ${authSystem.currentUser.name}</span>
                         <button class="logout-btn" onclick="logout()">Cerrar Sesión</button>
                     </div>
                 `;
             }
         }
 
-        function openLoginModal() {
-            document.getElementById('authModal').classList.add('active');
-        }
-
         function logout() {
             authSystem.logout();
-            document.getElementById('authModal').classList.remove('active');
             const userInfo = document.getElementById('userInfo');
             userInfo.innerHTML = `
                 <button class="login-btn-navbar" onclick="openLoginModal()">🔐 Iniciar Sesión</button>
             `;
-            document.getElementById('loginUser').value = '';
-            document.getElementById('loginPassword').value = '';
+            closeAuthModal();
         }
 
         // Verificar si hay usuario autenticado
