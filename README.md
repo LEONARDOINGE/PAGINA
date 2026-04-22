@@ -4,14 +4,15 @@
 
 ### 1. **Sistema de Login y Registro**
 - Modal de autenticación con dos pestañas: "Iniciar Sesión" y "Registrarse"
-- Los datos de usuarios se guardan en `localStorage` del navegador
-- Contraseña mínima de 6 caracteres
+- Los datos de usuarios se guardan en una base de datos SQLite
+- Contraseña mínima de 6 caracteres con hash seguro
+- Usuario administrador por defecto
 
 ### 2. **Registro de Nuevo Usuario**
 Completa los siguientes datos:
 - **Nombre Completo**: Tu nombre
 - **Usuario**: Tu nombre de usuario (único)
-- **Email**: Tu correo electrónico
+- **Email**: Tu correo electrónico (único)
 - **Contraseña**: Mínimo 6 caracteres
 - **Confirmar Contraseña**: Debe coincidir con la anterior
 
@@ -28,10 +29,33 @@ Después de iniciar sesión:
 - Se muestra todo el contenido de la web
 
 ### 5. **Datos Guardados**
-Los datos se guardan en el navegador utilizando `localStorage`, lo significa:
-- Los usuarios persistirán aunque cierres el navegador
-- Los datos se guardan localmente en tu computadora
-- NO se envía a ningún servidor (almacenamiento local)
+Los datos se guardan en una base de datos SQLite segura con contraseñas hasheadas.
+
+### 6. **Usuario Administrador**
+- **Usuario**: admin
+- **Contraseña**: admin123
+- **Email**: admin@fototec.com
+
+---
+
+## 🚀 Cómo Ejecutar
+
+1. **Asegúrate de que el servidor esté corriendo**:
+   ```bash
+   npm start
+   ```
+   Deberías ver: "Server running on http://localhost:3000"
+
+2. **Abre tu navegador** y ve a:
+   ```
+   http://localhost:3000/index.html
+   ```
+   ⚠️ **IMPORTANTE**: No abras el archivo `index.html` directamente desde el explorador de archivos, debe ser a través del servidor para que funcione el login.
+
+3. **Prueba el login**:
+   - **Registrar nuevo usuario**: Haz clic en "Registrarse" y completa el formulario
+   - **Iniciar sesión con admin**: Usuario `admin`, Contraseña `admin123`
+   - **O usa cualquier usuario registrado**
 
 ---
 
@@ -39,7 +63,7 @@ Los datos se guardan en el navegador utilizando `localStorage`, lo significa:
 
 **Para probar el sistema:**
 
-1. Abre la página en tu navegador
+1. Abre la página en tu navegador: `http://localhost:3000/index.html`
 2. Haz clic en "Registrarse"
 3. Completa el formulario:
    - Nombre: Gabriel García
@@ -48,6 +72,11 @@ Los datos se guardan en el navegador utilizando `localStorage`, lo significa:
    - Contraseña: 123456
    - Confirmar: 123456
 4. Haz clic en "Crear Cuenta"
+5. Ahora puedes iniciar sesión con usuario "gabrgarcia" o email "gabriel@email.com"
+
+**O usa el admin:**
+- Usuario: admin
+- Contraseña: admin123
 5. Regresa a "Iniciar Sesión"
 6. Ingresa: 
    - Usuario: gabrgarcia (o gabriel@email.com)

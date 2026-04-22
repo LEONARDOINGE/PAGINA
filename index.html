@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>fototec.com</title>
     <link rel="stylesheet" href="styles.css">
+    <script src="auth.js"></script>
 </head>
 <body>
     <!-- Contenedor Principal -->
@@ -16,7 +17,12 @@
                 <div class="logo">
                     <h1>FotoTec</h1>
                 </div>
-                <ul class="nav-menu">
+                <button class="menu-toggle" id="menuToggle" onclick="toggleMenu()">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+                <ul class="nav-menu" id="navMenu">
                     <li><a href="#inicio">Inicio</a></li>
                     <li><a href="#promociones">Promociones</a></li>
                     <li><a href="#servicios-detalle">Servicios</a></li>
@@ -24,6 +30,7 @@
                     <li><a href="#papel">Impresiones</a></li>
                     <li><a href="#reservas">Reservas</a></li>
                     <li><a href="#contacto">Contacto</a></li>
+                    <li class="nav-login"><a href="#" onclick="openLoginModal()">🔐 Iniciar Sesión</a></li>
                 </ul>
                 <div id="userInfo" class="user-info">
                     <button class="login-btn-navbar" onclick="openLoginModal()">🔐 Iniciar Sesión</button>
@@ -602,48 +609,25 @@
 
     <!-- Script para funcionalidad -->
     <script>
-        // ============ SISTEMA DE AUTENTICACIÓN ============
-        const authSystem = {
-            users: JSON.parse(localStorage.getItem('fotovecUsers')) || [],
-            currentUser: JSON.parse(localStorage.getItem('fotovecCurrentUser')) || null,
+        // ============ MENÚ HAMBURGUESA ============
+        function toggleMenu() {
+            const menuToggle = document.getElementById('menuToggle');
+            const navMenu = document.getElementById('navMenu');
+            
+            menuToggle.classList.toggle('active');
+            navMenu.classList.toggle('active');
+        }
 
-            register(name, username, email, password) {
-                if (this.users.find(u => u.username === username)) {
-                    return { success: false, message: 'El usuario ya existe' };
-                }
-                if (this.users.find(u => u.email === email)) {
-                    return { success: false, message: 'El email ya está registrado' };
-                }
-                const newUser = {
-                    id: Date.now(),
-                    name,
-                    username,
-                    email,
-                    password, // En producción, esto debería estar encriptado
-                    createdAt: new Date().toLocaleString('es-ES')
-                };
-                this.users.push(newUser);
-                localStorage.setItem('fotovecUsers', JSON.stringify(this.users));
-                return { success: true, message: 'Cuenta creada exitosamente' };
-            },
-
-            login(username, password) {
-                const user = this.users.find(u => 
-                    (u.username === username || u.email === username) && u.password === password
-                );
-                if (user) {
-                    this.currentUser = { id: user.id, name: user.name, username: user.username, email: user.email };
-                    localStorage.setItem('fotovecCurrentUser', JSON.stringify(this.currentUser));
-                    return { success: true, message: 'Inicio de sesión exitoso' };
-                }
-                return { success: false, message: 'Usuario o contraseña incorrectos' };
-            },
-
-            logout() {
-                this.currentUser = null;
-                localStorage.removeItem('fotovecCurrentUser');
-            }
-        };
+        // Cerrar menú al hacer clic en un enlace
+        document.addEventListener('DOMContentLoaded', function() {
+            const navLinks = document.querySelectorAll('#navMenu a');
+            navLinks.forEach(link => {
+                link.addEventListener('click', function() {
+                    document.getElementById('menuToggle').classList.remove('active');
+                    document.getElementById('navMenu').classList.remove('active');
+                });
+            });
+        });
 
         // Funciones de interfaz de autenticación
         function toggleAuth(tab) {
@@ -654,12 +638,12 @@
             event.target.classList.add('active');
         }
 
-        function handleLogin(e) {
+        async function handleLogin(e) {
             e.preventDefault();
             const username = document.getElementById('loginUser').value;
             const password = document.getElementById('loginPassword').value;
             
-            const result = authSystem.login(username, password);
+            const result = await authSystem.login(username, password);
             
             if (result.success) {
                 document.getElementById('authModal').classList.remove('active');
@@ -672,7 +656,7 @@
             }
         }
 
-        function handleRegister(e) {
+        async function handleRegister(e) {
             e.preventDefault();
             const name = document.getElementById('registerName').value;
             const username = document.getElementById('registerUser').value;
@@ -689,7 +673,7 @@
                 return;
             }
             
-            const result = authSystem.register(name, username, email, password);
+            const result = await authSystem.register(name, username, email, password);
             
             if (result.success) {
                 document.getElementById('registerError').textContent = 'Registro exitoso. Inicia sesión ahora.';
@@ -790,3 +774,59 @@
     </script>
 </body>
 </html>
+        < ! - -   M o d a l   d e   A u t e n t i c a c i � n   - - > 
+         < d i v   i d = " a u t h M o d a l "   c l a s s = " m o d a l " > 
+                 < d i v   c l a s s = " m o d a l - c o n t e n t " > 
+                         < s p a n   c l a s s = " c l o s e "   o n c l i c k = " d o c u m e n t . g e t E l e m e n t B y I d ( ' a u t h M o d a l ' ) . c l a s s L i s t . r e m o v e ( ' a c t i v e ' ) " > & t i m e s ; < / s p a n > 
+                         < d i v   c l a s s = " a u t h - t a b s " > 
+                                 < b u t t o n   c l a s s = " a u t h - t o g g l e - b t n   a c t i v e "   o n c l i c k = " t o g g l e A u t h ( ' l o g i n ' ) " > I n i c i a r   S e s i � n < / b u t t o n > 
+                                 < b u t t o n   c l a s s = " a u t h - t o g g l e - b t n "   o n c l i c k = " t o g g l e A u t h ( ' r e g i s t e r ' ) " > R e g i s t r a r s e < / b u t t o n > 
+                         < / d i v > 
+                         
+                         < d i v   i d = " l o g i n T a b "   c l a s s = " a u t h - t a b   a c t i v e " > 
+                                 < h 2 > I n i c i a r   S e s i � n < / h 2 > 
+                                 < f o r m   i d = " l o g i n F o r m "   o n s u b m i t = " h a n d l e L o g i n ( e v e n t ) " > 
+                                         < d i v   c l a s s = " f o r m - g r o u p " > 
+                                                 < l a b e l   f o r = " l o g i n U s e r " > U s u a r i o   o   E m a i l < / l a b e l > 
+                                                 < i n p u t   t y p e = " t e x t "   i d = " l o g i n U s e r "   r e q u i r e d > 
+                                         < / d i v > 
+                                         < d i v   c l a s s = " f o r m - g r o u p " > 
+                                                 < l a b e l   f o r = " l o g i n P a s s w o r d " > C o n t r a s e � a < / l a b e l > 
+                                                 < i n p u t   t y p e = " p a s s w o r d "   i d = " l o g i n P a s s w o r d "   r e q u i r e d > 
+                                         < / d i v > 
+                                         < b u t t o n   t y p e = " s u b m i t "   c l a s s = " a u t h - b t n " > I n i c i a r   S e s i � n < / b u t t o n > 
+                                         < d i v   i d = " l o g i n E r r o r "   c l a s s = " e r r o r - m e s s a g e " > < / d i v > 
+                                 < / f o r m > 
+                         < / d i v > 
+                         
+                         < d i v   i d = " r e g i s t e r T a b "   c l a s s = " a u t h - t a b " > 
+                                 < h 2 > C r e a r   C u e n t a < / h 2 > 
+                                 < f o r m   i d = " r e g i s t e r F o r m "   o n s u b m i t = " h a n d l e R e g i s t e r ( e v e n t ) " > 
+                                         < d i v   c l a s s = " f o r m - g r o u p " > 
+                                                 < l a b e l   f o r = " r e g i s t e r N a m e " > N o m b r e   C o m p l e t o < / l a b e l > 
+                                                 < i n p u t   t y p e = " t e x t "   i d = " r e g i s t e r N a m e "   r e q u i r e d > 
+                                         < / d i v > 
+                                         < d i v   c l a s s = " f o r m - g r o u p " > 
+                                                 < l a b e l   f o r = " r e g i s t e r U s e r " > U s u a r i o < / l a b e l > 
+                                                 < i n p u t   t y p e = " t e x t "   i d = " r e g i s t e r U s e r "   r e q u i r e d > 
+                                         < / d i v > 
+                                         < d i v   c l a s s = " f o r m - g r o u p " > 
+                                                 < l a b e l   f o r = " r e g i s t e r E m a i l " > E m a i l < / l a b e l > 
+                                                 < i n p u t   t y p e = " e m a i l "   i d = " r e g i s t e r E m a i l "   r e q u i r e d > 
+                                         < / d i v > 
+                                         < d i v   c l a s s = " f o r m - g r o u p " > 
+                                                 < l a b e l   f o r = " r e g i s t e r P a s s w o r d " > C o n t r a s e � a < / l a b e l > 
+                                                 < i n p u t   t y p e = " p a s s w o r d "   i d = " r e g i s t e r P a s s w o r d "   r e q u i r e d > 
+                                         < / d i v > 
+                                         < d i v   c l a s s = " f o r m - g r o u p " > 
+                                                 < l a b e l   f o r = " r e g i s t e r C o n f i r m " > C o n f i r m a r   C o n t r a s e � a < / l a b e l > 
+                                                 < i n p u t   t y p e = " p a s s w o r d "   i d = " r e g i s t e r C o n f i r m "   r e q u i r e d > 
+                                         < / d i v > 
+                                         < b u t t o n   t y p e = " s u b m i t "   c l a s s = " a u t h - b t n " > C r e a r   C u e n t a < / b u t t o n > 
+                                         < d i v   i d = " r e g i s t e r E r r o r "   c l a s s = " e r r o r - m e s s a g e " > < / d i v > 
+                                 < / f o r m > 
+                         < / d i v > 
+                 < / d i v > 
+         < / d i v > 
+ 
+ 
