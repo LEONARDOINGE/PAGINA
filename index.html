@@ -5,6 +5,208 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>fototec.com</title>
     <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Estilos para panel de administrador */
+        .admin-panel {
+            display: none;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            margin: 20px auto;
+            border-radius: 10px;
+            max-width: 1200px;
+        }
+
+        .admin-panel.active {
+            display: block;
+        }
+
+        .admin-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid rgba(255,255,255,0.3);
+            flex-wrap: wrap;
+        }
+
+        .admin-tab-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: 0.3s;
+            font-weight: bold;
+        }
+
+        .admin-tab-btn:hover,
+        .admin-tab-btn.active {
+            background: rgba(255,255,255,0.4);
+        }
+
+        .admin-content {
+            display: none;
+        }
+
+        .admin-content.active {
+            display: block;
+        }
+
+        .admin-section {
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .admin-section h3 {
+            margin-top: 0;
+            border-bottom: 1px solid rgba(255,255,255,0.3);
+            padding-bottom: 10px;
+        }
+
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: rgba(0,0,0,0.2);
+            border-radius: 5px;
+            overflow: hidden;
+            font-size: 0.9em;
+        }
+
+        .admin-table th,
+        .admin-table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .admin-table th {
+            background: rgba(0,0,0,0.3);
+            font-weight: bold;
+        }
+
+        .admin-table tr:hover {
+            background: rgba(255,255,255,0.05);
+        }
+
+        .admin-form {
+            display: grid;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .admin-form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .admin-form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .admin-form label {
+            font-size: 0.9em;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .admin-form input,
+        .admin-form select,
+        .admin-form textarea {
+            padding: 8px;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 5px;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            font-size: 0.9em;
+        }
+
+        .admin-form input::placeholder,
+        .admin-form textarea::placeholder {
+            color: rgba(255,255,255,0.6);
+        }
+
+        .admin-form button {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        .admin-form button:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .btn-danger {
+            background: rgba(220, 53, 69, 0.3) !important;
+            border-color: rgba(220, 53, 69, 0.5) !important;
+        }
+
+        .btn-danger:hover {
+            background: rgba(220, 53, 69, 0.5) !important;
+        }
+
+        .btn-success {
+            background: rgba(40, 167, 69, 0.3) !important;
+            border-color: rgba(40, 167, 69, 0.5) !important;
+        }
+
+        .btn-success:hover {
+            background: rgba(40, 167, 69, 0.5) !important;
+        }
+
+        .admin-alert {
+            padding: 12px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .alert-success {
+            background: rgba(40, 167, 69, 0.3);
+            border: 1px solid rgba(40, 167, 69, 0.5);
+            color: #90ee90;
+        }
+
+        .alert-danger {
+            background: rgba(220, 53, 69, 0.3);
+            border: 1px solid rgba(220, 53, 69, 0.5);
+            color: #ff6b6b;
+        }
+
+        .alert-info {
+            background: rgba(23, 162, 184, 0.3);
+            border: 1px solid rgba(23, 162, 184, 0.5);
+            color: #87ceeb;
+        }
+
+        .oculto-por-permisos {
+            display: none !important;
+        }
+
+        @media (max-width: 768px) {
+            .admin-form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .admin-table {
+                font-size: 0.8em;
+            }
+
+            .admin-table th,
+            .admin-table td {
+                padding: 5px;
+            }
+        }
+    </style>
 </head>
 <body>
     <!-- Contenedor Principal -->
@@ -567,6 +769,120 @@
         </div>
     </section>
 
+    <!-- ============ PANEL DE ADMINISTRADOR ============ -->
+    <section id="adminPanel" class="admin-panel">
+        <div class="container">
+            <h2>🔧 Panel de Administrador</h2>
+            <p>Gestiona productos, pedidos, usuarios y configuración del sistema</p>
+
+            <!-- Tabs de navegación del admin -->
+            <div class="admin-tabs">
+                <button class="admin-tab-btn active" onclick="mostrarTabAdmin('dashboard')">📊 Dashboard</button>
+                <button class="admin-tab-btn" onclick="mostrarTabAdmin('productos')">📦 Productos</button>
+                <button class="admin-tab-btn" onclick="mostrarTabAdmin('pedidos')">🛒 Pedidos</button>
+                <button class="admin-tab-btn" onclick="mostrarTabAdmin('usuarios')">👥 Usuarios</button>
+                <button class="admin-tab-btn" onclick="mostrarTabAdmin('reportes')">📈 Reportes</button>
+            </div>
+
+            <!-- TAB: Dashboard -->
+            <div id="adminDashboard" class="admin-content active">
+                <div class="admin-section">
+                    <h3>📊 Resumen General</h3>
+                    <div id="dashboardResumen" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px;">
+                        <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; text-align: center;">
+                            <div style="font-size: 2em; font-weight: bold;" id="totalProductos">0</div>
+                            <div style="font-size: 0.9em; opacity: 0.8;">Productos</div>
+                        </div>
+                        <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; text-align: center;">
+                            <div style="font-size: 2em; font-weight: bold;" id="totalPedidos">0</div>
+                            <div style="font-size: 0.9em; opacity: 0.8;">Pedidos</div>
+                        </div>
+                        <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; text-align: center;">
+                            <div style="font-size: 2em; font-weight: bold; color: #90ee90;" id="ingresos">$0</div>
+                            <div style="font-size: 0.9em; opacity: 0.8;">Ingresos</div>
+                        </div>
+                        <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; text-align: center;">
+                            <div style="font-size: 2em; font-weight: bold; color: #ff6b6b;" id="productosAgotados">0</div>
+                            <div style="font-size: 0.9em; opacity: 0.8;">Agotados</div>
+                        </div>
+                    </div>
+                </div>
+                <button class="admin-form button" style="margin-top: 15px;" onclick="actualizarDashboard()">🔄 Actualizar Dashboard</button>
+            </div>
+
+            <!-- TAB: Productos -->
+            <div id="adminProductos" class="admin-content">
+                <div class="admin-section">
+                    <h3>➕ Crear Nuevo Producto</h3>
+                    <div class="admin-form">
+                        <div class="admin-form-row">
+                            <div class="admin-form-group">
+                                <label for="newProdNombre">Nombre del Producto</label>
+                                <input type="text" id="newProdNombre" placeholder="Ej: Sesión de Estudio">
+                            </div>
+                            <div class="admin-form-group">
+                                <label for="newProdCategoria">Categoría</label>
+                                <select id="newProdCategoria">
+                                    <option value="estudio">Sesión Estudio</option>
+                                    <option value="boda">Boda</option>
+                                    <option value="impresion">Impresión</option>
+                                    <option value="otro">Otro</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="admin-form-group">
+                            <label for="newProdDescripcion">Descripción</label>
+                            <textarea id="newProdDescripcion" placeholder="Describe el producto..."></textarea>
+                        </div>
+                        <div class="admin-form-row">
+                            <div class="admin-form-group">
+                                <label for="newProdPrecio">Precio ($)</label>
+                                <input type="number" id="newProdPrecio" placeholder="50" step="0.01">
+                            </div>
+                            <div class="admin-form-group">
+                                <label for="newProdStock">Stock</label>
+                                <input type="number" id="newProdStock" placeholder="100">
+                            </div>
+                        </div>
+                        <button onclick="crearNuevoProducto()" class="btn-success" style="width: 100%;">✅ Crear Producto</button>
+                    </div>
+                </div>
+
+                <div class="admin-section">
+                    <h3>📋 Lista de Productos</h3>
+                    <div id="productosListaDiv" style="overflow-x: auto;"></div>
+                </div>
+            </div>
+
+            <!-- TAB: Pedidos -->
+            <div id="adminPedidos" class="admin-content">
+                <div class="admin-section">
+                    <h3>📋 Gestión de Pedidos</h3>
+                    <div id="pedidosListaDiv" style="overflow-x: auto;"></div>
+                </div>
+            </div>
+
+            <!-- TAB: Usuarios -->
+            <div id="adminUsuarios" class="admin-content">
+                <div class="admin-section">
+                    <h3>👥 Usuarios Registrados</h3>
+                    <div id="usuariosListaDiv" style="overflow-x: auto;"></div>
+                </div>
+            </div>
+
+            <!-- TAB: Reportes -->
+            <div id="adminReportes" class="admin-content">
+                <div class="admin-section">
+                    <h3>📊 Reportes y Estadísticas</h3>
+                    <button onclick="generarReporte()" class="btn-success" style="width: 100%; margin-bottom: 15px;">📄 Generar Reporte Completo</button>
+                    <div id="reporteDiv"></div>
+                </div>
+            </div>
+
+            <button onclick="cerrarPanelAdmin()" style="width: 100%; margin-top: 20px; background: rgba(255,100,100,0.3); border: 1px solid rgba(255,100,100,0.5);">❌ Cerrar Panel</button>
+        </div>
+    </section>
+
     <!-- Footer -->
     <footer class="footer">
         <div class="container">
@@ -614,12 +930,12 @@
                     <p class="step-description">Selecciona tu tipo de cuenta para continuar</p>
                     <div class="user-type-buttons">
                         <button class="user-type-btn" onclick="selectUserType('cliente')">
+                            <span class="icon">�</span>
+                            <span class="label">Registro</span>
+                        </button>
+                        <button class="user-type-btn" onclick="selectUserType('acceso')">
                             <span class="icon">👤</span>
                             <span class="label">Cliente</span>
-                        </button>
-                        <button class="user-type-btn" onclick="selectUserType('administrador')">
-                            <span class="icon">👨‍💼</span>
-                            <span class="label">Administrador</span>
                         </button>
                     </div>
                     <button class="close-modal-btn" onclick="closeAuthModal()">&times;</button>
@@ -671,8 +987,8 @@
                     <p class="step-description">Accede a tu cuenta</p>
                     <form onsubmit="handleClientLogin(event)">
                         <div class="form-group">
-                            <label for="clientLoginUsername">Usuario o Email *</label>
-                            <input type="text" id="clientLoginUsername" required>
+                            <label for="clientLoginUsername">Usuario, Email o Teléfono *</label>
+                            <input type="text" id="clientLoginUsername" placeholder="Ingresa tu usuario, correo o teléfono" required>
                         </div>
                         <div class="form-group">
                             <label for="clientLoginPassword">Contraseña *</label>
@@ -681,26 +997,26 @@
                         <div id="clientLoginError" class="error-message"></div>
                         <button type="submit" class="auth-btn">Iniciar Sesión</button>
                     </form>
-                    <p class="form-info">¿No tienes cuenta? <button class="link-btn" onclick="backToSelectType()">Registrate aquí</button></p>
+                    <p class="form-info">¿Quieres crear una cuenta? <button class="link-btn" onclick="backToSelectType()">Registrate aquí</button></p>
                     <button class="back-btn" onclick="backToSelectType()">← Atrás</button>
                     <button class="close-modal-btn" onclick="closeAuthModal()">&times;</button>
                 </div>
 
-                <!-- PASO 4: ADMINISTRADOR - Login -->
-                <div id="adminLoginStep" class="auth-step hidden">
-                    <h2>Iniciar Sesión - Administrador</h2>
-                    <p class="step-description">Acceso restringido</p>
-                    <form onsubmit="handleAdminLogin(event)">
+                <!-- PASO 4: CLIENTE - Acceso Simple -->
+                <div id="accesoClienteStep" class="auth-step hidden">
+                    <h2>Iniciar Sesión</h2>
+                    <p class="step-description">Accede con tu usuario y contraseña</p>
+                    <form onsubmit="handleClientAcceso(event)">
                         <div class="form-group">
-                            <label for="adminUsername">Usuario *</label>
-                            <input type="text" id="adminUsername" required>
+                            <label for="accesoUsername">Usuario *</label>
+                            <input type="text" id="accesoUsername" required>
                         </div>
                         <div class="form-group">
-                            <label for="adminPassword">Contraseña *</label>
-                            <input type="password" id="adminPassword" required>
+                            <label for="accesoPassword">Contraseña *</label>
+                            <input type="password" id="accesoPassword" required>
                         </div>
-                        <div id="adminLoginError" class="error-message"></div>
-                        <button type="submit" class="auth-btn">Acceder</button>
+                        <div id="accesoError" class="error-message"></div>
+                        <button type="submit" class="auth-btn">Iniciar Sesión</button>
                     </form>
                     <button class="back-btn" onclick="backToSelectType()">← Atrás</button>
                     <button class="close-modal-btn" onclick="closeAuthModal()">&times;</button>
@@ -766,7 +1082,7 @@
 
             loginClient(username, password) {
                 const client = this.clients.find(u => 
-                    (u.username === username || u.email === username) && u.password === password
+                    (u.username === username || u.email === username || u.phone === username) && u.password === password
                 );
                 if (client) {
                     this.currentUser = { 
@@ -779,7 +1095,7 @@
                     localStorage.setItem('fotovecCurrentUser', JSON.stringify(this.currentUser));
                     return { success: true, message: 'Inicio de sesión exitoso' };
                 }
-                return { success: false, message: 'Usuario o contraseña incorrectos' };
+                return { success: false, message: 'Usuario, correo o teléfono y contraseña incorrectos' };
             },
 
             loginAdmin(username, password) {
@@ -808,8 +1124,8 @@
             document.getElementById('selectUserType').classList.add('hidden');
             if (type === 'cliente') {
                 document.getElementById('clientRegisterStep').classList.remove('hidden');
-            } else if (type === 'administrador') {
-                document.getElementById('adminLoginStep').classList.remove('hidden');
+            } else if (type === 'acceso') {
+                document.getElementById('accesoClienteStep').classList.remove('hidden');
             }
         }
 
@@ -885,27 +1201,26 @@
             }
         }
 
-        function handleAdminLogin(e) {
+        function handleClientAcceso(e) {
             e.preventDefault();
-            const username = document.getElementById('adminUsername').value;
-            const password = document.getElementById('adminPassword').value;
+            const username = document.getElementById('accesoUsername').value;
+            const password = document.getElementById('accesoPassword').value;
 
-            const result = authSystem.loginAdmin(username, password);
+            const result = authSystem.loginClient(username, password);
             if (result.success) {
                 closeAuthModal();
                 showUserProfile();
             } else {
-                document.getElementById('adminLoginError').textContent = result.message;
+                document.getElementById('accesoError').textContent = result.message;
             }
         }
 
         function showUserProfile() {
             const userInfo = document.getElementById('userInfo');
             if (userInfo && authSystem.currentUser) {
-                const userType = authSystem.currentUser.userType === 'administrador' ? '👨‍💼' : '👤';
                 userInfo.innerHTML = `
                     <div class="user-profile-info">
-                        <span class="user-name">${userType} ${authSystem.currentUser.name}</span>
+                        <span class="user-name">👤 ${authSystem.currentUser.name}</span>
                         <button class="logout-btn" onclick="logout()">Cerrar Sesión</button>
                     </div>
                 `;
@@ -981,6 +1296,393 @@
                 });
             });
         });
+
+        // ============ FUNCIONES DEL PANEL DE ADMINISTRADOR ============
+
+        /**
+         * Muestra/oculta las pestañas del panel admin
+         */
+        function mostrarTabAdmin(tabName) {
+            // Ocultar todos los tabs
+            document.querySelectorAll('.admin-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Desactivar todos los botones
+            document.querySelectorAll('.admin-tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // Mostrar el tab seleccionado
+            const selectedTab = document.getElementById('admin' + tabName.charAt(0).toUpperCase() + tabName.slice(1));
+            if (selectedTab) {
+                selectedTab.classList.add('active');
+            }
+
+            // Activar el botón seleccionado
+            event.target.classList.add('active');
+
+            // Cargar datos según la pestaña
+            if (tabName === 'productos') {
+                cargarProductosAdmin();
+            } else if (tabName === 'pedidos') {
+                cargarPedidosAdmin();
+            } else if (tabName === 'usuarios') {
+                cargarUsuariosAdmin();
+            } else if (tabName === 'dashboard') {
+                actualizarDashboard();
+            }
+        }
+
+        /**
+         * Actualiza el dashboard con estadísticas
+         */
+        function actualizarDashboard() {
+            const reporte = database.generarReporte();
+            document.getElementById('totalProductos').textContent = reporte.totalProductos;
+            document.getElementById('totalPedidos').textContent = reporte.totalPedidos;
+            document.getElementById('ingresos').textContent = '$' + reporte.ingresosTotales.toFixed(2);
+            document.getElementById('productosAgotados').textContent = reporte.productosAgotados;
+        }
+
+        /**
+         * Crea un nuevo producto
+         */
+        function crearNuevoProducto() {
+            if (!verificarPermiso(authSystem.currentUser?.userType, 'crear_productos')) {
+                return;
+            }
+
+            const nombre = document.getElementById('newProdNombre').value;
+            const descripcion = document.getElementById('newProdDescripcion').value;
+            const precio = document.getElementById('newProdPrecio').value;
+            const stock = document.getElementById('newProdStock').value;
+            const categoria = document.getElementById('newProdCategoria').value;
+
+            if (!nombre || !precio || !stock) {
+                alert('Por favor rellena todos los campos obligatorios');
+                return;
+            }
+
+            const result = database.crearProducto(nombre, descripcion, precio, stock, categoria);
+            alert('✅ Producto creado exitosamente');
+            
+            // Limpiar formulario
+            document.getElementById('newProdNombre').value = '';
+            document.getElementById('newProdDescripcion').value = '';
+            document.getElementById('newProdPrecio').value = '';
+            document.getElementById('newProdStock').value = '';
+
+            cargarProductosAdmin();
+        }
+
+        /**
+         * Carga la lista de productos en el admin
+         */
+        function cargarProductosAdmin() {
+            if (!verificarPermiso(authSystem.currentUser?.userType, 'ver_productos')) {
+                return;
+            }
+
+            const productos = database.obtenerProductos();
+            let html = '<table class="admin-table"><thead><tr><th>ID</th><th>Nombre</th><th>Precio</th><th>Stock</th><th>Acciones</th></tr></thead><tbody>';
+
+            productos.forEach(prod => {
+                html += `
+                    <tr>
+                        <td>${prod.id}</td>
+                        <td><strong>${prod.nombre}</strong><br><small>${prod.descripcion}</small></td>
+                        <td>$${prod.precio.toFixed(2)}</td>
+                        <td>${prod.stock}</td>
+                        <td>
+                            <button onclick="editarProductoAdmin(${prod.id})" class="btn-success" style="padding: 5px 10px; font-size: 0.8em;">✏️ Editar</button>
+                            <button onclick="eliminarProductoAdmin(${prod.id})" class="btn-danger" style="padding: 5px 10px; font-size: 0.8em;">🗑️ Eliminar</button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += '</tbody></table>';
+            document.getElementById('productosListaDiv').innerHTML = html;
+        }
+
+        /**
+         * Edita un producto
+         */
+        function editarProductoAdmin(productoId) {
+            if (!verificarPermiso(authSystem.currentUser?.userType, 'editar_productos')) {
+                return;
+            }
+
+            const producto = database.obtenerProducto(productoId);
+            if (!producto) return;
+
+            const nuevoPrecio = prompt(`Nuevo precio para "${producto.nombre}":`, producto.precio);
+            if (nuevoPrecio === null) return;
+
+            const nuevoStock = prompt('Nuevo stock:', producto.stock);
+            if (nuevoStock === null) return;
+
+            const nuevoNombre = prompt('Nuevo nombre:', producto.nombre);
+            if (nuevoNombre === null) return;
+
+            const result = database.editarProducto(productoId, {
+                nombre: nuevoNombre,
+                precio: nuevoPrecio,
+                stock: nuevoStock
+            });
+
+            if (result.success) {
+                alert('✅ ' + result.message);
+                cargarProductosAdmin();
+            } else {
+                alert('❌ ' + result.message);
+            }
+        }
+
+        /**
+         * Elimina un producto
+         */
+        function eliminarProductoAdmin(productoId) {
+            if (!verificarPermiso(authSystem.currentUser?.userType, 'eliminar_productos')) {
+                return;
+            }
+
+            if (!confirm('¿Estás seguro de que deseas eliminar este producto?')) {
+                return;
+            }
+
+            const result = database.eliminarProducto(productoId);
+            if (result.success) {
+                alert('✅ Producto eliminado');
+                cargarProductosAdmin();
+            } else {
+                alert('❌ ' + result.message);
+            }
+        }
+
+        /**
+         * Carga la lista de pedidos en el admin
+         */
+        function cargarPedidosAdmin() {
+            if (!verificarPermiso(authSystem.currentUser?.userType, 'ver_todos_pedidos')) {
+                return;
+            }
+
+            const pedidos = database.obtenerPedidos();
+            let html = '<table class="admin-table"><thead><tr><th>ID Pedido</th><th>Cliente</th><th>Total</th><th>Estado</th><th>Fecha</th><th>Acciones</th></tr></thead><tbody>';
+
+            pedidos.forEach(ped => {
+                html += `
+                    <tr>
+                        <td>#${ped.id}</td>
+                        <td>${ped.clienteNombre}</td>
+                        <td>$${ped.total.toFixed(2)}</td>
+                        <td>${ped.estado}</td>
+                        <td>${ped.fechaCreacion}</td>
+                        <td>
+                            <button onclick="cambiarEstadoPedidoAdmin(${ped.id})" class="btn-success" style="padding: 5px 10px; font-size: 0.8em;">📝 Cambiar Estado</button>
+                            <button onclick="verDetallesPedido(${ped.id})" class="btn-success" style="padding: 5px 10px; font-size: 0.8em;">👁️ Ver</button>
+                            ${!ped.protegido ? `<button onclick="eliminarPedidoAdmin(${ped.id})" class="btn-danger" style="padding: 5px 10px; font-size: 0.8em;">🗑️ Eliminar</button>` : '<span style="opacity: 0.5;">🔒 Protegido</span>'}
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += '</tbody></table>';
+            document.getElementById('pedidosListaDiv').innerHTML = html;
+        }
+
+        /**
+         * Cambia el estado de un pedido
+         */
+        function cambiarEstadoPedidoAdmin(pedidoId) {
+            if (!verificarPermiso(authSystem.currentUser?.userType, 'cambiar_estado_pedido')) {
+                return;
+            }
+
+            const nuevoEstado = prompt('Nuevo estado (Pendiente, Confirmado, Enviado, Entregado, Cancelado):', 'Pendiente');
+            if (!nuevoEstado) return;
+
+            const result = database.cambiarEstadoPedido(pedidoId, nuevoEstado);
+            if (result.success) {
+                alert('✅ ' + result.message);
+                cargarPedidosAdmin();
+            } else {
+                alert('❌ ' + result.message);
+            }
+        }
+
+        /**
+         * Ve los detalles de un pedido
+         */
+        function verDetallesPedido(pedidoId) {
+            const pedido = database.obtenerPedido(pedidoId);
+            if (!pedido) return;
+
+            alert(`📋 DETALLES DEL PEDIDO #${pedido.id}
+Cliente: ${pedido.clienteNombre}
+Total: $${pedido.total.toFixed(2)}
+Estado: ${pedido.estado}
+Fecha: ${pedido.fechaCreacion}
+Notas: ${pedido.notas || 'Ninguna'}`);
+        }
+
+        /**
+         * Elimina un pedido
+         */
+        function eliminarPedidoAdmin(pedidoId) {
+            if (!verificarPermiso(authSystem.currentUser?.userType, 'eliminar_productos')) {
+                return;
+            }
+
+            if (!confirm('⚠️ ¿Estás seguro? Esta acción no se puede deshacer.')) {
+                return;
+            }
+
+            const result = database.eliminarPedido(pedidoId);
+            if (result.success) {
+                alert('✅ Pedido eliminado');
+                cargarPedidosAdmin();
+            } else {
+                alert('❌ ' + result.message);
+            }
+        }
+
+        /**
+         * Carga la lista de usuarios en el admin
+         */
+        function cargarUsuariosAdmin() {
+            if (!verificarPermiso(authSystem.currentUser?.userType, 'ver_usuarios')) {
+                return;
+            }
+
+            const clientes = authSystem.clients;
+            let html = '<div class="admin-alert alert-info">Total de clientes registrados: ' + clientes.length + '</div>';
+            html += '<table class="admin-table"><thead><tr><th>ID</th><th>Nombre</th><th>Usuario</th><th>Email</th><th>Teléfono</th><th>Acciones</th></tr></thead><tbody>';
+
+            clientes.forEach(cliente => {
+                html += `
+                    <tr>
+                        <td>${cliente.id}</td>
+                        <td>${cliente.name}</td>
+                        <td>${cliente.username}</td>
+                        <td>${cliente.email}</td>
+                        <td>${cliente.phone}</td>
+                        <td>
+                            <button onclick="resetearContrasenaAdmin('${cliente.username}')" class="btn-success" style="padding: 5px 10px; font-size: 0.8em;">🔑 Reset Pass</button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += '</tbody></table>';
+            document.getElementById('usuariosListaDiv').innerHTML = html;
+        }
+
+        /**
+         * Resetea la contraseña de un usuario (sin verla)
+         */
+        function resetearContrasenaAdmin(username) {
+            if (!verificarPermiso(authSystem.currentUser?.userType, 'resetear_contrasena')) {
+                return;
+            }
+
+            const newPass = prompt(`Nueva contraseña para "${username}":`);
+            if (!newPass) return;
+
+            if (newPass.length < 6) {
+                alert('La contraseña debe tener al menos 6 caracteres');
+                return;
+            }
+
+            const cliente = authSystem.clients.find(c => c.username === username);
+            if (cliente) {
+                cliente.password = newPass;
+                localStorage.setItem('fotovecClients', JSON.stringify(authSystem.clients));
+                alert('✅ Contraseña actualizada para ' + username);
+            }
+        }
+
+        /**
+         * Genera un reporte completo
+         */
+        function generarReporte() {
+            if (!verificarPermiso(authSystem.currentUser?.userType, 'ver_reportes')) {
+                return;
+            }
+
+            const reporte = database.generarReporte();
+            let html = `
+                <div class="admin-alert alert-info">
+                    <h4>📊 Reporte Generado: ${reporte.timestamp}</h4>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px;">
+                    <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 5px;">
+                        <div style="font-size: 1.5em; font-weight: bold;">📦 ${reporte.totalProductos}</div>
+                        <div>Productos en Catálogo</div>
+                    </div>
+                    <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 5px;">
+                        <div style="font-size: 1.5em; font-weight: bold;">🛒 ${reporte.totalPedidos}</div>
+                        <div>Pedidos Totales</div>
+                    </div>
+                    <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 5px;">
+                        <div style="font-size: 1.5em; font-weight: bold; color: #90ee90;">$${reporte.ingresosTotales.toFixed(2)}</div>
+                        <div>Ingresos Totales</div>
+                    </div>
+                    <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 5px;">
+                        <div style="font-size: 1.5em; font-weight: bold;">⏳ ${reporte.pedidosPendientes}</div>
+                        <div>Pedidos Pendientes</div>
+                    </div>
+                    <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 5px;">
+                        <div style="font-size: 1.5em; font-weight: bold; color: #90ee90;">✅ ${reporte.pedidosEntregados}</div>
+                        <div>Pedidos Entregados</div>
+                    </div>
+                    <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 5px;">
+                        <div style="font-size: 1.5em; font-weight: bold; color: #ff6b6b;">⚠️ ${reporte.productosAgotados}</div>
+                        <div>Productos Agotados</div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('reporteDiv').innerHTML = html;
+        }
+
+        /**
+         * Cierra el panel de administrador
+         */
+        function cerrarPanelAdmin() {
+            const adminPanel = document.getElementById('adminPanel');
+            adminPanel.classList.remove('active');
+        }
+
+        // ============ MOSTRAR/OCULTAR PANEL ADMIN SEGÚN PERMISOS ============
+
+        // Cuando se actualiza el perfil del usuario, mostrar/ocultar el panel admin
+        const originalShowUserProfile = showUserProfile;
+        window.showUserProfile = function() {
+            originalShowUserProfile();
+
+            if (authSystem.currentUser && authSystem.currentUser.userType === 'administrador') {
+                const adminPanel = document.getElementById('adminPanel');
+                adminPanel.classList.add('active');
+                console.log('✅ Panel de administrador activado');
+                
+                // Agregar botón de acceso rápido al admin panel
+                const userInfo = document.getElementById('userInfo');
+                if (userInfo) {
+                    const adminBtn = document.createElement('button');
+                    adminBtn.innerHTML = '⚙️ Panel Admin';
+                    adminBtn.style.cssText = 'margin-left: 10px; padding: 8px 15px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer;';
+                    adminBtn.onclick = () => {
+                        const adminPanel = document.getElementById('adminPanel');
+                        adminPanel.classList.toggle('active');
+                    };
+                    userInfo.appendChild(adminBtn);
+                }
+                
+                actualizarDashboard();
+            }
+        };
     </script>
 </body>
 </html>
