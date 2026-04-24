@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -1686,3 +1687,837 @@ Notas: ${pedido.notas || 'Ninguna'}`);
     </script>
 </body>
 </html>
+=======
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>fototec.com</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="auth.js"></script>
+</head>
+<body>
+    <!-- Contenedor Principal -->
+    <div id="mainContent" class="main-content">
+    <!-- Encabezado -->
+    <header>
+        <nav class="navbar">
+            <div class="container">
+                <div class="logo">
+                    <h1>FotoTec</h1>
+                </div>
+                <button class="menu-toggle" id="menuToggle" onclick="toggleMenu()">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+                <ul class="nav-menu" id="navMenu">
+                    <li><a href="#inicio">Inicio</a></li>
+                    <li><a href="#promociones">Promociones</a></li>
+                    <li><a href="#servicios-detalle">Servicios</a></li>
+                    <li><a href="#galeria">Galería</a></li>
+                    <li><a href="#papel">Impresiones</a></li>
+                    <li><a href="#reservas">Reservas</a></li>
+                    <li><a href="#contacto">Contacto</a></li>
+                    <li class="nav-login"><a href="#" onclick="openLoginModal()">🔐 Iniciar Sesión</a></li>
+                </ul>
+                <div id="userInfo" class="user-info">
+                    <button class="login-btn-navbar" onclick="openLoginModal()">🔐 Iniciar Sesión</button>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Sección Hero -->
+    <section id="inicio" class="hero">
+        <div class="hero-content">
+            <h2>Capturamos tus Momentos Especiales</h2>
+            <p>Fotografía profesional de calidad y creatividad</p>
+            <button class="cta-button" onclick="document.getElementById('galeria').scrollIntoView({behavior:'smooth'})">Ver Galería</button>
+        </div>
+    </section>
+
+    <!-- Promociones Destacadas -->
+    <section id="promociones" class="promociones">
+        <div class="container">
+            <h2>🎁 Promociones Exclusivas</h2>
+            <div class="promociones-grid">
+                <div class="promo-card">
+                    <div class="promo-icon">🎂</div>
+                    <h3>Descuento de Cumpleaños</h3>
+                    <p class="promo-discount">30% OFF</p>
+                    <p>Si eres cliente frecuente, obtén un descuento del 30% en tu sesión fotográfica durante el mes de tu cumpleaños.</p>
+                    <span class="promo-badge">EXCLUSIVO CLIENTES</span>
+                </div>
+                <div class="promo-card">
+                    <div class="promo-icon">🌸</div>
+                    <h3>Sets de Temporada</h3>
+                    <p class="promo-discount">10 FOTOS</p>
+                    <p><strong>$1,500</strong> | Día de las Madres, Navidad, San Valentín y más. Entrega Digital + Física.</p>
+                    <span class="promo-badge">DISPONIBLE AHORA</span>
+                </div>
+                <div class="promo-card">
+                    <div class="promo-icon">💒</div>
+                    <h3>Sesiones de Boda</h3>
+                    <p class="promo-discount">25% OFF</p>
+                    <p>Obtén un descuento del 25% en 5 horas de cobertura fotográfica profesional en tu evento.</p>
+                    <span class="promo-badge">CONSULTA DISPONIBILIDAD</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Servicios Expandidos -->
+    <section id="servicios-detalle" class="servicios-detalle">
+        <div class="container">
+            <h2>Nuestros Servicios</h2>
+            <div class="servicios-tabs">
+                <div class="tab-buttons">
+                    <button class="tab-btn active" onclick="showTab('estudio')">Sesiones de Estudio</button>
+                    <button class="tab-btn" onclick="showTab('tecnica')">Fotografía Técnica</button>
+                    <button class="tab-btn" onclick="showTab('impresiones')">Impresiones Especiales</button>
+                </div>
+
+                <div id="estudio" class="tab-content active">
+                    <div class="tab-grid">
+                        <div class="tab-item">
+                            <h4>Fondo Blanco Clásico</h4>
+                            <p>Fotografía profesional en fondo blanco. Perfecto para comercial, personal o corporativo.</p>
+                            <p>Color o Blanco y Negro</p>
+                            <ul>
+                                <li>Iluminación personalizada</li>
+                                <li>Edición profesional</li>
+                                <li>Entrega digital</li>
+                            </ul>
+                        </div>
+                        <div class="tab-item">
+                            <h4>Sets Temáticos</h4>
+                            <p>Captura especial con decoración de temporada.</p>
+                            <p><strong>$1,500 - 10 fotos</strong></p>
+                            <ul>
+                                <li>Día de las Madres</li>
+                                <li>Navidad</li>
+                                <li>San Valentín</li>
+                                <li>Más eventos por encargo</li>
+                            </ul>
+                        </div>
+                        <div class="tab-item">
+                            <h4>Dirección Fotográfica</h4>
+                            <p>Asesoría completa para tu sesión perfecta.</p>
+                            <ul>
+                                <li>Selección de vestuario</li>
+                                <li>Posicionamiento experto</li>
+                                <li>Iluminación artística</li>
+                                <li>Edición selectiva</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tecnica" class="tab-content">
+                    <div class="tab-grid">
+                        <div class="tab-item">
+                            <h4>Pasaporte</h4>
+                            <p>Fotografía de identificación con estándares internacionales.</p>
+                            <ul>
+                                <li>Blanco y Negro</li>
+                                <li>Tamaño reglamentario</li>
+                                <li>Calidad garantizada</li>
+                            </ul>
+                        </div>
+                        <div class="tab-item">
+                            <h4>Servicio Militar</h4>
+                            <p>Fotografía técnica para trámites de identificación militar.</p>
+                            <ul>
+                                <li>Formato específico</li>
+                                <li>Blanco y Negro</li>
+                                <li>Entrega rápida</li>
+                            </ul>
+                        </div>
+                        <div class="tab-item">
+                            <h4>Credencial</h4>
+                            <p>Identificación profesional de alta calidad.</p>
+                            <ul>
+                                <li>Blanco y Negro o Color</li>
+                                <li>Tamaño estándar</li>
+                                <li>Múltiples copias disponibles</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="impresiones" class="tab-content">
+                    <div class="tab-grid">
+                        <div class="tab-item">
+                            <h4>Impresiones Estándar</h4>
+                            <p>Formatos clásicos para tu hogar u oficina.</p>
+                            <ul>
+                                <li>4x6 pulgadas</li>
+                                <li>5x7 pulgadas</li>
+                                <li>8x10 pulgadas</li>
+                            </ul>
+                        </div>
+                        <div class="tab-item">
+                            <h4>Cuadros Gigantes</h4>
+                            <p>Impresiones de gran formato para impactar.</p>
+                            <ul>
+                                <li>Desde 11x14 hasta 24x36</li>
+                                <li>Lienzo o papel fotográfico</li>
+                                <li>Sin marco</li>
+                            </ul>
+                        </div>
+                        <div class="tab-item">
+                            <h4>Acabados Premium</h4>
+                            <p>Múltiples opciones de papel y textura.</p>
+                            <ul>
+                                <li>Brillante (Glossy)</li>
+                                <li>Mate (Matte)</li>
+                                <li>Lustre/Satinado</li>
+                                <li>Fine Art/Algodón</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Guía de Paper Tipos -->
+    <section id="papel" class="papel">
+        <div class="container">
+            <h2>Guía de Impresión: Elige tu Acabado Ideal</h2>
+            <p class="paper-intro">En FOTOTEC, la calidad no termina en la cámara. El tipo de papel que elijas determinará cómo se preservan tus recuerdos.</p>
+            
+            <div class="papel-grid">
+                <!-- Papel Brillante -->
+                <div class="papel-card papel-estandar">
+                    <div class="papel-badge">ESTÁNDAR</div>
+                    <h3>📸 Papel Brillante (Glossy)</h3>
+                    <h4>El Clásico Vibrante</h4>
+                    <div class="papel-caracteristicas">
+                        <h5>Características:</h5>
+                        <ul>
+                            <li>Colores muy vivos</li>
+                            <li>Negros profundos</li>
+                            <li>Gran nitidez</li>
+                            <li>Recubrimiento reflectivo</li>
+                        </ul>
+                    </div>
+                    <div class="papel-ideal">
+                        <h5>Ideal para:</h5>
+                        <p>Fotos familiares coloridas, sesiones de niños y fotos de tamaño estándar.</p>
+                    </div>
+                    <div class="papel-nota">
+                        <strong>💡 Nota:</strong> Espectacular a la vista, pero se marcan fácilmente las huellas dactilares al tocarlo.
+                    </div>
+                </div>
+
+                <!-- Papel Mate -->
+                <div class="papel-card papel-estandar">
+                    <div class="papel-badge">ESTÁNDAR/PROFESIONAL</div>
+                    <h3>🎨 Papel Mate (Matte)</h3>
+                    <h4>Elegancia sin Reflejos</h4>
+                    <div class="papel-caracteristicas">
+                        <h5>Características:</h5>
+                        <ul>
+                            <li>Textura suave y opaca</li>
+                            <li>No refleja la luz</li>
+                            <li>No se marcan huellas</li>
+                            <li>Aspecto artístico/vintage</li>
+                        </ul>
+                    </div>
+                    <div class="papel-ideal">
+                        <h5>Ideal para:</h5>
+                        <p>Fotografías en blanco y negro, retratos profesionales y fotos que irán sin vidrio.</p>
+                    </div>
+                    <div class="papel-nota">
+                        <strong>💡 Nota:</strong> Los colores son más sutiles y naturales, ideales para una decoración sobria.
+                    </div>
+                </div>
+
+                <!-- Papel Lustre -->
+                <div class="papel-card papel-premium">
+                    <div class="papel-badge">PREMIUM</div>
+                    <h3>✨ Papel Lustre / Satinado</h3>
+                    <h4>El Equilibrio Perfecto</h4>
+                    <div class="papel-caracteristicas">
+                        <h5>Características:</h5>
+                        <ul>
+                            <li>Punto medio entre brillo y mate</li>
+                            <li>Textura "perlada" o "piel de naranja"</li>
+                            <li>Colores saturados y resistencia</li>
+                            <li>Estándar de fotógrafos profesionales</li>
+                        </ul>
+                    </div>
+                    <div class="papel-ideal">
+                        <h5>Ideal para:</h5>
+                        <p>Sesiones temáticas (Navidad, San Valentín) y fotos que se manipularán mucho.</p>
+                    </div>
+                    <div class="papel-nota">
+                        <strong>💡 Nota:</strong> Es el papel más duradero y profesional para conservar tus sesiones por años. <span class="highlight-recomendacion">+25% sobre precio base</span>
+                    </div>
+                </div>
+
+                <!-- Papel Fine Art -->
+                <div class="papel-card papel-ultra">
+                    <div class="papel-badge">ULTRA-PREMIUM</div>
+                    <h3>🖼️ Papel Fine Art / Algodón</h3>
+                    <h4>Calidad de Museo</h4>
+                    <div class="papel-caracteristicas">
+                        <h5>Características:</h5>
+                        <ul>
+                            <li>Alto gramaje y textura rica</li>
+                            <li>Fabricado con fibras naturales</li>
+                            <li>Máxima longevidad (100+ años)</li>
+                            <li>Profundidad tridimensional</li>
+                        </ul>
+                    </div>
+                    <div class="papel-ideal">
+                        <h5>Ideal para:</h5>
+                        <p>Cuadros Gigantes y retratos de autor que durarán generaciones.</p>
+                    </div>
+                    <div class="papel-nota">
+                        <strong>💡 Nota:</strong> Si buscas una pieza de arte para tu sala que dure generaciones, este es el papel indicado. <span class="highlight-recomendacion">SOLO FORMATOS GRANDES</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="papel-muestrario">
+                <h3>Solicita nuestro Muestrario Físico</h3>
+                <p>Toca y compara las texturas reales de nuestros papeles. La experiencia sensorial cierra la venta.</p>
+                <button class="cta-button">Pedir Muestrario</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Galería de Trabajo -->
+    <section id="galeria" class="galeria">
+        <div class="container">
+            <h2>Nuestro Trabajo</h2>
+            <p class="galeria-tagline">Galería de sesiones anteriores de clientes satisfechos</p>
+            <div class="galeria-grid">
+                <div class="galeria-item">
+                    <div class="galeria-placeholder">📷</div>
+                    <div class="galeria-info">
+                        <h4>Sesión Familia</h4>
+                        <p>Fondo Blanco | Color</p>
+                    </div>
+                </div>
+                <div class="galeria-item">
+                    <div class="galeria-placeholder">👥</div>
+                    <div class="galeria-info">
+                        <h4>Retratos Profesionales</h4>
+                        <p>B&W | Dirección Fotográfica</p>
+                    </div>
+                </div>
+                <div class="galeria-item">
+                    <div class="galeria-placeholder">💒</div>
+                    <div class="galeria-info">
+                        <h4>Bodas</h4>
+                        <p>Cobertura Completa | 8 horas</p>
+                    </div>
+                </div>
+                <div class="galeria-item">
+                    <div class="galeria-placeholder">🌸</div>
+                    <div class="galeria-info">
+                        <h4>Set Día de Madres</h4>
+                        <p>10 Fotos | Temporada 2025</p>
+                    </div>
+                </div>
+                <div class="galeria-item">
+                    <div class="galeria-placeholder">🎄</div>
+                    <div class="galeria-info">
+                        <h4>Set Navidad</h4>
+                        <p>10 Fotos | Temporada 2025</p>
+                    </div>
+                </div>
+                <div class="galeria-item">
+                    <div class="galeria-placeholder">💝</div>
+                    <div class="galeria-info">
+                        <h4>Set San Valentín</h4>
+                        <p>10 Fotos | Parejas</p>
+                    </div>
+                </div>
+                <div class="galeria-item">
+                    <div class="galeria-placeholder">👶</div>
+                    <div class="galeria-info">
+                        <h4>Sesión Infantil</h4>
+                        <p>Color | Fondo Temático</p>
+                    </div>
+                </div>
+                <div class="galeria-item">
+                    <div class="galeria-placeholder">🖼️</div>
+                    <div class="galeria-info">
+                        <h4>Cuadro Panorámico</h4>
+                        <p>Fine Art | 24x36</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Sistema de Reservas -->
+    <section id="reservas" class="reservas">
+        <div class="container">
+            <h2>Haz tu Reserva</h2>
+            <p class="reservas-tagline">Agenda tu sesión fotográfica en pocos pasos</p>
+            
+            <div class="reservas-content">
+                <div class="reservas-form-container">
+                    <form class="reservas-form" id="reservasForm">
+                        <div class="form-section">
+                            <h3>Información Personal</h3>
+                            <div class="form-group">
+                                <label for="nombre">Nombre Completo *</label>
+                                <input type="text" id="nombre" name="nombre" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="email">Correo Electrónico *</label>
+                                <input type="email" id="email" name="email" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="telefono">Teléfono *</label>
+                                <input type="tel" id="telefono" name="telefono" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="fecha_cumpleanos">Fecha de Cumpleaños (para promociones)</label>
+                                <input type="date" id="fecha_cumpleanos" name="fecha_cumpleanos">
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <h3>Tipo de Sesión</h3>
+                            <div class="form-group">
+                                <label for="tipo_sesion">Selecciona el tipo de sesión *</label>
+                                <select id="tipo_sesion" name="tipo_sesion" required onchange="actualizarForm()">
+                                    <option value="">-- Elige una opción --</option>
+                                    <option value="estudio">Sesión de Estudio (Fondo Blanco)</option>
+                                    <option value="estudio_tematico">Sesión Temática (Navidad, Madres, etc.)</option>
+                                    <option value="tecnica">Fotografía Técnica (Pasaporte, Credencial, etc.)</option>
+                                    <option value="boda">Sesión de Boda</option>
+                                    <option value="evento">Cobertura de Evento</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-section" id="detalles-sesion">
+                            <h3>Detalles de la Sesión</h3>
+                            
+                            <div class="form-group">
+                                <label for="estilo">Estilo de Fotografía *</label>
+                                <div class="radio-group">
+                                    <label class="radio-label">
+                                        <input type="radio" name="estilo" value="color"> Color
+                                    </label>
+                                    <label class="radio-label">
+                                        <input type="radio" name="estilo" value="byn"> Blanco y Negro
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="cantidad_personas">¿Cuántas personas asistirán? *</label>
+                                <select id="cantidad_personas" name="cantidad_personas" required>
+                                    <option value="">-- Selecciona --</option>
+                                    <option value="1">1 persona</option>
+                                    <option value="2">2 personas</option>
+                                    <option value="3">3-5 personas</option>
+                                    <option value="4">6-10 personas</option>
+                                    <option value="5">Más de 10</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="fecha_sesion">Fecha preferida de sesión *</label>
+                                <input type="date" id="fecha_sesion" name="fecha_sesion" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="hora_sesion">Hora preferida *</label>
+                                <select id="hora_sesion" name="hora_sesion" required>
+                                    <option value="">-- Selecciona una hora --</option>
+                                    <option value="09:00">09:00 AM</option>
+                                    <option value="10:00">10:00 AM</option>
+                                    <option value="11:00">11:00 AM</option>
+                                    <option value="14:00">02:00 PM</option>
+                                    <option value="15:00">03:00 PM</option>
+                                    <option value="16:00">04:00 PM</option>
+                                    <option value="17:00">05:00 PM</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="notas">Notas o Especificaciones</label>
+                                <textarea id="notas" name="notas" rows="4" placeholder="Cuéntanos qué esperas de tu sesión..."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <h3>Paquete de Impresión (Opcional)</h3>
+                            <div class="form-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="interes_impresion"> Estoy interesado en impresiones
+                                </label>
+                            </div>
+                            <div class="form-group">
+                                <label for="tipo_papel">Tipo de papel preferido</label>
+                                <select id="tipo_papel" name="tipo_papel">
+                                    <option value="">-- No aplica --</option>
+                                    <option value="brillante">Brillante (Estándar)</option>
+                                    <option value="mate">Mate (Profesional)</option>
+                                    <option value="lustre">Lustre/Satinado (Premium)</option>
+                                    <option value="fineart">Fine Art (Ultra-Premium)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <h3>Términos y Condiciones</h3>
+                            <div class="form-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="terminos" required> Acepto los términos y condiciones *
+                                </label>
+                            </div>
+                            <div class="form-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="datos_crm"> Deseo registrar mis datos para recibir promociones
+                                </label>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="cta-button submit-btn">Reservar Sesión</button>
+                    </form>
+                </div>
+
+                <div class="reservas-info">
+                    <div class="info-card">
+                        <h4>⏱️ Duración Típica</h4>
+                        <p><strong>Sesión Estudio:</strong> 60-90 minutos</p>
+                        <p><strong>Sesión Temática:</strong> 60 minutos</p>
+                        <p><strong>Bodas:</strong> 8-10 horas</p>
+                    </div>
+                    <div class="info-card">
+                        <h4>📦 Entrega de Archivos</h4>
+                        <p>Todos los archivos digitales se entregan vía <strong>Google Drive</strong> con permisos de descarga.</p>
+                        <p><strong>Plazo:</strong> 5-7 días hábiles</p>
+                    </div>
+                    <div class="info-card">
+                        <h4>💳 Política de Pago</h4>
+                        <p><strong>50%</strong> al hacer la reserva</p>
+                        <p><strong>50%</strong> el día de la sesión</p>
+                    </div>
+                    <div class="info-card">
+                        <h4>❓ ¿Preguntas?</h4>
+                        <p>📞 Llama: +52 899 207 0611</p>
+                        <p>📧 Email: fototec@gmail.com</p>
+                        <p>💬 WhatsApp disponible</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contacto -->
+    <section id="contacto" class="contacto">
+        <div class="container">
+            <h2>Ponte en Contacto</h2>
+            <div class="contact-content">
+                <div class="contact-info">
+                    <h3>Información de Contacto</h3>
+                    <div class="contact-item">
+                        <h4>📞 Teléfono</h4>
+                        <p>+52 899 207 0611</p>
+                    </div>
+                    <div class="contact-item">
+                        <h4>📧 Email</h4>
+                        <p>fototec@gmail.com</p>
+                    </div>
+                    <div class="contact-item">
+                        <h4>📍 Ubicación</h4>
+                        <p>Av. Tecnológico S/N<br>Col. Loma Real De Jarachina Sur</p>
+                    </div>
+                    <div class="contact-item">
+                        <h4>🕐 Horario</h4>
+                        <p>Lunes a Viernes: 9:00 - 18:00<br>Sábado: 10:00 - 14:00<br>Domingo: Cerrado</p>
+                    </div>
+                </div>
+                <form class="contact-form" id="contactForm">
+                    <div class="form-group">
+                        <input type="text" placeholder="Tu nombre" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="email" placeholder="Tu correo" required>
+                    </div>
+                    <div class="form-group">
+                        <textarea placeholder="Tu mensaje" rows="5" required></textarea>
+                    </div>
+                    <button type="submit" class="cta-button">Enviar Mensaje</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h5>FOTOTEC</h5>
+                    <p>Donde cada momento se convierte en arte.</p>
+                </div>
+                <div class="footer-section">
+                    <h5>Enlaces Rápidos</h5>
+                    <ul>
+                        <li><a href="#reservas">Reservas</a></li>
+                        <li><a href="#servicios-detalle">Servicios</a></li>
+                        <li><a href="#papel">Guía de Papel</a></li>
+                        <li><a href="#promociones">Promociones</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h5>Síguenos</h5>
+                    <ul>
+                        <li><a href="#">📘 Facebook</a></li>
+                        <li><a href="#">📷 Instagram</a></li>
+                        <li><a href="#">▶️ YouTube</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h5>Contacto</h5>
+                    <p>📞 +52 899 207 0611</p>
+                    <p>📧 fototec@gmail.com</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 FOTOTEC. Todos los derechos reservados. | <a href="#">Política de Privacidad</a></p>
+            </div>
+        </div>
+    </footer>
+
+    </div>
+
+    <!-- Script para funcionalidad -->
+    <script>
+        // ============ MENÚ HAMBURGUESA ============
+        function toggleMenu() {
+            const menuToggle = document.getElementById('menuToggle');
+            const navMenu = document.getElementById('navMenu');
+            
+            menuToggle.classList.toggle('active');
+            navMenu.classList.toggle('active');
+        }
+
+        // Cerrar menú al hacer clic en un enlace
+        document.addEventListener('DOMContentLoaded', function() {
+            const navLinks = document.querySelectorAll('#navMenu a');
+            navLinks.forEach(link => {
+                link.addEventListener('click', function() {
+                    document.getElementById('menuToggle').classList.remove('active');
+                    document.getElementById('navMenu').classList.remove('active');
+                });
+            });
+        });
+
+        // Funciones de interfaz de autenticación
+        function toggleAuth(tab) {
+            document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.auth-toggle-btn').forEach(b => b.classList.remove('active'));
+            
+            document.getElementById(tab + 'Tab').classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const username = document.getElementById('loginUser').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            const result = await authSystem.login(username, password);
+            
+            if (result.success) {
+                document.getElementById('authModal').classList.remove('active');
+                showUserProfile();
+                document.getElementById('loginUser').value = '';
+                document.getElementById('loginPassword').value = '';
+                document.getElementById('loginError').textContent = '';
+            } else {
+                document.getElementById('loginError').textContent = result.message;
+            }
+        }
+
+        async function handleRegister(e) {
+            e.preventDefault();
+            const name = document.getElementById('registerName').value;
+            const username = document.getElementById('registerUser').value;
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+            const confirm = document.getElementById('registerConfirm').value;
+            
+            if (password !== confirm) {
+                document.getElementById('registerError').textContent = 'Las contraseñas no coinciden';
+                return;
+            }
+            if (password.length < 6) {
+                document.getElementById('registerError').textContent = 'La contraseña debe tener mínimo 6 caracteres';
+                return;
+            }
+            
+            const result = await authSystem.register(name, username, email, password);
+            
+            if (result.success) {
+                document.getElementById('registerError').textContent = 'Registro exitoso. Inicia sesión ahora.';
+                document.getElementById('registerError').style.color = 'green';
+                setTimeout(() => toggleAuth('login'), 2000);
+            } else {
+                document.getElementById('registerError').textContent = result.message;
+            }
+        }
+
+        function showUserProfile() {
+            const userInfo = document.getElementById('userInfo');
+            if (userInfo && authSystem.currentUser) {
+                userInfo.innerHTML = `
+                    <div class="user-profile-info">
+                        <span class="user-name">👤 ${authSystem.currentUser.name}</span>
+                        <button class="logout-btn" onclick="logout()">Cerrar Sesión</button>
+                    </div>
+                `;
+            }
+        }
+
+        function openLoginModal() {
+            document.getElementById('authModal').classList.add('active');
+        }
+
+        function logout() {
+            authSystem.logout();
+            document.getElementById('authModal').classList.remove('active');
+            const userInfo = document.getElementById('userInfo');
+            userInfo.innerHTML = `
+                <button class="login-btn-navbar" onclick="openLoginModal()">🔐 Iniciar Sesión</button>
+            `;
+            document.getElementById('loginUser').value = '';
+            document.getElementById('loginPassword').value = '';
+        }
+
+        // Verificar si hay usuario autenticado
+        window.addEventListener('load', function() {
+            if (authSystem.currentUser) {
+                showUserProfile();
+            }
+        });
+
+        // ============ FUNCIONALIDAD DEL SITIO ============
+        
+        // Funcionalidad de tabs
+        function showTab(tabName) {
+            const contents = document.querySelectorAll('.tab-content');
+            contents.forEach(tab => tab.classList.remove('active'));
+            
+            const buttons = document.querySelectorAll('.tab-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // Actualizar form según tipo de sesión
+        function actualizarForm() {
+            const tipoSesion = document.getElementById('tipo_sesion').value;
+            const detalles = document.getElementById('detalles-sesion');
+            
+            // Aquí puedes agregar lógica para mostrar/ocultar campos según la sesión
+            console.log('Tipo de sesión seleccionado:', tipoSesion);
+        }
+
+        // Manejo del formulario de reservas
+        document.addEventListener('DOMContentLoaded', function() {
+            const reservasForm = document.getElementById('reservasForm');
+            const contactForm = document.getElementById('contactForm');
+            
+            if (reservasForm) {
+                reservasForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    alert('¡Gracias por tu reserva! Te contactaremos pronto para confirmar.');
+                });
+            }
+            
+            if (contactForm) {
+                contactForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    alert('¡Gracias por tu mensaje! Te responderemos pronto.');
+                });
+            }
+
+            // Scroll suave para los enlaces de navegación
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({ behavior: 'smooth' });
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
+        < ! - -   M o d a l   d e   A u t e n t i c a c i � n   - - > 
+         < d i v   i d = " a u t h M o d a l "   c l a s s = " m o d a l " > 
+                 < d i v   c l a s s = " m o d a l - c o n t e n t " > 
+                         < s p a n   c l a s s = " c l o s e "   o n c l i c k = " d o c u m e n t . g e t E l e m e n t B y I d ( ' a u t h M o d a l ' ) . c l a s s L i s t . r e m o v e ( ' a c t i v e ' ) " > & t i m e s ; < / s p a n > 
+                         < d i v   c l a s s = " a u t h - t a b s " > 
+                                 < b u t t o n   c l a s s = " a u t h - t o g g l e - b t n   a c t i v e "   o n c l i c k = " t o g g l e A u t h ( ' l o g i n ' ) " > I n i c i a r   S e s i � n < / b u t t o n > 
+                                 < b u t t o n   c l a s s = " a u t h - t o g g l e - b t n "   o n c l i c k = " t o g g l e A u t h ( ' r e g i s t e r ' ) " > R e g i s t r a r s e < / b u t t o n > 
+                         < / d i v > 
+                         
+                         < d i v   i d = " l o g i n T a b "   c l a s s = " a u t h - t a b   a c t i v e " > 
+                                 < h 2 > I n i c i a r   S e s i � n < / h 2 > 
+                                 < f o r m   i d = " l o g i n F o r m "   o n s u b m i t = " h a n d l e L o g i n ( e v e n t ) " > 
+                                         < d i v   c l a s s = " f o r m - g r o u p " > 
+                                                 < l a b e l   f o r = " l o g i n U s e r " > U s u a r i o   o   E m a i l < / l a b e l > 
+                                                 < i n p u t   t y p e = " t e x t "   i d = " l o g i n U s e r "   r e q u i r e d > 
+                                         < / d i v > 
+                                         < d i v   c l a s s = " f o r m - g r o u p " > 
+                                                 < l a b e l   f o r = " l o g i n P a s s w o r d " > C o n t r a s e � a < / l a b e l > 
+                                                 < i n p u t   t y p e = " p a s s w o r d "   i d = " l o g i n P a s s w o r d "   r e q u i r e d > 
+                                         < / d i v > 
+                                         < b u t t o n   t y p e = " s u b m i t "   c l a s s = " a u t h - b t n " > I n i c i a r   S e s i � n < / b u t t o n > 
+                                         < d i v   i d = " l o g i n E r r o r "   c l a s s = " e r r o r - m e s s a g e " > < / d i v > 
+                                 < / f o r m > 
+                         < / d i v > 
+                         
+                         < d i v   i d = " r e g i s t e r T a b "   c l a s s = " a u t h - t a b " > 
+                                 < h 2 > C r e a r   C u e n t a < / h 2 > 
+                                 < f o r m   i d = " r e g i s t e r F o r m "   o n s u b m i t = " h a n d l e R e g i s t e r ( e v e n t ) " > 
+                                         < d i v   c l a s s = " f o r m - g r o u p " > 
+                                                 < l a b e l   f o r = " r e g i s t e r N a m e " > N o m b r e   C o m p l e t o < / l a b e l > 
+                                                 < i n p u t   t y p e = " t e x t "   i d = " r e g i s t e r N a m e "   r e q u i r e d > 
+                                         < / d i v > 
+                                         < d i v   c l a s s = " f o r m - g r o u p " > 
+                                                 < l a b e l   f o r = " r e g i s t e r U s e r " > U s u a r i o < / l a b e l > 
+                                                 < i n p u t   t y p e = " t e x t "   i d = " r e g i s t e r U s e r "   r e q u i r e d > 
+                                         < / d i v > 
+                                         < d i v   c l a s s = " f o r m - g r o u p " > 
+                                                 < l a b e l   f o r = " r e g i s t e r E m a i l " > E m a i l < / l a b e l > 
+                                                 < i n p u t   t y p e = " e m a i l "   i d = " r e g i s t e r E m a i l "   r e q u i r e d > 
+                                         < / d i v > 
+                                         < d i v   c l a s s = " f o r m - g r o u p " > 
+                                                 < l a b e l   f o r = " r e g i s t e r P a s s w o r d " > C o n t r a s e � a < / l a b e l > 
+                                                 < i n p u t   t y p e = " p a s s w o r d "   i d = " r e g i s t e r P a s s w o r d "   r e q u i r e d > 
+                                         < / d i v > 
+                                         < d i v   c l a s s = " f o r m - g r o u p " > 
+                                                 < l a b e l   f o r = " r e g i s t e r C o n f i r m " > C o n f i r m a r   C o n t r a s e � a < / l a b e l > 
+                                                 < i n p u t   t y p e = " p a s s w o r d "   i d = " r e g i s t e r C o n f i r m "   r e q u i r e d > 
+                                         < / d i v > 
+                                         < b u t t o n   t y p e = " s u b m i t "   c l a s s = " a u t h - b t n " > C r e a r   C u e n t a < / b u t t o n > 
+                                         < d i v   i d = " r e g i s t e r E r r o r "   c l a s s = " e r r o r - m e s s a g e " > < / d i v > 
+                                 < / f o r m > 
+                         < / d i v > 
+                 < / d i v > 
+         < / d i v > 
+ 
+ 
+>>>>>>> 3bd19b63e585a588ae37ed0becdd017a44baebaf
