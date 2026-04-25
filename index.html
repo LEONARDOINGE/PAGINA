@@ -577,129 +577,130 @@
             
             <div class="reservas-content">
                 <div class="reservas-form-container">
-                    <form class="reservas-form" id="reservasForm">
-                        <div class="form-section">
-                            <h3>Información Personal</h3>
-                            <div class="form-group">
-                                <label for="nombre">Nombre Completo *</label>
-                                <input type="text" id="nombre" name="nombre" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="email">Correo Electrónico *</label>
-                                <input type="email" id="email" name="email" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="telefono">Teléfono *</label>
-                                <input type="tel" id="telefono" name="telefono" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="fecha_cumpleanos">Fecha de Cumpleaños (para promociones)</label>
-                                <input type="date" id="fecha_cumpleanos" name="fecha_cumpleanos">
-                            </div>
-                        </div>
-
-                        <div class="form-section">
-                            <h3>Tipo de Sesión</h3>
-                            <div class="form-group">
-                                <label for="tipo_sesion">Selecciona el tipo de sesión *</label>
-                                <select id="tipo_sesion" name="tipo_sesion" required onchange="actualizarForm()">
-                                    <option value="">-- Elige una opción --</option>
-                                    <option value="estudio">Sesión de Estudio (Fondo Blanco)</option>
-                                    <option value="estudio_tematico">Sesión Temática (Navidad, Madres, etc.)</option>
-                                    <option value="tecnica">Fotografía Técnica (Pasaporte, Credencial, etc.)</option>
-                                    <option value="boda">Sesión de Boda</option>
-                                    <option value="evento">Cobertura de Evento</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="form-section" id="detalles-sesion">
-                            <h3>Detalles de la Sesión</h3>
-                            
-                            <div class="form-group">
-                                <label for="estilo">Estilo de Fotografía *</label>
-                                <div class="radio-group">
-                                    <label class="radio-label">
-                                        <input type="radio" name="estilo" value="color"> Color
-                                    </label>
-                                    <label class="radio-label">
-                                        <input type="radio" name="estilo" value="byn"> Blanco y Negro
-                                    </label>
+                    <div class="reserva-card">
+                        <h3 class="reserva-title">Agenda tu sesión fotográfica</h3>
+                        <form action="https://formspree.io/f/xeevdjlg" method="POST" class="reserva-form">
+                            <div class="form-section">
+                                <h3>Información Personal</h3>
+                                <div class="form-group">
+                                    <label>Nombre Completo *</label>
+                                    <input type="text" name="nombre_cliente" placeholder="Nombre completo" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Correo Electrónico *</label>
+                                    <input type="email" name="correo_contacto" placeholder="Tu email" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Teléfono</label>
+                                    <input type="tel" name="telefono" placeholder="WhatsApp">
+                                </div>
+                                <div class="form-group">
+                                    <label>Fecha de Cumpleaños (opcional)</label>
+                                    <input type="date" name="fecha_cumpleanos">
                                 </div>
                             </div>
 
-                            <div class="form-group">
-                                <label for="cantidad_personas">¿Cuántas personas asistirán? *</label>
-                                <select id="cantidad_personas" name="cantidad_personas" required>
-                                    <option value="">-- Selecciona --</option>
-                                    <option value="1">1 persona</option>
-                                    <option value="2">2 personas</option>
-                                    <option value="3">3-5 personas</option>
-                                    <option value="4">6-10 personas</option>
-                                    <option value="5">Más de 10</option>
-                                </select>
+                            <div class="form-section">
+                                <h3>Tipo de Sesión</h3>
+                                <div class="form-group">
+                                    <label>Selecciona el tipo de sesión *</label>
+                                    <select name="tipo_sesion" required>
+                                        <option value="">-- Elige una opción --</option>
+                                        <option value="estudio">Sesión de Estudio (Fondo Blanco)</option>
+                                        <option value="estudio_tematico">Sesión Temática (Navidad, Madres, etc.)</option>
+                                        <option value="tecnica">Fotografía Técnica (Pasaporte, Credencial, etc.)</option>
+                                        <option value="boda">Sesión de Boda</option>
+                                        <option value="evento">Cobertura de Evento</option>
+                                    </select>
+                                </div>
                             </div>
 
-                            <div class="form-group">
-                                <label for="fecha_sesion">Fecha preferida de sesión *</label>
-                                <input type="date" id="fecha_sesion" name="fecha_sesion" required>
+                            <div class="form-section">
+                                <h3>Detalles de la Sesión</h3>
+                                <div class="form-group">
+                                    <label>Estilo de Fotografía</label>
+                                    <div style="display:flex;gap:12px;align-items:center;">
+                                        <label><input type="radio" name="estilo" value="color"> Color</label>
+                                        <label><input type="radio" name="estilo" value="byn"> Blanco y Negro</label>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label>¿Cuántas personas asistirán?</label>
+                                    <select name="cantidad_personas">
+                                        <option value="">-- Selecciona --</option>
+                                        <option value="1">1 persona</option>
+                                        <option value="2">2 personas</option>
+                                        <option value="3">3-5 personas</option>
+                                        <option value="4">6-10 personas</option>
+                                        <option value="5">Más de 10</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Fecha preferida de sesión</label>
+                                    <input type="date" name="fecha_reserva">
+                                </div>
+                                <div class="form-group">
+                                    <label>Hora preferida</label>
+                                    <select name="hora_sesion">
+                                        <option value="">-- Selecciona una hora --</option>
+                                        <option value="09:00">09:00 AM</option>
+                                        <option value="10:00">10:00 AM</option>
+                                        <option value="11:00">11:00 AM</option>
+                                        <option value="14:00">02:00 PM</option>
+                                        <option value="15:00">03:00 PM</option>
+                                        <option value="16:00">04:00 PM</option>
+                                        <option value="17:00">05:00 PM</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Notas o Especificaciones</label>
+                                    <textarea name="notas" rows="4" placeholder="Cuéntanos qué esperas de tu sesión..."></textarea>
+                                </div>
                             </div>
 
-                            <div class="form-group">
-                                <label for="hora_sesion">Hora preferida *</label>
-                                <select id="hora_sesion" name="hora_sesion" required>
-                                    <option value="">-- Selecciona una hora --</option>
-                                    <option value="09:00">09:00 AM</option>
-                                    <option value="10:00">10:00 AM</option>
-                                    <option value="11:00">11:00 AM</option>
-                                    <option value="14:00">02:00 PM</option>
-                                    <option value="15:00">03:00 PM</option>
-                                    <option value="16:00">04:00 PM</option>
-                                    <option value="17:00">05:00 PM</option>
-                                </select>
+                            <div class="form-section">
+                                <h3>Paquete de Impresión (Opcional)</h3>
+                                <div class="form-group">
+                                    <label><input type="checkbox" name="interes_impresion"> Estoy interesado en impresiones</label>
+                                </div>
+                                <div class="form-group">
+                                    <label>Tipo de papel preferido</label>
+                                    <select name="tipo_papel">
+                                        <option value="">-- No aplica --</option>
+                                        <option value="brillante">Brillante (Estándar)</option>
+                                        <option value="mate">Mate (Profesional)</option>
+                                        <option value="lustre">Lustre/Satinado (Premium)</option>
+                                        <option value="fineart">Fine Art (Ultra-Premium)</option>
+                                    </select>
+                                </div>
                             </div>
 
-                            <div class="form-group">
-                                <label for="notas">Notas o Especificaciones</label>
-                                <textarea id="notas" name="notas" rows="4" placeholder="Cuéntanos qué esperas de tu sesión..."></textarea>
+                            <div class="form-section">
+                                <h3>Términos y Condiciones</h3>
+                                <div class="form-group">
+                                    <label><input type="checkbox" name="terminos" required> Acepto los términos y condiciones *</label>
+                                </div>
+                                <div class="form-group">
+                                    <label><input type="checkbox" name="datos_crm"> Deseo registrar mis datos para recibir promociones</label>
+                                </div>
                             </div>
-                        </div>
 
-                        <div class="form-section">
-                            <h3>Paquete de Impresión (Opcional)</h3>
-                            <div class="form-group">
-                                <label class="checkbox-label">
-                                    <input type="checkbox" name="interes_impresion"> Estoy interesado en impresiones
-                                </label>
-                            </div>
-                            <div class="form-group">
-                                <label for="tipo_papel">Tipo de papel preferido</label>
-                                <select id="tipo_papel" name="tipo_papel">
-                                    <option value="">-- No aplica --</option>
-                                    <option value="brillante">Brillante (Estándar)</option>
-                                    <option value="mate">Mate (Profesional)</option>
-                                    <option value="lustre">Lustre/Satinado (Premium)</option>
-                                    <option value="fineart">Fine Art (Ultra-Premium)</option>
-                                </select>
-                            </div>
-                        </div>
+                            <div style="display:flex;flex-direction:column;gap:14px;margin-top:12px;">
+                                <button type="submit" class="reserva-btn">Reservar Sesión</button>
+                                <small style="color:#6b7280;">Recibirás un correo para confirmar el formulario en Formspree.</small>
 
-                        <div class="form-section">
-                            <h3>Términos y Condiciones</h3>
-                            <div class="form-group">
-                                <label class="checkbox-label">
-                                    <input type="checkbox" name="terminos" required> Acepto los términos y condiciones *
-                                </label>
+                                <div class="reserva-footer">
+                                    <div class="divider"><span>Acceso rápido con</span></div>
+                                    <div class="socials">
+                                        <button type="button" class="social-btn">🔵</button>
+                                        <button type="button" class="social-btn">🟢</button>
+                                        <button type="button" class="social-btn">🔷</button>
+                                        <button type="button" class="social-btn">⚫</button>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="form-group">
-                                <label class="checkbox-label">
-                                    <input type="checkbox" name="datos_crm"> Deseo registrar mis datos para recibir promociones
-                                </label>
-                            </div>
-                        </div>
-
-                        <button type="submit" class="cta-button submit-btn">Reservar Sesión</button>
-                    </form>
+                        </form>
+                    </div>
                 </div>
 
                 <div class="reservas-info">
@@ -925,102 +926,38 @@
     <div id="authModal" class="auth-modal">
         <div class="auth-container">
             <div class="auth-box">
-                <!-- PASO 1: Seleccionar tipo de usuario -->
-                <div id="selectUserType" class="auth-step">
-                    <h2>¿Qué tipo de usuario eres?</h2>
-                    <p class="step-description">Selecciona tu tipo de cuenta para continuar</p>
-                    <div class="user-type-buttons">
-                        <button class="user-type-btn" onclick="selectUserType('cliente')">
-                            <span class="icon">�</span>
-                            <span class="label">Registro</span>
-                        </button>
-                        <button class="user-type-btn" onclick="selectUserType('acceso')">
-                            <span class="icon">👤</span>
-                            <span class="label">Cliente</span>
-                        </button>
-                    </div>
-                    <button class="close-modal-btn" onclick="closeAuthModal()">&times;</button>
+                <span class="close-btn close-modal-btn" onclick="closeAuthModal()">&times;</span>
+
+                <!-- Encabezado de pestañas -->
+                <div class="modal-tabs">
+                  <button class="tab-link active" onclick="openTab(event, 'registro')">Regístrate</button>
+                  <button class="tab-link" onclick="openTab(event, 'login')">Inicia sesión</button>
                 </div>
 
-                <!-- PASO 2: CLIENTE - Registro -->
-                <div id="clientRegisterStep" class="auth-step hidden">
-                    <h2>Crear Cuenta de Cliente</h2>
-                    <p class="step-description">Completa tus datos personales</p>
-                    <form onsubmit="handleClientRegister(event)">
-                        <div class="form-group">
-                            <label for="clientName">Nombre Completo *</label>
-                            <input type="text" id="clientName" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="clientEmail">Correo Electrónico *</label>
-                            <input type="email" id="clientEmail" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="clientPhone">Teléfono</label>
-                            <input type="tel" id="clientPhone">
-                        </div>
-                        <div class="form-group">
-                            <label for="clientAddress">Dirección</label>
-                            <input type="text" id="clientAddress">
-                        </div>
-                        <div class="form-group">
-                            <label for="clientUsername">Nombre de Usuario *</label>
-                            <input type="text" id="clientUsername" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="clientPassword">Contraseña *</label>
-                            <input type="password" id="clientPassword" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="clientConfirm">Confirmar Contraseña *</label>
-                            <input type="password" id="clientConfirm" required>
-                        </div>
-                        <div id="clientRegisterError" class="error-message"></div>
-                        <button type="submit" class="auth-btn">Crear Cuenta</button>
-                    </form>
-                    <button class="back-btn" onclick="backToSelectType()">← Atrás</button>
-                    <button class="close-modal-btn" onclick="closeAuthModal()">&times;</button>
-                </div>
+                <hr class="tab-divider">
 
-                <!-- PASO 3: CLIENTE - Login -->
-                <div id="clientLoginStep" class="auth-step hidden">
-                    <h2>Iniciar Sesión - Cliente</h2>
-                    <p class="step-description">Accede a tu cuenta</p>
-                    <form onsubmit="handleClientLogin(event)">
-                        <div class="form-group">
-                            <label for="clientLoginUsername">Usuario, Email o Teléfono *</label>
-                            <input type="text" id="clientLoginUsername" placeholder="Ingresa tu usuario, correo o teléfono" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="clientLoginPassword">Contraseña *</label>
-                            <input type="password" id="clientLoginPassword" required>
-                        </div>
-                        <div id="clientLoginError" class="error-message"></div>
-                        <button type="submit" class="auth-btn">Iniciar Sesión</button>
-                    </form>
-                    <p class="form-info">¿Quieres crear una cuenta? <button class="link-btn" onclick="backToSelectType()">Registrate aquí</button></p>
-                    <button class="back-btn" onclick="backToSelectType()">← Atrás</button>
-                    <button class="close-modal-btn" onclick="closeAuthModal()">&times;</button>
-                </div>
+                <!-- Formulario de Registro -->
+                                <div id="registro" class="tab-content" style="display: block;">
+                                    <form id="form-registro" action="https://formspree.io" method="POST">
+                                        <div class="form-group"><input type="text" name="nombre" placeholder="Nombre completo" required></div>
+                                        <div class="form-group"><input type="email" name="email" placeholder="E-mail" required></div>
+                                        <!-- Campos de contraseña -->
+                                        <div class="form-group"><input type="password" id="pass" name="password" placeholder="Crear contraseña" required></div>
+                                        <div class="form-group"><input type="password" id="confirm_pass" placeholder="Confirmar contraseña" required></div>
+                                        <!-- Mensaje de error -->
+                                        <p id="error-msg" style="color: #ff6048; font-size: 12px; margin-top: 5px; display: none;"></p>
+                                        <button type="submit" class="btn-primary">Crear cuenta</button>
+                                    </form>
+                                </div>
 
-                <!-- PASO 4: CLIENTE - Acceso Simple -->
-                <div id="accesoClienteStep" class="auth-step hidden">
-                    <h2>Iniciar Sesión</h2>
-                    <p class="step-description">Accede con tu usuario y contraseña</p>
-                    <form onsubmit="handleClientAcceso(event)">
-                        <div class="form-group">
-                            <label for="accesoUsername">Usuario *</label>
-                            <input type="text" id="accesoUsername" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="accesoPassword">Contraseña *</label>
-                            <input type="password" id="accesoPassword" required>
-                        </div>
-                        <div id="accesoError" class="error-message"></div>
-                        <button type="submit" class="auth-btn">Iniciar Sesión</button>
-                    </form>
-                    <button class="back-btn" onclick="backToSelectType()">← Atrás</button>
-                    <button class="close-modal-btn" onclick="closeAuthModal()">&times;</button>
+                <!-- Formulario de Login -->
+                <div id="login" class="tab-content" style="display: none;">
+                  <form action="https://formspree.io" method="POST">
+                    <div class="form-group"><input type="email" name="email" placeholder="E-mail" required></div>
+                    <div class="form-group"><input type="password" name="password" placeholder="Contraseña" required></div>
+                    <button type="submit" class="btn-primary">Iniciar sesión</button>
+                  </form>
+                  <a href="#" class="forgot-pass">¿Has olvidado tu contraseña?</a>
                 </div>
             </div>
         </div>
@@ -1685,6 +1622,61 @@ Notas: ${pedido.notas || 'Ninguna'}`);
             }
         };
     </script>
+
+        <script>
+                function openTab(evt, tabName) {
+                    var contents = document.getElementsByClassName("tab-content");
+                    for (var i = 0; i < contents.length; i++) {
+                        contents[i].style.display = "none";
+                    }
+                    var links = document.getElementsByClassName("tab-link");
+                    for (var i = 0; i < links.length; i++) {
+                        links[i].className = links[i].className.replace(" active", "");
+                    }
+                    document.getElementById(tabName).style.display = "block";
+                    evt.currentTarget.className += " active";
+                }
+
+                // Ensure default tab shown when opening modal
+                function openAuthModalWithDefault() {
+                    var activeLink = document.querySelector('.modal-tabs .tab-link.active');
+                    if (activeLink) activeLink.click();
+                }
+
+                // Attach close behavior to .close-modal-btn if present
+                function closeAuthModal() {
+                    var modal = document.getElementById('authModal');
+                    if (modal) modal.classList.remove('active');
+                }
+
+                // Validación de contraseña en registro
+                (function(){
+                    var form = document.getElementById('form-registro');
+                    if (!form) return;
+                    form.onsubmit = function(e) {
+                        var pass = document.getElementById('pass').value;
+                        var confirmPass = document.getElementById('confirm_pass').value;
+                        var errorMsg = document.getElementById('error-msg');
+                        var regex = /^(?=.*[A-Z])(?=.*[!@#$%^&*(),.?":{}|<>]).{8,}$/;
+                        if (!regex.test(pass)) {
+                            e.preventDefault();
+                            errorMsg.innerText = 'La contraseña debe tener al menos 8 caracteres, una mayúscula y un símbolo.';
+                            errorMsg.style.display = 'block';
+                            document.getElementById('pass').focus();
+                            return;
+                        }
+                        if (pass !== confirmPass) {
+                            e.preventDefault();
+                            errorMsg.innerText = 'Las contraseñas no coinciden.';
+                            errorMsg.style.display = 'block';
+                            document.getElementById('confirm_pass').focus();
+                            return;
+                        }
+                        errorMsg.style.display = 'none';
+                        return true;
+                    };
+                })();
+        </script>
 </body>
 </html>
 =======
