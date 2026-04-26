@@ -923,42 +923,51 @@
     </footer>
 
     <!-- MODAL DE AUTENTICACIÓN -->
-    <div id="authModal" class="auth-modal">
-        <div class="auth-container">
-            <div class="auth-box">
-                <span class="close-btn close-modal-btn" onclick="closeAuthModal()">&times;</span>
+        <div id="authModal" class="auth-modal">
+                <div class="auth-container">
+                        <div class="auth-box">
+                                <button class="close-btn close-modal-btn" aria-label="Cerrar" onclick="closeAuthModal()">&times;</button>
 
-                <!-- Encabezado de pestañas -->
-                <div class="modal-tabs">
-                  <button class="tab-link active" onclick="openTab(event, 'registro')">Regístrate</button>
-                  <button class="tab-link" onclick="openTab(event, 'login')">Inicia sesión</button>
-                </div>
+                                <!-- Encabezado de pestañas -->
+                                <div class="modal-tabs">
+                                    <button class="tab-link active" onclick="openTab(event, 'registro')">Regístrate</button>
+                                    <button class="tab-link" onclick="openTab(event, 'login')">Inicia sesión</button>
+                                </div>
 
-                <hr class="tab-divider">
+                                <hr class="tab-divider">
 
-                <!-- Formulario de Registro -->
+                                <!-- Formulario de Registro -->
                                 <div id="registro" class="tab-content" style="display: block;">
-                                    <form id="form-registro" action="https://formspree.io" method="POST">
-                                        <div class="form-group"><input type="text" name="nombre" placeholder="Nombre completo" required></div>
-                                        <div class="form-group"><input type="email" name="email" placeholder="E-mail" required></div>
-                                        <!-- Campos de contraseña -->
-                                        <div class="form-group"><input type="password" id="pass" name="password" placeholder="Crear contraseña" required></div>
-                                        <div class="form-group"><input type="password" id="confirm_pass" placeholder="Confirmar contraseña" required></div>
+                                    <!-- FORMULARIO DE REGISTRO: envia a /registro -->
+                                    <form id="form-registro" action="/registro" method="POST">
+                                        <div class="form-group"><input type="text" name="username" id="regUsername" placeholder="Nombre completo" required></div>
+                                        <div class="form-group"><input type="email" name="email" id="regEmail" placeholder="E-mail" required></div>
+                                        <!-- Campos de contraseña con toggle -->
+                                        <div class="form-group pass-wrap">
+                                            <input type="password" id="pass" name="password" placeholder="Crear contraseña" required>
+                                            <button type="button" class="show-pass" onclick="togglePassword('pass', this)" aria-label="Mostrar contraseña">Mostrar</button>
+                                        </div>
+                                        <div class="form-group pass-wrap">
+                                            <input type="password" id="confirm_pass" name="confirm_password" placeholder="Confirmar contraseña" required>
+                                            <button type="button" class="show-pass" onclick="togglePassword('confirm_pass', this)" aria-label="Mostrar contraseña">Mostrar</button>
+                                        </div>
                                         <!-- Mensaje de error -->
                                         <p id="error-msg" style="color: #ff6048; font-size: 12px; margin-top: 5px; display: none;"></p>
-                                        <button type="submit" class="btn-primary">Crear cuenta</button>
+                                        <button type="submit" class="btn-primary">Crear cuenta y guardar en DB</button>
                                     </form>
                                 </div>
 
-                <!-- Formulario de Login -->
-                <div id="login" class="tab-content" style="display: none;">
-                  <form action="https://formspree.io" method="POST">
-                    <div class="form-group"><input type="email" name="email" placeholder="E-mail" required></div>
-                    <div class="form-group"><input type="password" name="password" placeholder="Contraseña" required></div>
-                    <button type="submit" class="btn-primary">Iniciar sesión</button>
-                  </form>
-                  <a href="#" class="forgot-pass">¿Has olvidado tu contraseña?</a>
-                </div>
+                                <!-- Formulario de Login -->
+                                <div id="login" class="tab-content" style="display: none;">
+                                    <form id="form-login" action="/login" method="POST">
+                                        <div class="form-group"><input type="email" id="loginEmail" name="email" placeholder="E-mail" required></div>
+                                        <div class="form-group pass-wrap"><input type="password" id="loginPassword" name="password" placeholder="Contraseña" required>
+                                                <button type="button" class="show-pass" onclick="togglePassword('loginPassword', this)" aria-label="Mostrar contraseña">Mostrar</button>
+                                        </div>
+                                        <button type="submit" class="btn-primary">Iniciar sesión</button>
+                                    </form>
+                                    <a href="#" class="forgot-pass">¿Has olvidado tu contraseña?</a>
+                                </div>
             </div>
         </div>
     </div>
@@ -1082,6 +1091,19 @@
         function closeAuthModal() {
             document.getElementById('authModal').classList.remove('active');
             clearAllForms();
+        }
+
+        // Alterna visibilidad de contraseña para un campo dado
+        function togglePassword(fieldId, btn) {
+            const input = document.getElementById(fieldId);
+            if (!input) return;
+            if (input.type === 'password') {
+                input.type = 'text';
+                btn.textContent = 'Ocultar';
+            } else {
+                input.type = 'password';
+                btn.textContent = 'Mostrar';
+            }
         }
 
         function clearAllForms() {

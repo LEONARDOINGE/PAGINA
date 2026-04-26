@@ -212,6 +212,52 @@ body {
     transform: translateY(0);
 }
 
+.auth-box {
+    position: relative;
+}
+
+/* Close button in modal */
+.close-btn {
+    position: absolute;
+    top: 12px;
+    right: 14px;
+    background: transparent;
+    border: none;
+    font-size: 26px;
+    line-height: 1;
+    cursor: pointer;
+    color: #333;
+}
+
+/* Password field wrapper to position toggle */
+.pass-wrap {
+    position: relative;
+}
+
+.pass-wrap input[type="password"],
+.pass-wrap input[type="text"] {
+    padding-right: 90px; /* espacio para el botón mostrar */
+}
+
+.show-pass {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--primary-color);
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+.show-pass:active {
+    transform: translateY(-50%) scale(0.98);
+}
+
 .error-message {
     color: #d32f2f;
     font-size: 0.9rem;
