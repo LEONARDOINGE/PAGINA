@@ -1,18 +1,27 @@
 {
-  "name": "pagina",
+  "name": "fototec",
   "version": "1.0.0",
-  "description": "- Modal de autenticación con dos pestañas: \"Iniciar Sesión\" y \"Registrarse\"\r - Los datos de usuarios se guardan en `localStorage` del navegador\r - Contraseña mínima de 6 caracteres",
-  "main": "index.js",
+  "description": "FotoTec - Sistema de reservas y gestion de clientes para fotografia profesional",
+  "main": "server.js",
   "scripts": {
     "start": "node server.js",
+    "dev": "node server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/LEONARDOINGE/PAGINA.git"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "fotografia",
+    "reservas",
+    "express",
+    "sqlite"
+  ],
+  "author": "FotoTec",
   "license": "ISC",
   "type": "commonjs",
   "bugs": {
@@ -24,7 +33,16 @@
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
-    "nodemailer": "^8.0.6",
+    "express-session": "^1.19.0",
+    "hono": "^4.12.15",
+    "jsonwebtoken": "^9.0.3",
+    "nodemailer": "^8.0.7",
+    "passport": "^0.7.0",
+    "passport-google-oauth20": "^2.0.0",
     "sqlite3": "^6.0.1"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260426.1",
+    "wrangler": "^4.86.0"
   }
 }

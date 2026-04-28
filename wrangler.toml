@@ -1,0 +1,13 @@
+name = "fototec"
+compatibility_date = "2024-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+pages_build_output_dir = "./"
+
+[dev]
+port = 8787
+
+[[d1_databases]]
+binding = "DB"
+database_name = "fototec-db"
+database_id = "01945907-77dd-4280-b5f2-4737bc12c34f"

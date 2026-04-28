@@ -1,9 +1,16 @@
 ﻿const sqlite3 = require("sqlite3").verbose();
 const path = require("path");
 const bcrypt = require("bcryptjs");
+const fs = require("fs");
 
-// Path to the database file
-const dbPath = path.join(__dirname, "database.db");
+// Database path - configurable via environment
+const dbPath = process.env.DATABASE_PATH || path.join(__dirname, "database.db");
+
+// Ensure directory exists for database
+const dbDir = path.dirname(dbPath);
+if (!fs.existsSync(dbDir)) {
+    fs.mkdirSync(dbDir, { recursive: true });
+}
 
 // Create or open the database
 const db = new sqlite3.Database(dbPath, (err) => {

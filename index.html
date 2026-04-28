@@ -6,6 +6,307 @@
     <title>fototec.com</title>
     <link rel="stylesheet" href="styles.css">
     <style>
+        /* ========== DECORACIONES CON  ========== */
+        .floating-decoration {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 999;
+            font-size: 2.5rem;
+            opacity: 0.4;
+            transition: all 0.3s ease;
+            animation: bounce 2s infinite;
+        }
+        .floating-decoration:hover {
+            opacity: 1;
+            transform: scale(1.2);
+        }
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+        .hero-decoration {
+            position: absolute;
+            font-size: 3rem;
+            opacity: 0.15;
+            z-index: 1;
+        }
+        .hero-decoration-left {
+            top: 20%;
+            left: 5%;
+            transform: rotate(-20deg);
+        }
+        .hero-decoration-right {
+            bottom: 20%;
+            right: 5%;
+            transform: rotate(20deg);
+        }
+        .section-decoration,
+        .section-decoration-dark {
+            text-align: center;
+            font-size: 1.5rem;
+            opacity: 0.3;
+            letter-spacing: 1rem;
+            margin-bottom: 1rem;
+        }
+        .section-decoration-dark {
+            color: #333;
+        }
+        .footer-decoration {
+            text-align: center;
+            font-size: 1.2rem;
+            opacity: 0.4;
+            letter-spacing: 0.8rem;
+            margin-bottom: 1rem;
+            padding-top: 1rem;
+        }
+        .footer-tagline {
+            font-size: 0.85rem;
+            color: #aaa;
+            margin-top: 0.5rem;
+        }
+        /* ========== FIN DECORACIONES ========== */
+
+        /* ========== MODAL AUTH NUEVO Y ESTETICO ========== */
+        .auth-split {
+            display: flex;
+            background: white;
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.3);
+            position: relative;
+            max-width: 800px;
+            width: 95%;
+            min-height: 500px;
+        }
+        .auth-close-btn {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            background: rgba(255,255,255,0.9);
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            z-index: 10;
+        }
+        .auth-close-btn:hover {
+            background: #ff6b6b;
+            color: white;
+            transform: rotate(90deg);
+        }
+        .auth-side {
+            flex: 1;
+            padding: 50px 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            transition: all 0.4s ease;
+        }
+        .auth-login-side {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .auth-register-side {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ff8e53 100%);
+            color: white;
+        }
+        .auth-side-hidden {
+            display: none;
+        }
+        .auth-side-header {
+            text-align: center;
+            margin-bottom: 35px;
+        }
+        .auth-logo {
+            font-size: 3.5rem;
+            margin-bottom: 15px;
+        }
+        .auth-side-header h2 {
+            font-size: 1.8rem;
+            margin: 0 0 8px 0;
+            font-weight: 700;
+        }
+        .auth-side-header p {
+            opacity: 0.85;
+            font-size: 0.95rem;
+            margin: 0;
+        }
+        .auth-side-form {
+            max-width: 320px;
+            margin: 0 auto;
+            width: 100%;
+        }
+        .auth-input-group {
+            position: relative;
+            margin-bottom: 18px;
+        }
+        .auth-input-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.1rem;
+            z-index: 1;
+        }
+        .auth-input-group input {
+            width: 100%;
+            padding: 15px 50px 15px 48px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s;
+            background: rgba(255,255,255,0.15);
+            color: white;
+        }
+        .auth-input-group input::placeholder {
+            color: rgba(255,255,255,0.7);
+        }
+        .auth-input-group input:focus {
+            outline: none;
+            border-color: white;
+            background: rgba(255,255,255,0.25);
+        }
+        .auth-toggle-pass {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.1rem;
+            opacity: 0.7;
+            transition: opacity 0.3s;
+        }
+        .auth-toggle-pass:hover {
+            opacity: 1;
+        }
+        .auth-error {
+            color: #ffeb3b;
+            font-size: 0.85rem;
+            margin-bottom: 15px;
+            text-align: center;
+            min-height: 22px;
+        }
+        .auth-submit-btn {
+            width: 100%;
+            padding: 16px;
+            background: white;
+            color: #667eea;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+        }
+        .auth-submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+        .auth-submit-register {
+            color: #ff6b6b;
+        }
+        .auth-submit-admin {
+            background: white;
+            color: #667eea;
+        }
+        .auth-switch-btn {
+            width: 100%;
+            padding: 14px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid rgba(255,255,255,0.4);
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 15px;
+        }
+        .auth-switch-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        /* Admin Modal */
+        .auth-admin-modal {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            backdrop-filter: blur(5px);
+        }
+        .auth-admin-modal.hidden {
+            display: none;
+        }
+        .auth-admin-content {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            max-width: 380px;
+            width: 90%;
+            position: relative;
+        }
+        .auth-admin-close {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: #999;
+        }
+        .auth-admin-close:hover {
+            color: #ff6b6b;
+        }
+        .auth-admin-content .auth-logo {
+            font-size: 3rem;
+        }
+        .auth-admin-content h2 {
+            color: #333;
+            margin: 0 0 25px 0;
+        }
+        /* Responsive */
+        @media (max-width: 768px) {
+            .auth-split {
+                flex-direction: column;
+                width: 95%;
+            }
+            .auth-side {
+                padding: 40px 25px;
+            }
+            .auth-login-side,
+            .auth-register-side {
+                display: none;
+            }
+            .auth-login-side.auth-side-hidden,
+            .auth-register-side.auth-side-hidden {
+                display: none;
+            }
+            .auth-login-side.auth-side-hidden,
+            .auth-register-side.auth-side-hidden {
+                display: flex !important;
+            }
+        }
+        /* ========== FIN MODAL AUTH ========== */
+
         /* Estilos para panel de administrador */
         .admin-panel {
             display: none;
@@ -209,6 +510,11 @@
     </style>
 </head>
 <body>
+    <!-- Decoracion flotante -->
+    <div class="floating-decoration">
+        <a href="#inicio" title="Ir arriba"></a>
+    </div>
+
     <!-- Contenedor Principal -->
     <div id="mainContent" class="main-content">
     <!-- Encabezado -->
@@ -216,7 +522,7 @@
         <nav class="navbar">
             <div class="container">
                 <div class="logo">
-                    <h1>FotoTec</h1>
+                    <h1>FotoTec </h1>
                 </div>
                 <button class="menu-toggle" id="menuToggle" onclick="toggleMenu()">
                     <span></span>
@@ -231,7 +537,8 @@
                     <li><a href="#papel">Impresiones</a></li>
                     <li><a href="#reservas">Reservas</a></li>
                     <li><a href="#contacto">Contacto</a></li>
-                    <li class="nav-login"><a href="#" onclick="openLoginModal()">🔐 Iniciar Sesión</a></li>
+                    <li class="nav-login"><a href="#" onclick="openLoginModal()">🔐 Login</a></li>
+                    <li class="nav-admin"><a href="#" onclick="openAuthAdmin()">🔧 Admin</a></li>
                 </ul>
                 <div id="userInfo" class="user-info">
                     <button class="login-btn-navbar" onclick="openLoginModal()">🔐 Iniciar Sesión</button>
@@ -242,8 +549,10 @@
 
     <!-- Sección Hero -->
     <section id="inicio" class="hero">
+        <div class="hero-decoration hero-decoration-left"></div>
+        <div class="hero-decoration hero-decoration-right"></div>
         <div class="hero-content">
-            <h2>Capturamos tus Momentos Especiales</h2>
+            <h2>Capturamos tus Momentos Especiales </h2>
             <p>Fotografía profesional de calidad y creatividad</p>
             <button class="cta-button" onclick="document.getElementById('galeria').scrollIntoView({behavior:'smooth'})">Ver Galería</button>
         </div>
@@ -251,29 +560,30 @@
 
     <!-- Promociones Destacadas -->
     <section id="promociones" class="promociones">
+        <div class="section-decoration">  </div>
         <div class="container">
-            <h2>🎁 Promociones Exclusivas</h2>
+            <h2>🎁 Promociones Exclusivas </h2>
             <div class="promociones-grid">
                 <div class="promo-card">
                     <div class="promo-icon">🎂</div>
                     <h3>Descuento de Cumpleaños</h3>
                     <p class="promo-discount">30% OFF</p>
                     <p>Si eres cliente frecuente, obtén un descuento del 30% en tu sesión fotográfica durante el mes de tu cumpleaños.</p>
-                    <span class="promo-badge">EXCLUSIVO CLIENTES</span>
+                    <span class="promo-badge">EXCLUSIVO CLIENTES </span>
                 </div>
                 <div class="promo-card">
                     <div class="promo-icon">🌸</div>
                     <h3>Sets de Temporada</h3>
                     <p class="promo-discount">10 FOTOS</p>
                     <p><strong>$1,500</strong> | Día de las Madres, Navidad, San Valentín y más. Entrega Digital + Física.</p>
-                    <span class="promo-badge">DISPONIBLE AHORA</span>
+                    <span class="promo-badge">DISPONIBLE AHORA </span>
                 </div>
                 <div class="promo-card">
                     <div class="promo-icon">💒</div>
                     <h3>Sesiones de Boda</h3>
                     <p class="promo-discount">25% OFF</p>
                     <p>Obtén un descuento del 25% en 5 horas de cobertura fotográfica profesional en tu evento.</p>
-                    <span class="promo-badge">CONSULTA DISPONIBILIDAD</span>
+                    <span class="promo-badge">CONSULTA DISPONIBILIDAD </span>
                 </div>
             </div>
         </div>
@@ -396,9 +706,10 @@
 
     <!-- Guía de Paper Tipos -->
     <section id="papel" class="papel">
+        <div class="section-decoration-dark">  </div>
         <div class="container">
-            <h2>Guía de Impresión: Elige tu Acabado Ideal</h2>
-            <p class="paper-intro">En FOTOTEC, la calidad no termina en la cámara. El tipo de papel que elijas determinará cómo se preservan tus recuerdos.</p>
+            <h2>Guía de Impresión: Elige tu Acabado Ideal </h2>
+            <p class="paper-intro">En FOTOTEC , la calidad no termina en la cámara. El tipo de papel que elijas determinará cómo se preservan tus recuerdos.</p>
             
             <div class="papel-grid">
                 <!-- Papel Brillante -->
@@ -504,63 +815,80 @@
 
     <!-- Galería de Trabajo -->
     <section id="galeria" class="galeria">
+        <div class="section-decoration">  </div>
         <div class="container">
-            <h2>Nuestro Trabajo</h2>
+            <h2>Nuestro Trabajo </h2>
             <p class="galeria-tagline">Galería de sesiones anteriores de clientes satisfechos</p>
             <div class="galeria-grid">
                 <div class="galeria-item">
-                    <div class="galeria-placeholder">📷</div>
+                    <div class="galeria-placeholder">
+                        <img src="https://picsum.photos/seed/family1/400/300" alt="Sesión Familia" loading="lazy">
+                    </div>
                     <div class="galeria-info">
-                        <h4>Sesión Familia</h4>
+                        <h4>Sesión Familia </h4>
                         <p>Fondo Blanco | Color</p>
                     </div>
                 </div>
                 <div class="galeria-item">
-                    <div class="galeria-placeholder">👥</div>
+                    <div class="galeria-placeholder">
+                        <img src="https://picsum.photos/seed/portrait2/400/300" alt="Retratos" loading="lazy">
+                    </div>
                     <div class="galeria-info">
-                        <h4>Retratos Profesionales</h4>
+                        <h4>Retratos Profesionales </h4>
                         <p>B&W | Dirección Fotográfica</p>
                     </div>
                 </div>
                 <div class="galeria-item">
-                    <div class="galeria-placeholder">💒</div>
+                    <div class="galeria-placeholder">
+                        <img src="https://picsum.photos/seed/wedding3/400/300" alt="Bodas" loading="lazy">
+                    </div>
                     <div class="galeria-info">
-                        <h4>Bodas</h4>
+                        <h4>Bodas </h4>
                         <p>Cobertura Completa | 8 horas</p>
                     </div>
                 </div>
                 <div class="galeria-item">
-                    <div class="galeria-placeholder">🌸</div>
+                    <div class="galeria-placeholder">
+                        <img src="https://picsum.photos/seed/spring4/400/300" alt="Día de Madres" loading="lazy">
+                    </div>
                     <div class="galeria-info">
-                        <h4>Set Día de Madres</h4>
+                        <h4>Set Día de Madres </h4>
                         <p>10 Fotos | Temporada 2025</p>
                     </div>
                 </div>
                 <div class="galeria-item">
-                    <div class="galeria-placeholder">🎄</div>
+                    <div class="galeria-placeholder">
+                        <img src="https://picsum.photos/seed/christmas5/400/300" alt="Navidad" loading="lazy">
+                    </div>
                     <div class="galeria-info">
-                        <h4>Set Navidad</h4>
+                        <h4>Set Navidad </h4>
                         <p>10 Fotos | Temporada 2025</p>
                     </div>
                 </div>
                 <div class="galeria-item">
-                    <div class="galeria-placeholder">💝</div>
+                    <div class="galeria-placeholder">
+                        <img src="https://picsum.photos/seed/valentine6/400/300" alt="San Valentín" loading="lazy">
+                    </div>
                     <div class="galeria-info">
-                        <h4>Set San Valentín</h4>
+                        <h4>Set San Valentín </h4>
                         <p>10 Fotos | Parejas</p>
                     </div>
                 </div>
                 <div class="galeria-item">
-                    <div class="galeria-placeholder">👶</div>
+                    <div class="galeria-placeholder">
+                        <img src="https://picsum.photos/seed/baby7/400/300" alt="Sesión Infantil" loading="lazy">
+                    </div>
                     <div class="galeria-info">
-                        <h4>Sesión Infantil</h4>
+                        <h4>Sesión Infantil </h4>
                         <p>Color | Fondo Temático</p>
                     </div>
                 </div>
                 <div class="galeria-item">
-                    <div class="galeria-placeholder">🖼️</div>
+                    <div class="galeria-placeholder">
+                        <img src="https://picsum.photos/seed/art8/400/300" alt="Cuadro Panorámico" loading="lazy">
+                    </div>
                     <div class="galeria-info">
-                        <h4>Cuadro Panorámico</h4>
+                        <h4>Cuadro Panorámico </h4>
                         <p>Fine Art | 24x36</p>
                     </div>
                 </div>
@@ -570,9 +898,10 @@
 
     <!-- Sistema de Reservas -->
     <section id="reservas" class="reservas">
+        <div class="section-decoration">  </div>
         <div class="container">
-            <h2>Haz tu Reserva</h2>
-            <p class="reservas-tagline">Agenda tu sesión fotográfica en pocos pasos</p>
+            <h2>Haz tu Reserva </h2>
+            <p class="reservas-tagline">Agenda tu sesión fotográfica en pocos pasos </p>
             
             <div class="reservas-content">
                 <div class="reservas-form-container">
@@ -885,11 +1214,13 @@
 
     <!-- Footer -->
     <footer class="footer">
+        <div class="footer-decoration">    </div>
         <div class="container">
             <div class="footer-content">
                 <div class="footer-section">
-                    <h5>FOTOTEC</h5>
+                    <h5>FOTOTEC </h5>
                     <p>Donde cada momento se convierte en arte.</p>
+                    <p class="footer-tagline">Hecho con  para ustedes</p>
                 </div>
                 <div class="footer-section">
                     <h5>Enlaces Rápidos</h5>
@@ -901,7 +1232,7 @@
                     </ul>
                 </div>
                 <div class="footer-section">
-                    <h5>Síguenos</h5>
+                    <h5>Síguenos </h5>
                     <ul>
                         <li><a href="#">📘 Facebook</a></li>
                         <li><a href="#">📷 Instagram</a></li>
@@ -920,159 +1251,93 @@
         </div>
     </footer>
 
-    <!-- MODAL DE AUTENTICACIÓN -->
-<<<<<<< HEAD
-        <div id="authModal" class="auth-modal">
-                <div class="auth-container">
-                        <div class="auth-box">
-                                <button class="close-btn close-modal-btn" aria-label="Cerrar" onclick="closeAuthModal()">&times;</button>
-
-                                <!-- Encabezado de pestañas -->
-                                <div class="modal-tabs">
-                                    <button class="tab-link active" onclick="openTab(event, 'registro')">Regístrate</button>
-                                    <button class="tab-link" onclick="openTab(event, 'login')">Inicia sesión</button>
-                                </div>
-
-                                <hr class="tab-divider">
-
-                                <!-- Formulario de Registro -->
-                                <div id="registro" class="tab-content" style="display: block;">
-                                    <!-- FORMULARIO DE REGISTRO: envia a /registro -->
-                                    <form id="form-registro" action="/registro" method="POST">
-                                        <div class="form-group"><input type="text" name="username" id="regUsername" placeholder="Nombre completo" required></div>
-                                        <div class="form-group"><input type="email" name="email" id="regEmail" placeholder="E-mail" required></div>
-                                        <!-- Campos de contraseña con toggle -->
-                                        <div class="form-group pass-wrap">
-                                            <input type="password" id="pass" name="password" placeholder="Crear contraseña" required>
-                                            <button type="button" class="show-pass" onclick="togglePassword('pass', this)" aria-label="Mostrar contraseña">Mostrar</button>
-                                        </div>
-                                        <div class="form-group pass-wrap">
-                                            <input type="password" id="confirm_pass" name="confirm_password" placeholder="Confirmar contraseña" required>
-                                            <button type="button" class="show-pass" onclick="togglePassword('confirm_pass', this)" aria-label="Mostrar contraseña">Mostrar</button>
-                                        </div>
-                                        <!-- Mensaje de error -->
-                                        <p id="error-msg" style="color: #ff6048; font-size: 12px; margin-top: 5px; display: none;"></p>
-                                        <button type="submit" class="btn-primary">Crear cuenta y guardar en DB</button>
-                                    </form>
-                                </div>
-
-                                <!-- Formulario de Login -->
-                                <div id="login" class="tab-content" style="display: none;">
-                                    <form id="form-login" action="/login" method="POST">
-                                        <div class="form-group"><input type="email" id="loginEmail" name="email" placeholder="E-mail" required></div>
-                                        <div class="form-group pass-wrap"><input type="password" id="loginPassword" name="password" placeholder="Contraseña" required>
-                                                <button type="button" class="show-pass" onclick="togglePassword('loginPassword', this)" aria-label="Mostrar contraseña">Mostrar</button>
-                                        </div>
-                                        <button type="submit" class="btn-primary">Iniciar sesión</button>
-                                    </form>
-                                    <a href="#" class="forgot-pass">¿Has olvidado tu contraseña?</a>
-                                </div>
-=======
+<!-- MODAL DE AUTENTICACIÓN -->
     <div id="authModal" class="auth-modal">
         <div class="auth-container">
-            <div class="auth-box">
-                <!-- PASO 1: Seleccionar tipo de usuario -->
-                <div id="selectUserType" class="auth-step">
-                    <h2>¿Qué tipo de usuario eres?</h2>
-                    <p class="step-description">Selecciona tu tipo de cuenta para continuar</p>
-                    <div class="user-type-buttons">
-                        <button class="user-type-btn" onclick="selectUserType('cliente')">
-                            <span class="icon">�</span>
-                            <span class="label">Registro</span>
-                        </button>
-                        <button class="user-type-btn" onclick="selectUserType('acceso')">
-                            <span class="icon">👤</span>
-                            <span class="label">Cliente</span>
-                        </button>
+            <div class="auth-split">
+                <button class="close-modal-btn auth-close-btn" onclick="closeAuthModal()">&times;</button>
+                
+                <!-- LADO IZQUIERDO - LOGIN -->
+                <div class="auth-side auth-login-side">
+                    <div class="auth-side-header">
+                        <div class="auth-logo">🔐</div>
+                        <h2>Iniciar Sesión</h2>
+                        <p>¿Ya tienes cuenta? Ingresa aquí</p>
                     </div>
-                    <button class="close-modal-btn" onclick="closeAuthModal()">&times;</button>
+                    <form onsubmit="handleAuthLogin(event)" class="auth-side-form">
+                        <div class="auth-input-group">
+                            <span class="auth-input-icon">👤</span>
+                            <input type="text" id="authLoginUsername" placeholder="Usuario o correo" required>
+                        </div>
+                        <div class="auth-input-group">
+                            <span class="auth-input-icon">🔒</span>
+                            <input type="password" id="authLoginPassword" placeholder="Contraseña" required>
+                            <button type="button" class="auth-toggle-pass" onclick="toggleAuthPassword('authLoginPassword', this)">👁️</button>
+                        </div>
+                        <div id="authLoginError" class="auth-error"></div>
+                        <button type="submit" class="auth-submit-btn">Entrar </button>
+                        <button type="button" class="auth-switch-btn" onclick="showAuthSection('register')">¿No tienes cuenta? Regístrate </button>
+                    </form>
                 </div>
 
-                <!-- PASO 2: CLIENTE - Registro -->
-                <div id="clientRegisterStep" class="auth-step hidden">
-                    <h2>Crear Cuenta de Cliente</h2>
-                    <p class="step-description">Completa tus datos personales</p>
-                    <form onsubmit="handleClientRegister(event)">
-                        <div class="form-group">
-                            <label for="clientName">Nombre Completo *</label>
-                            <input type="text" id="clientName" required>
+                <!-- LADO DERECHO - REGISTRO -->
+                <div class="auth-side auth-register-side">
+                    <div class="auth-side-header">
+                        <div class="auth-logo">📝</div>
+                        <h2>Crear Cuenta</h2>
+                        <p>Regístrate para hacer reservas</p>
+                    </div>
+                    <form onsubmit="handleAuthRegister(event)" class="auth-side-form">
+                        <div class="auth-input-group">
+                            <span class="auth-input-icon">👤</span>
+                            <input type="text" id="authRegName" placeholder="Nombre completo" required>
                         </div>
-                        <div class="form-group">
-                            <label for="clientEmail">Correo Electrónico *</label>
-                            <input type="email" id="clientEmail" required>
+                        <div class="auth-input-group">
+                            <span class="auth-input-icon">📧</span>
+                            <input type="email" id="authRegEmail" placeholder="Correo electrónico" required>
                         </div>
-                        <div class="form-group">
-                            <label for="clientPhone">Teléfono</label>
-                            <input type="tel" id="clientPhone">
+                        <div class="auth-input-group">
+                            <span class="auth-input-icon">🐱</span>
+                            <input type="text" id="authRegUsername" placeholder="Nombre de usuario" required>
                         </div>
-                        <div class="form-group">
-                            <label for="clientAddress">Dirección</label>
-                            <input type="text" id="clientAddress">
+                        <div class="auth-input-group">
+                            <span class="auth-input-icon">🔑</span>
+                            <input type="password" id="authRegPassword" placeholder="Contraseña (mín. 6)" required minlength="6">
+                            <button type="button" class="auth-toggle-pass" onclick="toggleAuthPassword('authRegPassword', this)">👁️</button>
                         </div>
-                        <div class="form-group">
-                            <label for="clientUsername">Nombre de Usuario *</label>
-                            <input type="text" id="clientUsername" required>
+                        <div class="auth-input-group">
+                            <span class="auth-input-icon">🔐</span>
+                            <input type="password" id="authRegConfirm" placeholder="Confirmar contraseña" required>
                         </div>
-                        <div class="form-group">
-                            <label for="clientPassword">Contraseña *</label>
-                            <input type="password" id="clientPassword" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="clientConfirm">Confirmar Contraseña *</label>
-                            <input type="password" id="clientConfirm" required>
-                        </div>
-                        <div id="clientRegisterError" class="error-message"></div>
-                        <button type="submit" class="auth-btn">Crear Cuenta</button>
+                        <div id="authRegError" class="auth-error"></div>
+                        <button type="submit" class="auth-submit-btn auth-submit-register">Crear Cuenta </button>
+                        <button type="button" class="auth-switch-btn auth-switch-btn-light" onclick="showAuthSection('login')">¿Ya tienes cuenta? Inicia sesión</button>
                     </form>
-                    <button class="back-btn" onclick="backToSelectType()">← Atrás</button>
-                    <button class="close-modal-btn" onclick="closeAuthModal()">&times;</button>
                 </div>
 
-                <!-- PASO 3: CLIENTE - Login -->
-                <div id="clientLoginStep" class="auth-step hidden">
-                    <h2>Iniciar Sesión - Cliente</h2>
-                    <p class="step-description">Accede a tu cuenta</p>
-                    <form onsubmit="handleClientLogin(event)">
-                        <div class="form-group">
-                            <label for="clientLoginUsername">Usuario, Email o Teléfono *</label>
-                            <input type="text" id="clientLoginUsername" placeholder="Ingresa tu usuario, correo o teléfono" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="clientLoginPassword">Contraseña *</label>
-                            <input type="password" id="clientLoginPassword" required>
-                        </div>
-                        <div id="clientLoginError" class="error-message"></div>
-                        <button type="submit" class="auth-btn">Iniciar Sesión</button>
-                    </form>
-                    <p class="form-info">¿Quieres crear una cuenta? <button class="link-btn" onclick="backToSelectType()">Registrate aquí</button></p>
-                    <button class="back-btn" onclick="backToSelectType()">← Atrás</button>
-                    <button class="close-modal-btn" onclick="closeAuthModal()">&times;</button>
+                <!-- MODAL ADMIN (superpuesto) -->
+                <div id="authAdminModal" class="auth-admin-modal hidden">
+                    <div class="auth-admin-content">
+                        <button class="auth-admin-close" onclick="closeAuthAdmin()">&times;</button>
+                        <div class="auth-logo">🔧</div>
+                        <h2>Acceso Admin</h2>
+                        <form onsubmit="handleAuthAdmin(event)">
+                            <div class="auth-input-group">
+                                <span class="auth-input-icon">👤</span>
+                                <input type="text" id="authAdminUsername" placeholder="Usuario admin" required>
+                            </div>
+                            <div class="auth-input-group">
+                                <span class="auth-input-icon">🔑</span>
+                                <input type="password" id="authAdminPassword" placeholder="Contraseña" required>
+                                <button type="button" class="auth-toggle-pass" onclick="toggleAuthPassword('authAdminPassword', this)">👁️</button>
+                            </div>
+                            <div id="authAdminError" class="auth-error"></div>
+                            <button type="submit" class="auth-submit-btn auth-submit-admin">Entrar como Admin 🔧</button>
+                        </form>
+                    </div>
                 </div>
-
-                <!-- PASO 4: CLIENTE - Acceso Simple -->
-                <div id="accesoClienteStep" class="auth-step hidden">
-                    <h2>Iniciar Sesión</h2>
-                    <p class="step-description">Accede con tu usuario y contraseña</p>
-                    <form onsubmit="handleClientAcceso(event)">
-                        <div class="form-group">
-                            <label for="accesoUsername">Usuario *</label>
-                            <input type="text" id="accesoUsername" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="accesoPassword">Contraseña *</label>
-                            <input type="password" id="accesoPassword" required>
-                        </div>
-                        <div id="accesoError" class="error-message"></div>
-                        <button type="submit" class="auth-btn">Iniciar Sesión</button>
-                    </form>
-                    <button class="back-btn" onclick="backToSelectType()">← Atrás</button>
-                    <button class="close-modal-btn" onclick="closeAuthModal()">&times;</button>
-                </div>
->>>>>>> f9cbc238828c374abb4819880866ba586e847293
             </div>
         </div>
-    </div>
-
     </div>
 
     <!-- Script para funcionalidad -->
@@ -1099,66 +1364,64 @@
 
         // ============ SISTEMA DE AUTENTICACIÓN ============
         const authSystem = {
-            clients: JSON.parse(localStorage.getItem('fotovecClients')) || [],
-            admins: [
-                { id: 1, username: 'admin', password: '12345' }
-            ],
             currentUser: JSON.parse(localStorage.getItem('fotovecCurrentUser')) || null,
 
-            registerClient(name, username, email, phone, address, password) {
-                if (this.clients.find(u => u.username === username)) {
-                    return { success: false, message: 'El usuario ya existe' };
+            async register(name, username, email, password) {
+                try {
+                    const response = await fetch('/api/register', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name, username, email, password })
+                    });
+                    const data = await response.json();
+                    if (response.ok) {
+                        return { success: true, message: 'Cuenta creada exitosamente ' };
+                    } else {
+                        return { success: false, message: data.error || 'Error en el registro' };
+                    }
+                } catch (error) {
+                    return { success: false, message: 'Error de conexión con el servidor' };
                 }
-                if (this.clients.find(u => u.email === email)) {
-                    return { success: false, message: 'El email ya está registrado' };
-                }
-                const newClient = {
-                    id: Date.now(),
-                    name,
-                    username,
-                    email,
-                    phone,
-                    address,
-                    password,
-                    userType: 'cliente',
-                    createdAt: new Date().toLocaleString('es-ES')
-                };
-                this.clients.push(newClient);
-                localStorage.setItem('fotovecClients', JSON.stringify(this.clients));
-                return { success: true, message: 'Cuenta creada exitosamente' };
             },
 
-            loginClient(username, password) {
-                const client = this.clients.find(u => 
-                    (u.username === username || u.email === username || u.phone === username) && u.password === password
-                );
-                if (client) {
-                    this.currentUser = { 
-                        id: client.id, 
-                        name: client.name, 
-                        username: client.username, 
-                        email: client.email,
-                        userType: 'cliente'
-                    };
-                    localStorage.setItem('fotovecCurrentUser', JSON.stringify(this.currentUser));
-                    return { success: true, message: 'Inicio de sesión exitoso' };
+            async login(usernameOrEmail, password) {
+                try {
+                    const response = await fetch('/api/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ usernameOrEmail, password })
+                    });
+                    const data = await response.json();
+                    if (response.ok) {
+                        this.currentUser = data.user;
+                        localStorage.setItem('fotovecCurrentUser', JSON.stringify(this.currentUser));
+                        return { success: true, message: 'Bienvenido ' };
+                    } else {
+                        return { success: false, message: data.error || 'Credenciales incorrectas' };
+                    }
+                } catch (error) {
+                    return { success: false, message: 'Error de conexión con el servidor' };
                 }
-                return { success: false, message: 'Usuario, correo o teléfono y contraseña incorrectos' };
             },
 
-            loginAdmin(username, password) {
-                const admin = this.admins.find(a => a.username === username && a.password === password);
-                if (admin) {
-                    this.currentUser = { 
-                        id: admin.id, 
-                        name: 'Administrador', 
-                        username: admin.username,
-                        userType: 'administrador'
-                    };
-                    localStorage.setItem('fotovecCurrentUser', JSON.stringify(this.currentUser));
-                    return { success: true, message: 'Acceso de administrador exitoso' };
+            async loginAdmin(username, password) {
+                try {
+                    const response = await fetch('/api/verificar-admin', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username, password })
+                    });
+                    const data = await response.json();
+                    if (response.ok && data.success) {
+                        this.currentUser = data.user;
+                        localStorage.setItem('fotovecCurrentUser', JSON.stringify(this.currentUser));
+                        return { success: true, message: 'Admin conectado 🔧' };
+                    } else {
+                        return { success: false, message: data.error || 'Credenciales incorrectas' };
+                    }
+                } catch (error) {
+                    return { success: false, message: 'Error de conexión con el servidor' };
                 }
-                return { success: false, message: 'Usuario o contraseña de administrador incorrectos' };
             },
 
             logout() {
@@ -1167,112 +1430,132 @@
             }
         };
 
-        // Funciones de navegación entre pasos
-        function selectUserType(type) {
-            document.getElementById('selectUserType').classList.add('hidden');
-            if (type === 'cliente') {
-                document.getElementById('clientRegisterStep').classList.remove('hidden');
-            } else if (type === 'acceso') {
-                document.getElementById('accesoClienteStep').classList.remove('hidden');
+        // ============ FUNCIONES DEL MODAL NUEVO ============
+        function showAuthSection(section) {
+            const loginSide = document.querySelector('.auth-login-side');
+            const registerSide = document.querySelector('.auth-register-side');
+            
+            if (section === 'register') {
+                loginSide.classList.add('auth-side-hidden');
+                registerSide.classList.remove('auth-side-hidden');
+            } else {
+                registerSide.classList.add('auth-side-hidden');
+                loginSide.classList.remove('auth-side-hidden');
             }
-        }
-
-        function backToSelectType() {
-            document.querySelectorAll('.auth-step').forEach(step => step.classList.add('hidden'));
-            document.getElementById('selectUserType').classList.remove('hidden');
-            clearAllForms();
+            document.getElementById('authLoginError').textContent = '';
+            document.getElementById('authRegError').textContent = '';
         }
 
         function openLoginModal() {
             document.getElementById('authModal').classList.add('active');
-            document.querySelectorAll('.auth-step').forEach(step => step.classList.add('hidden'));
-            document.getElementById('selectUserType').classList.remove('hidden');
+            showAuthSection('login');
         }
 
         function closeAuthModal() {
             document.getElementById('authModal').classList.remove('active');
-            clearAllForms();
+            clearAuthForms();
         }
 
-        // Alterna visibilidad de contraseña para un campo dado
-        function togglePassword(fieldId, btn) {
-            const input = document.getElementById(fieldId);
-            if (!input) return;
+        function closeAuthAdmin() {
+            document.getElementById('authAdminModal').classList.add('hidden');
+        }
+
+        function openAuthAdmin() {
+            document.getElementById('authModal').classList.add('active');
+            document.getElementById('authAdminModal').classList.remove('hidden');
+            document.getElementById('authAdminUsername').value = '';
+            document.getElementById('authAdminPassword').value = '';
+            document.getElementById('authAdminError').textContent = '';
+        }
+
+        function clearAuthForms() {
+            const forms = document.querySelectorAll('#authModal input');
+            forms.forEach(input => input.value = '');
+            document.querySelectorAll('.auth-error').forEach(err => err.textContent = '');
+        }
+
+        function toggleAuthPassword(inputId, btn) {
+            const input = document.getElementById(inputId);
             if (input.type === 'password') {
                 input.type = 'text';
-                btn.textContent = 'Ocultar';
+                btn.textContent = '🙈';
             } else {
                 input.type = 'password';
-                btn.textContent = 'Mostrar';
+                btn.textContent = '👁️';
             }
         }
 
-        function clearAllForms() {
-            document.querySelectorAll('input, textarea').forEach(input => {
-                if (input.closest('#authModal')) input.value = '';
-            });
-            document.querySelectorAll('.error-message').forEach(msg => msg.textContent = '');
+        async function handleAuthLogin(e) {
+            e.preventDefault();
+            const username = document.getElementById('authLoginUsername').value;
+            const password = document.getElementById('authLoginPassword').value;
+            const errorDiv = document.getElementById('authLoginError');
+
+            if (!username || !password) {
+                errorDiv.textContent = 'Por favor completa todos los campos';
+                return;
+            }
+
+            const result = await authSystem.login(username, password);
+            if (result.success) {
+                closeAuthModal();
+                showUserProfile();
+            } else {
+                errorDiv.textContent = result.message;
+            }
         }
 
-        // Funciones de registro e inicio de sesión
-        function handleClientRegister(e) {
+        async function handleAuthRegister(e) {
             e.preventDefault();
-            const name = document.getElementById('clientName').value;
-            const email = document.getElementById('clientEmail').value;
-            const phone = document.getElementById('clientPhone').value;
-            const address = document.getElementById('clientAddress').value;
-            const username = document.getElementById('clientUsername').value;
-            const password = document.getElementById('clientPassword').value;
-            const confirm = document.getElementById('clientConfirm').value;
+            const name = document.getElementById('authRegName').value;
+            const username = document.getElementById('authRegUsername').value;
+            const email = document.getElementById('authRegEmail').value;
+            const password = document.getElementById('authRegPassword').value;
+            const confirm = document.getElementById('authRegConfirm').value;
+            const errorDiv = document.getElementById('authRegError');
+
+            if (!name || !username || !email || !password || !confirm) {
+                errorDiv.textContent = 'Por favor completa todos los campos';
+                return;
+            }
 
             if (password !== confirm) {
-                document.getElementById('clientRegisterError').textContent = 'Las contraseñas no coinciden';
+                errorDiv.textContent = 'Las contraseñas no coinciden ';
                 return;
             }
+
             if (password.length < 6) {
-                document.getElementById('clientRegisterError').textContent = 'La contraseña debe tener mínimo 6 caracteres';
+                errorDiv.textContent = 'La contraseña debe tener al menos 6 caracteres';
                 return;
             }
 
-            const result = authSystem.registerClient(name, username, email, phone, address, password);
+            const result = await authSystem.register(name, username, email, password);
             if (result.success) {
-                document.getElementById('clientRegisterError').textContent = 'Registro exitoso. Ahora inicia sesión';
-                document.getElementById('clientRegisterError').style.color = 'green';
-                setTimeout(() => {
-                    document.getElementById('clientRegisterStep').classList.add('hidden');
-                    document.getElementById('clientLoginStep').classList.remove('hidden');
-                    clearAllForms();
-                }, 2000);
+                errorDiv.style.color = '#28a745';
+                errorDiv.textContent = '¡Cuenta creada! Ahora inicia sesión ';
+                setTimeout(() => switchAuthTab('login'), 1500);
             } else {
-                document.getElementById('clientRegisterError').textContent = result.message;
+                errorDiv.textContent = result.message;
             }
         }
 
-        function handleClientLogin(e) {
+        async function handleAuthAdmin(e) {
             e.preventDefault();
-            const username = document.getElementById('clientLoginUsername').value;
-            const password = document.getElementById('clientLoginPassword').value;
+            const username = document.getElementById('authAdminUsername').value;
+            const password = document.getElementById('authAdminPassword').value;
+            const errorDiv = document.getElementById('authAdminError');
 
-            const result = authSystem.loginClient(username, password);
+            if (!username || !password) {
+                errorDiv.textContent = 'Por favor completa todos los campos';
+                return;
+            }
+
+            const result = await authSystem.loginAdmin(username, password);
             if (result.success) {
                 closeAuthModal();
                 showUserProfile();
             } else {
-                document.getElementById('clientLoginError').textContent = result.message;
-            }
-        }
-
-        function handleClientAcceso(e) {
-            e.preventDefault();
-            const username = document.getElementById('accesoUsername').value;
-            const password = document.getElementById('accesoPassword').value;
-
-            const result = authSystem.loginClient(username, password);
-            if (result.success) {
-                closeAuthModal();
-                showUserProfile();
-            } else {
-                document.getElementById('accesoError').textContent = result.message;
+                errorDiv.textContent = result.message;
             }
         }
 
@@ -1333,9 +1616,27 @@
             const contactForm = document.getElementById('contactForm');
             
             if (reservasForm) {
-                reservasForm.addEventListener('submit', function(e) {
+                reservasForm.addEventListener('submit', async function(e) {
                     e.preventDefault();
-                    alert('¡Gracias por tu reserva! Te contactaremos pronto para confirmar.');
+                    const formData = new FormData(reservasForm);
+                    const data = Object.fromEntries(formData.entries());
+
+                    try {
+                        const response = await fetch('/enviar-reserva', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(data)
+                        });
+                        const result = await response.json();
+                        if (result.success) {
+                            alert('¡Gracias por tu reserva! Te contactaremos pronto para confirmar.');
+                            reservasForm.reset();
+                        } else {
+                            alert('Error: ' + (result.error || 'No se pudo enviar la reserva'));
+                        }
+                    } catch (error) {
+                        alert('Error de conexión. Por favor intenta más tarde.');
+                    }
                 });
             }
             

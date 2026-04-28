@@ -1,4 +1,8 @@
-# Dependencies
+client_secret_1046319903572-1smrcfm9eskjnshg6og6l3gdpcq4fev4.apps.googleusercontent.com.json
+
+# Ignore other local config
+.env
+node_modules/# Dependencies
 node_modules/
 npm-debug.log
 yarn-error.log
