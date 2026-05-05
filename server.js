@@ -46,19 +46,16 @@ app.post("/api/register", (req, res) => {
 
     const hashedPassword = bcrypt.hashSync(password, 10);
 
-    db.run(
-        `INSERT INTO users (name, username, email, password) VALUES (?, ?, ?, ?)`,
-        [name, username, email, hashedPassword],
-        function(err) {
-            if (err) {
-                if (err.message.includes("UNIQUE constraint failed")) {
-                    return res.status(400).json({ error: "Username or email already exists" });
-                }
-                return res.status(500).json({ error: "Database error" });
-            }
-            res.json({ message: "User registered successfully", userId: this.lastID });
+    try {
+        const stmt = db.prepare(`INSERT INTO users (name, username, email, password) VALUES (?, ?, ?, ?)`);
+        const result = stmt.run(name, username, email, hashedPassword);
+        res.json({ message: "User registered successfully", userId: result.lastInsertRowid });
+    } catch (err) {
+        if (err.message.includes("UNIQUE constraint failed")) {
+            return res.status(400).json({ error: "Username or email already exists" });
         }
-    );
+        return res.status(500).json({ error: "Database error" });
+    }
 });
 
 app.post("/api/login", (req, res) => {
@@ -68,37 +65,36 @@ app.post("/api/login", (req, res) => {
         return res.status(400).json({ error: "Username/email and password are required" });
     }
 
-    db.get(
-        `SELECT * FROM users WHERE username = ? OR email = ?`,
-        [usernameOrEmail, usernameOrEmail],
-        (err, user) => {
-            if (err) {
-                return res.status(500).json({ error: "Database error" });
-            }
-            if (!user) {
-                return res.status(401).json({ error: "Invalid credentials" });
-            }
+    try {
+        const stmt = db.prepare(`SELECT * FROM users WHERE username = ? OR email = ?`);
+        const user = stmt.get(usernameOrEmail, usernameOrEmail);
 
-            const isValidPassword = bcrypt.compareSync(password, user.password);
-            if (!isValidPassword) {
-                return res.status(401).json({ error: "Invalid credentials" });
-            }
-
-            const { password: _, role, ...userWithoutPassword } = user;
-            const userType = role === 'admin' ? 'administrador' : 'cliente';
-            const userWithUserType = { ...userWithoutPassword, userType };
-            res.json({ message: "Login successful", user: userWithUserType });
+        if (!user) {
+            return res.status(401).json({ error: "Invalid credentials" });
         }
-    );
+
+        const isValidPassword = bcrypt.compareSync(password, user.password);
+        if (!isValidPassword) {
+            return res.status(401).json({ error: "Invalid credentials" });
+        }
+
+        const { password: _, role, ...userWithoutPassword } = user;
+        const userType = role === 'admin' ? 'administrador' : 'cliente';
+        const userWithUserType = { ...userWithoutPassword, userType };
+        res.json({ message: "Login successful", user: userWithUserType });
+    } catch (err) {
+        return res.status(500).json({ error: "Database error" });
+    }
 });
 
 app.get("/api/users", (req, res) => {
-    db.all(`SELECT id, name, username, email, role, created_at FROM users`, [], (err, rows) => {
-        if (err) {
-            return res.status(500).json({ error: "Database error" });
-        }
+    try {
+        const stmt = db.prepare(`SELECT id, name, username, email, role, created_at FROM users`);
+        const rows = stmt.all();
         res.json(rows);
-    });
+    } catch (err) {
+        return res.status(500).json({ error: "Database error" });
+    }
 });
 
 app.post('/enviar-reserva', (req, res) => {
@@ -214,10 +210,9 @@ app.get('/enviar-reserva/test', (req, res) => {
 app.post('/api/verificar-admin', (req, res) => {
     const { username, password } = req.body;
 
-    db.get('SELECT * FROM users WHERE username = ? AND role = ?', [username, 'admin'], (err, user) => {
-        if (err) {
-            return res.status(500).json({ success: false, error: 'Error en el servidor' });
-        }
+    try {
+        const stmt = db.prepare('SELECT * FROM users WHERE username = ? AND role = ?');
+        const user = stmt.get(username, 'admin');
 
         if (user && bcrypt.compareSync(password, user.password)) {
             res.json({
@@ -234,20 +229,23 @@ app.post('/api/verificar-admin', (req, res) => {
                 error: 'Credenciales de admin invalidas'
             });
         }
-    });
+    } catch (err) {
+        return res.status(500).json({ success: false, error: 'Error en el servidor' });
+    }
 });
 
 app.get('/api/clients', (req, res) => {
-    db.all('SELECT id, name, username, email, created_at FROM users', [], (err, rows) => {
-        if (err) {
-            return res.status(500).json({ success: false, error: 'Database error' });
-        }
+    try {
+        const stmt = db.prepare('SELECT id, name, username, email, created_at FROM users');
+        const rows = stmt.all();
         res.json({
             success: true,
             count: rows.length,
             clients: rows
         });
-    });
+    } catch (err) {
+        return res.status(500).json({ success: false, error: 'Database error' });
+    }
 });
 
 app.get('/', (req, res) => {

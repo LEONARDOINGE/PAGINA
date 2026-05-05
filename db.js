@@ -1,19 +1,16 @@
-﻿const sqlite3 = require("sqlite3").verbose();
+﻿const Database = require("better-sqlite3");
 const path = require("path");
 const bcrypt = require("bcryptjs");
 const fs = require("fs");
 
-// Database path - configurable via environment
 const dbPath = process.env.DATABASE_PATH || path.join(__dirname, "database.db");
 
-// Ensure directory exists for database
 const dbDir = path.dirname(dbPath);
 if (!fs.existsSync(dbDir)) {
     fs.mkdirSync(dbDir, { recursive: true });
 }
 
-// Create or open the database
-const db = new sqlite3.Database(dbPath, (err) => {
+const db = new Database(dbPath, (err) => {
     if (err) {
         console.error("Error opening database:", err.message);
     } else {
@@ -21,41 +18,23 @@ const db = new sqlite3.Database(dbPath, (err) => {
     }
 });
 
-// Create tables
-db.serialize(() => {
-    // Users table
-    db.run(`
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
-            username TEXT UNIQUE NOT NULL,
-            email TEXT UNIQUE NOT NULL,
-            password TEXT NOT NULL,
-            role TEXT DEFAULT "user" CHECK (role IN ("user", "admin")),
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )
-    `, (err) => {
-        if (err) {
-            console.error("Error creating users table:", err.message);
-        } else {
-            console.log("Users table created or already exists.");
-        }
-    });
+db.exec(`
+    CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        username TEXT UNIQUE NOT NULL,
+        email TEXT UNIQUE NOT NULL,
+        password TEXT NOT NULL,
+        role TEXT DEFAULT "user" CHECK (role IN ("user", "admin")),
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+`);
 
-    // Insert default admin if not exists
-    const defaultAdminPassword = bcrypt.hashSync("admin123", 10);
-    db.run(`
-        INSERT OR IGNORE INTO users (name, username, email, password, role)
-        VALUES ("Admin", "admin", "admin@fototec.com", ?, "admin")
-    `, [defaultAdminPassword], function(err) {
-        if (err) {
-            console.error("Error inserting default admin:", err.message);
-        } else if (this.changes > 0) {
-            console.log("Default admin user created.");
-        } else {
-            console.log("Default admin user already exists.");
-        }
-    });
-});
+const defaultAdminPassword = bcrypt.hashSync("admin123", 10);
+const stmt = db.prepare(`
+    INSERT OR IGNORE INTO users (name, username, email, password, role)
+    VALUES ("Admin", "admin", "admin@fototec.com", ?, "admin")
+`);
+stmt.run(defaultAdminPassword);
 
 module.exports = db;
