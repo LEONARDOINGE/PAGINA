@@ -222,9 +222,11 @@
         }
         .auth-input-group label {
             display: block;
-            font-size: 0.75rem;
-            margin-bottom: 3px;
-            opacity: 0.9;
+            font-size: 0.85rem;
+            margin-bottom: 6px;
+            opacity: 1;
+            font-weight: 600;
+            letter-spacing: 0.3px;
         }
         .auth-input-group input {
             width: 100%;
@@ -237,8 +239,8 @@
             color: white;
         }
         .auth-input-group input::placeholder {
-            color: rgba(255,255,255,0.5);
-            font-size: 0.8rem;
+            color: rgba(255,255,255,0.65);
+            font-size: 0.85rem;
         }
         .auth-input-group input:focus {
             outline: none;
@@ -1355,14 +1357,14 @@
                     </div>
                     <form onsubmit="handleAuthLogin(event)" class="auth-side-form">
                         <div class="auth-input-group">
-                            <label>Usuario o correo</label>
+                            <label>👤 Usuario o correo electrónico</label>
                             <span class="auth-input-icon">👤</span>
-                            <input type="text" id="authLoginUsername" placeholder="Tu usuario o email" required>
+                            <input type="text" id="authLoginUsername" placeholder="Ingresa tu usuario o email" required>
                         </div>
                         <div class="auth-input-group">
-                            <label>Contraseña</label>
+                            <label>🔒 Contraseña</label>
                             <span class="auth-input-icon">🔒</span>
-                            <input type="password" id="authLoginPassword" placeholder="Tu contraseña" required>
+                            <input type="password" id="authLoginPassword" placeholder="Ingresa tu contraseña" required>
                             <button type="button" class="auth-toggle-pass" onclick="toggleAuthPassword('authLoginPassword', this)">👁️</button>
                         </div>
                         <div id="authLoginError" class="auth-error"></div>
@@ -1380,30 +1382,30 @@
                     </div>
                     <form onsubmit="handleAuthRegister(event)" class="auth-side-form">
                         <div class="auth-input-group">
-                            <label>Nombre completo</label>
+                            <label>👤 Nombre Completo</label>
                             <span class="auth-input-icon">👤</span>
-                            <input type="text" id="authRegName" placeholder="Tu nombre" required>
+                            <input type="text" id="authRegName" placeholder="Ej: Juan Pérez García" required>
                         </div>
                         <div class="auth-input-group">
-                            <label>Correo electrónico</label>
+                            <label>📧 Correo Electrónico</label>
                             <span class="auth-input-icon">📧</span>
-                            <input type="email" id="authRegEmail" placeholder="correo@ejemplo.com" required>
+                            <input type="email" id="authRegEmail" placeholder="tu.correo@ejemplo.com" required>
                         </div>
                         <div class="auth-input-group">
-                            <label>Usuario</label>
-                            <span class="auth-input-icon">🐱</span>
-                            <input type="text" id="authRegUsername" placeholder="Nombre de usuario" required>
+                            <label>👥 Nombre de Usuario</label>
+                            <span class="auth-input-icon">👥</span>
+                            <input type="text" id="authRegUsername" placeholder="usuario_único_12" required>
                         </div>
                         <div class="auth-input-group">
-                            <label>Contraseña</label>
+                            <label>🔑 Contraseña</label>
                             <span class="auth-input-icon">🔑</span>
-                            <input type="password" id="authRegPassword" placeholder="Mínimo 6 caracteres" required minlength="6">
+                            <input type="password" id="authRegPassword" placeholder="Mínimo 6 caracteres, con mayúsculas" required minlength="6">
                             <button type="button" class="auth-toggle-pass" onclick="toggleAuthPassword('authRegPassword', this)">👁️</button>
                         </div>
                         <div class="auth-input-group">
-                            <label>Confirmar contraseña</label>
+                            <label>🔐 Confirmar Contraseña</label>
                             <span class="auth-input-icon">🔐</span>
-                            <input type="password" id="authRegConfirm" placeholder="Repite tu contraseña" required>
+                            <input type="password" id="authRegConfirm" placeholder="Repite la contraseña exactamente" required>
                         </div>
                         <div id="authRegError" class="auth-error"></div>
                         <button type="submit" class="auth-submit-btn auth-submit-register">Crear Cuenta </button>
