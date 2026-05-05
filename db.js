@@ -10,13 +10,7 @@ if (!fs.existsSync(dbDir)) {
     fs.mkdirSync(dbDir, { recursive: true });
 }
 
-const db = new Database(dbPath, (err) => {
-    if (err) {
-        console.error("Error opening database:", err.message);
-    } else {
-        console.log("Connected to the SQLite database.");
-    }
-});
+const db = new Database(dbPath);
 
 db.exec(`
     CREATE TABLE IF NOT EXISTS users (
