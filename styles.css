@@ -313,28 +313,38 @@ header {
 
 /* ========== GALERÍA ========== */
 .galeria-placeholder {
-    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-    height: 200px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 3rem;
-    border-radius: 8px;
+    height: 220px;
+    border-radius: 12px;
+    overflow: hidden;
+    position: relative;
+}
+
+.galeria-placeholder img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.galeria-item:hover .galeria-placeholder img {
+    transform: scale(1.1);
 }
 
 .galeria-info {
-    padding: 1rem;
+    padding: 1.2rem 1rem;
 }
 
 .galeria-info h4 {
-    font-size: 1.1rem;
+    font-size: 1.15rem;
     color: var(--dark-color);
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.4rem;
+    font-weight: 600;
 }
 
 .galeria-info p {
-    font-size: 0.9rem;
-    color: #888;
+    font-size: 0.95rem;
+    color: #666;
+    font-style: italic;
 }
 
 /* ========== SERVICIOS TABS ========== */
