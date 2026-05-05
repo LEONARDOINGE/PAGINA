@@ -375,19 +375,15 @@
                 width: 95%;
             }
             .auth-side {
-                padding: 40px 25px;
+                padding: 30px 20px;
             }
             .auth-login-side,
             .auth-register-side {
                 display: none;
             }
-            .auth-login-side.auth-side-hidden,
-            .auth-register-side.auth-side-hidden {
-                display: none;
-            }
-            .auth-login-side.auth-side-hidden,
-            .auth-register-side.auth-side-hidden {
-                display: flex !important;
+            .auth-login-side:not(.auth-side-hidden),
+            .auth-register-side:not(.auth-side-hidden) {
+                display: flex;
             }
         }
         /* ========== FIN MODAL AUTH ========== */
@@ -1376,7 +1372,7 @@
                 </div>
 
                 <!-- LADO DERECHO - REGISTRO -->
-                <div class="auth-side auth-register-side">
+                <div class="auth-side auth-register-side auth-side-hidden">
                     <div class="auth-side-header">
                         <div class="auth-logo">📝</div>
                         <h2>Crear Cuenta</h2>
