@@ -72,13 +72,13 @@
         .auth-split {
             display: flex;
             background: white;
-            border-radius: 24px;
+            border-radius: 16px;
             overflow: hidden;
-            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.3);
             position: relative;
-            max-width: 800px;
+            max-width: 380px;
             width: 95%;
-            min-height: 500px;
+            min-height: auto;
         }
         .auth-close-btn {
             position: absolute;
@@ -105,7 +105,7 @@
         }
         .auth-side {
             flex: 1;
-            padding: 50px 40px;
+            padding: 20px 25px;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -124,51 +124,121 @@
         }
         .auth-side-header {
             text-align: center;
-            margin-bottom: 35px;
-        }
-        .auth-logo {
-            font-size: 3.5rem;
             margin-bottom: 15px;
         }
+        .auth-logo {
+            font-size: 2rem;
+            margin-bottom: 8px;
+        }
         .auth-side-header h2 {
-            font-size: 1.8rem;
-            margin: 0 0 8px 0;
+            font-size: 1.3rem;
+            margin: 0 0 5px 0;
             font-weight: 700;
         }
         .auth-side-header p {
             opacity: 0.85;
-            font-size: 0.95rem;
+            font-size: 0.8rem;
             margin: 0;
         }
         .auth-side-form {
-            max-width: 320px;
+            max-width: 100%;
             margin: 0 auto;
             width: 100%;
         }
         .auth-input-group {
             position: relative;
-            margin-bottom: 18px;
+            margin-bottom: 8px;
         }
-        .auth-input-icon {
+.auth-input-icon {
             position: absolute;
-            left: 15px;
+            left: 10px;
             top: 50%;
             transform: translateY(-50%);
-            font-size: 1.1rem;
+            font-size: 0.9rem;
             z-index: 1;
+        }
+        .auth-toggle-pass {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+            opacity: 0.7;
+            transition: opacity 0.3s;
+        }
+        .auth-toggle-pass:hover {
+            opacity: 1;
+        }
+        .auth-error {
+            color: #ffeb3b;
+            font-size: 0.75rem;
+            margin-bottom: 8px;
+            text-align: center;
+            min-height: 18px;
+        }
+        .auth-submit-btn {
+            width: 100%;
+            padding: 10px;
+            background: white;
+            color: #667eea;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+            margin-top: 5px;
+        }
+        .auth-submit-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        .auth-submit-register {
+            color: #ff6b6b;
+        }
+        .auth-submit-admin {
+            background: white;
+            color: #667eea;
+        }
+        .auth-switch-btn {
+            width: 100%;
+            padding: 8px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.4);
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 8px;
+        }
+        .auth-switch-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        .auth-input-group label {
+            display: block;
+            font-size: 0.75rem;
+            margin-bottom: 3px;
+            opacity: 0.9;
         }
         .auth-input-group input {
             width: 100%;
-            padding: 15px 50px 15px 48px;
-            border: 2px solid rgba(255,255,255,0.3);
-            border-radius: 12px;
-            font-size: 1rem;
+            padding: 10px 40px 10px 35px;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 8px;
+            font-size: 0.9rem;
             transition: all 0.3s;
             background: rgba(255,255,255,0.15);
             color: white;
         }
         .auth-input-group input::placeholder {
-            color: rgba(255,255,255,0.7);
+            color: rgba(255,255,255,0.5);
+            font-size: 0.8rem;
         }
         .auth-input-group input:focus {
             outline: none;
@@ -256,20 +326,20 @@
         }
         .auth-admin-content {
             background: white;
-            border-radius: 20px;
-            padding: 40px;
+            border-radius: 16px;
+            padding: 25px;
             text-align: center;
-            max-width: 380px;
+            max-width: 320px;
             width: 90%;
             position: relative;
         }
         .auth-admin-close {
             position: absolute;
-            top: 10px;
-            right: 15px;
+            top: 8px;
+            right: 12px;
             background: none;
             border: none;
-            font-size: 28px;
+            font-size: 24px;
             cursor: pointer;
             color: #999;
         }
@@ -277,11 +347,26 @@
             color: #ff6b6b;
         }
         .auth-admin-content .auth-logo {
-            font-size: 3rem;
+            font-size: 2rem;
         }
         .auth-admin-content h2 {
             color: #333;
-            margin: 0 0 25px 0;
+            margin: 0 0 15px 0;
+            font-size: 1.2rem;
+        }
+        .auth-admin-content .auth-input-group label {
+            color: #333;
+        }
+        .auth-admin-content .auth-input-group input {
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            color: #333;
+        }
+        .auth-admin-content .auth-input-group input::placeholder {
+            color: #999;
+        }
+        .auth-admin-content .auth-error {
+            color: #ff6b6b;
         }
         /* Responsive */
         @media (max-width: 768px) {
@@ -1274,12 +1359,14 @@
                     </div>
                     <form onsubmit="handleAuthLogin(event)" class="auth-side-form">
                         <div class="auth-input-group">
+                            <label>Usuario o correo</label>
                             <span class="auth-input-icon">👤</span>
-                            <input type="text" id="authLoginUsername" placeholder="Usuario o correo" required>
+                            <input type="text" id="authLoginUsername" placeholder="Tu usuario o email" required>
                         </div>
                         <div class="auth-input-group">
+                            <label>Contraseña</label>
                             <span class="auth-input-icon">🔒</span>
-                            <input type="password" id="authLoginPassword" placeholder="Contraseña" required>
+                            <input type="password" id="authLoginPassword" placeholder="Tu contraseña" required>
                             <button type="button" class="auth-toggle-pass" onclick="toggleAuthPassword('authLoginPassword', this)">👁️</button>
                         </div>
                         <div id="authLoginError" class="auth-error"></div>
@@ -1297,25 +1384,30 @@
                     </div>
                     <form onsubmit="handleAuthRegister(event)" class="auth-side-form">
                         <div class="auth-input-group">
+                            <label>Nombre completo</label>
                             <span class="auth-input-icon">👤</span>
-                            <input type="text" id="authRegName" placeholder="Nombre completo" required>
+                            <input type="text" id="authRegName" placeholder="Tu nombre" required>
                         </div>
                         <div class="auth-input-group">
+                            <label>Correo electrónico</label>
                             <span class="auth-input-icon">📧</span>
-                            <input type="email" id="authRegEmail" placeholder="Correo electrónico" required>
+                            <input type="email" id="authRegEmail" placeholder="correo@ejemplo.com" required>
                         </div>
                         <div class="auth-input-group">
+                            <label>Usuario</label>
                             <span class="auth-input-icon">🐱</span>
                             <input type="text" id="authRegUsername" placeholder="Nombre de usuario" required>
                         </div>
                         <div class="auth-input-group">
+                            <label>Contraseña</label>
                             <span class="auth-input-icon">🔑</span>
-                            <input type="password" id="authRegPassword" placeholder="Contraseña (mín. 6)" required minlength="6">
+                            <input type="password" id="authRegPassword" placeholder="Mínimo 6 caracteres" required minlength="6">
                             <button type="button" class="auth-toggle-pass" onclick="toggleAuthPassword('authRegPassword', this)">👁️</button>
                         </div>
                         <div class="auth-input-group">
+                            <label>Confirmar contraseña</label>
                             <span class="auth-input-icon">🔐</span>
-                            <input type="password" id="authRegConfirm" placeholder="Confirmar contraseña" required>
+                            <input type="password" id="authRegConfirm" placeholder="Repite tu contraseña" required>
                         </div>
                         <div id="authRegError" class="auth-error"></div>
                         <button type="submit" class="auth-submit-btn auth-submit-register">Crear Cuenta </button>
