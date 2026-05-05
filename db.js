@@ -12,14 +12,16 @@ if (!fs.existsSync(dbDir)) {
 
 const db = new Database(dbPath);
 
+db.exec(`DROP TABLE IF EXISTS users`);
+
 db.exec(`
-    CREATE TABLE IF NOT EXISTS users (
+    CREATE TABLE users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
         username TEXT UNIQUE NOT NULL,
         email TEXT UNIQUE NOT NULL,
         password TEXT NOT NULL,
-        role TEXT DEFAULT 'user' CHECK (role IN ('user', 'admin')),
+        role TEXT DEFAULT 'user',
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
 `);
