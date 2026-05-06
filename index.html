@@ -3,7 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>fototec.com</title>
+    <title>FotoTec | Fotografía Profesional en Monterrey</title>
+    <meta name="description" content="FotoTec - Servicios de fotografía profesional en Monterrey. Sesiones de estudio, bodas, eventos, pasaportes y más. Reserva tu sesión hoy.">
+    <meta name="keywords" content="fotografía, fotos, estudio fotográfico, Monterrey, bodas, bodas Monterrey, sesiones fotográficas, pasaportes, credenciales, FotoTec">
+    <meta name="author" content="FotoTec">
+    <meta name="robots" content="index, follow">
+    <meta property="og:title" content="FotoTec | Fotografía Profesional">
+    <meta property="og:description" content="Capturamos tus momentos especiales con calidad profesional. Reserva tu sesión.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://fototec.com">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="apple-touch-icon" href="favicon.svg">
     <link rel="stylesheet" href="styles.css">
     <style>
         /* ========== DECORACIONES CON  ========== */
@@ -608,7 +619,8 @@
         <nav class="navbar">
             <div class="container">
                 <div class="logo">
-                    <h1>FotoTec </h1>
+                    <!-- Si tienes un logo, reemplaza el h1 por: <img src="tu-logo.png" alt="FotoTec" class="logo-img"> -->
+                    <h1>📸 FotoTec</h1>
                 </div>
                 <button class="menu-toggle" id="menuToggle" onclick="toggleMenu()">
                     <span></span>
@@ -617,12 +629,12 @@
                 </button>
                 <ul class="nav-menu" id="navMenu">
                     <li><a href="#inicio">Inicio</a></li>
-                    <li><a href="#promociones">Promociones</a></li>
+                    <li><a href="#nosotros">Nosotros</a></li>
                     <li><a href="#servicios-detalle">Servicios</a></li>
                     <li><a href="#galeria">Galería</a></li>
-                    <li><a href="#papel">Impresiones</a></li>
+                    <li><a href="#testimonios">Testimonios</a></li>
                     <li><a href="#reservas">Reservas</a></li>
-                    <li><a href="#contacto">Contacto</a></li>
+                    <li><a href="#ubicacion">Ubicación</a></li>
                     <li class="nav-login"><a href="#" onclick="openLoginModal()">🔐 Login</a></li>
                 </ul>
                 <div id="userInfo" class="user-info">
@@ -637,9 +649,17 @@
         <div class="hero-decoration hero-decoration-left"></div>
         <div class="hero-decoration hero-decoration-right"></div>
         <div class="hero-content">
-            <h2>Capturamos tus Momentos Especiales </h2>
-            <p>Fotografía profesional de calidad y creatividad</p>
-            <button class="cta-button" onclick="document.getElementById('galeria').scrollIntoView({behavior:'smooth'})">Ver Galería</button>
+            <h2>Capturamos tus Momentos Especiales</h2>
+            <p>Fotografía profesional de calidad y creatividad en Monterrey</p>
+            <div class="hero-buttons">
+                <button class="cta-button primary" onclick="document.getElementById('reservas').scrollIntoView({behavior:'smooth'})">Reservar Sesión</button>
+                <button class="cta-button secondary" onclick="document.getElementById('galeria').scrollIntoView({behavior:'smooth'})">Ver Galería</button>
+            </div>
+            <div class="hero-badges">
+                <span>📸 +10 años de experiencia</span>
+                <span>⭐ +500 clientes satisfechos</span>
+                <span>🏆 Calidad profesional</span>
+            </div>
         </div>
     </section>
 
@@ -1305,6 +1325,111 @@
             <button onclick="cerrarPanelAdmin()" style="width: 100%; margin-top: 20px; background: rgba(255,100,100,0.3); border: 1px solid rgba(255,100,100,0.5);">❌ Cerrar Panel</button>
         </div>
     </section>
+
+    <!-- SOBRE NOSOTROS -->
+    <section id="nosotros" class="nosotros">
+        <div class="container">
+            <h2>Sobre <span>Nosotros</span></h2>
+            <div class="nosotros-content">
+                <div class="nosotros-text">
+                    <h3>Tu estudio fotográfico de confianza en Monterrey</h3>
+                    <p>FotoTec es un estudio fotográfico profesional con años de experiencia capturando los momentos más importantes de tu vida. Nos especializamos en sesiones de estudio, fotografía de bodas, eventos, fotografías técnicas (pasaportes, credenciales) y mucho más.</p>
+                    <p>Nuestro compromiso es brindarte imágenes de la más alta calidad, con un servicio personalizado que supera tus expectativas. Cada sesión es única, y nos aseguramos de que cada detalle refleje tu estilo y personalidad.</p>
+                    <div class="nosotros-stats">
+                        <div class="stat-item">
+                            <span class="stat-number">+500</span>
+                            <span class="stat-label">Clientes satisfechos</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number">+10</span>
+                            <span class="stat-label">Años de experiencia</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number">+1000</span>
+                            <span class="stat-label">Sesiones realizadas</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="nosotros-image">
+                    <img src="https://images.unsplash.com/photo-1596526131083-e8c633c948d2?w=500&h=400&fit=crop" alt="Estudio FotoTec">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- TESTIMONIOS -->
+    <section id="testimonios" class="testimonios">
+        <div class="container">
+            <h2>Lo que dicen nuestros <span>clientes</span></h2>
+            <div class="testimonios-grid">
+                <div class="testimonio-card">
+                    <div class="testimonio-stars">⭐⭐⭐⭐⭐</div>
+                    <p class="testimonio-texto">"Excelente servicio, me tomaron fotos para mi pasaporte y quedaron perfectas. El trato fue muy amable y profesional. 100% recomendado."</p>
+                    <div class="testimonio-autor">
+                        <strong>María González</strong>
+                        <span>Cliente frecuente</span>
+                    </div>
+                </div>
+                <div class="testimonio-card">
+                    <div class="testimonio-stars">⭐⭐⭐⭐⭐</div>
+                    <p class="testimonio-texto">"Contraté FotoTec para mi boda y las fotos quedaron increíbles. Capturaron cada momento especial de ese día. ¡Son los mejores!"</p>
+                    <div class="testimonio-autor">
+                        <strong>Carlos y Laura</strong>
+                        <span>Sesión de boda</span>
+                    </div>
+                </div>
+                <div class="testimonio-card">
+                    <div class="testimonio-stars">⭐⭐⭐⭐⭐</div>
+                    <p class="testimonio-texto">"Llevamos a toda la familia a las fotos de Navidad y quedaron preciosas. El estudio tiene decoraciones increíbles. Volveremos seguro."</p>
+                    <div class="testimonio-autor">
+                        <strong>Roberto Hernández</strong>
+                        <span>Sesión familiar</span>
+                    </div>
+                </div>
+                <div class="testimonio-card">
+                    <div class="testimonio-stars">⭐⭐⭐⭐⭐</div>
+                    <p class="testimonio-texto">"Mis fotos de graduación quedaron espectaculares. El fotógrafo supo guiarme para lograr las mejores poses. Muy profesional."</p>
+                    <div class="testimonio-autor">
+                        <strong>Andrea López</strong>
+                        <span>Sesión de graduación</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- GOOGLE MAPS -->
+    <section id="ubicacion" class="ubicacion">
+        <div class="container">
+            <h2>Nuestra <span>ubicación</span></h2>
+            <p class="ubicacion-texto">Visítanos en nuestro estudio. Estamos ubicados en el corazón de Monterrey.</p>
+            <div class="mapa-container">
+                <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3596.662!2d-100.31!3d25.67!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMjXCsDQwJzEyLjAiTiAxMDDCsDE4JzQwLjAiVw!5e0!3m2!1ses!2smx!4v1700000000000" width="100%" height="350" style="border:0; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+            </div>
+            <div class="ubicacion-info">
+                <div class="ubi-card">
+                    <span class="ubi-icon">📍</span>
+                    <h4>Dirección</h4>
+                    <p>Av. Tecnológico S/N, Col. Loma Real de Jarachina Sur, Monterrey, Nuevo León</p>
+                </div>
+                <div class="ubi-card">
+                    <span class="ubi-icon">🕐</span>
+                    <h4>Horario</h4>
+                    <p>Lunes a Viernes: 9:00 AM - 6:00 PM<br>Sábado: 10:00 AM - 2:00 PM<br>Domingo: Cerrado</p>
+                </div>
+                <div class="ubi-card">
+                    <span class="ubi-icon">📞</span>
+                    <h4>Contacto</h4>
+                    <p>+52 899 207 0611<br>fototec@gmail.com</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- BOTÓN WHATSAPP FLOTANTE -->
+    <a href="https://wa.me/528992070611?text=Hola%2C%20me%20interesa%20conocer%20sus%20servicios%20fotográficos" target="_blank" class="whatsapp-float" title="Escríbenos por WhatsApp">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp">
+    </a>
 
     <!-- Footer -->
     <footer class="footer">
