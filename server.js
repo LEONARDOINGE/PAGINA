@@ -248,6 +248,232 @@ app.get('/api/clients', (req, res) => {
     }
 });
 
+// ========== RUTAS CRUD DE PRODUCTOS ==========
+
+// Obtener todos los productos
+app.get('/api/productos', (req, res) => {
+    try {
+        const stmt = db.prepare('SELECT * FROM productos');
+        const productos = stmt.all();
+        res.json({
+            success: true,
+            count: productos.length,
+            productos: productos
+        });
+    } catch (err) {
+        return res.status(500).json({ success: false, error: 'Database error', details: err.message });
+    }
+});
+
+// Obtener un producto por ID
+app.get('/api/productos/:id', (req, res) => {
+    try {
+        const stmt = db.prepare('SELECT * FROM productos WHERE id = ?');
+        const producto = stmt.get(req.params.id);
+        if (!producto) {
+            return res.status(404).json({ success: false, error: 'Producto no encontrado' });
+        }
+        res.json({ success: true, producto: producto });
+    } catch (err) {
+        return res.status(500).json({ success: false, error: 'Database error', details: err.message });
+    }
+});
+
+// Crear un nuevo producto
+app.post('/api/productos', (req, res) => {
+    const { nombre, descripcion, precio, stock, categoria, imagen_url } = req.body;
+
+    if (!nombre || !precio) {
+        return res.status(400).json({ success: false, error: 'Nombre y precio son requeridos' });
+    }
+
+    try {
+        const stmt = db.prepare(`
+            INSERT INTO productos (nombre, descripcion, precio, stock, categoria, imagen_url)
+            VALUES (?, ?, ?, ?, ?, ?)
+        `);
+        const result = stmt.run(nombre, descripcion || null, precio, stock || 0, categoria || null, imagen_url || null);
+        res.json({
+            success: true,
+            message: 'Producto creado exitosamente',
+            id: result.lastInsertRowid
+        });
+    } catch (err) {
+        return res.status(500).json({ success: false, error: 'Database error', details: err.message });
+    }
+});
+
+// Actualizar un producto
+app.put('/api/productos/:id', (req, res) => {
+    const { nombre, descripcion, precio, stock, categoria, imagen_url } = req.body;
+
+    if (!nombre || !precio) {
+        return res.status(400).json({ success: false, error: 'Nombre y precio son requeridos' });
+    }
+
+    try {
+        const stmt = db.prepare(`
+            UPDATE productos 
+            SET nombre = ?, descripcion = ?, precio = ?, stock = ?, categoria = ?, imagen_url = ?, updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+        `);
+        const result = stmt.run(nombre, descripcion || null, precio, stock || 0, categoria || null, imagen_url || null, req.params.id);
+        if (result.changes === 0) {
+            return res.status(404).json({ success: false, error: 'Producto no encontrado' });
+        }
+        res.json({ success: true, message: 'Producto actualizado exitosamente' });
+    } catch (err) {
+        return res.status(500).json({ success: false, error: 'Database error', details: err.message });
+    }
+});
+
+// Eliminar un producto
+app.delete('/api/productos/:id', (req, res) => {
+    try {
+        const stmt = db.prepare('DELETE FROM productos WHERE id = ?');
+        const result = stmt.run(req.params.id);
+        if (result.changes === 0) {
+            return res.status(404).json({ success: false, error: 'Producto no encontrado' });
+        }
+        res.json({ success: true, message: 'Producto eliminado exitosamente' });
+    } catch (err) {
+        return res.status(500).json({ success: false, error: 'Database error', details: err.message });
+    }
+});
+
+// ========== RUTAS CRUD DE RESERVAS ==========
+
+// Obtener todas las reservas
+app.get('/api/reservas', (req, res) => {
+    try {
+        const stmt = db.prepare(`
+            SELECT r.*, u.name, u.email, p.nombre as producto_nombre, p.precio
+            FROM reservas r
+            JOIN users u ON r.usuario_id = u.id
+            JOIN productos p ON r.producto_id = p.id
+        `);
+        const reservas = stmt.all();
+        res.json({
+            success: true,
+            count: reservas.length,
+            reservas: reservas
+        });
+    } catch (err) {
+        return res.status(500).json({ success: false, error: 'Database error', details: err.message });
+    }
+});
+
+// Obtener reservas de un usuario
+app.get('/api/reservas/usuario/:usuario_id', (req, res) => {
+    try {
+        const stmt = db.prepare(`
+            SELECT r.*, p.nombre as producto_nombre, p.precio
+            FROM reservas r
+            JOIN productos p ON r.producto_id = p.id
+            WHERE r.usuario_id = ?
+        `);
+        const reservas = stmt.all(req.params.usuario_id);
+        res.json({
+            success: true,
+            count: reservas.length,
+            reservas: reservas
+        });
+    } catch (err) {
+        return res.status(500).json({ success: false, error: 'Database error', details: err.message });
+    }
+});
+
+// Crear una nueva reserva
+app.post('/api/reservas', (req, res) => {
+    const { usuario_id, producto_id, cantidad, notas } = req.body;
+
+    if (!usuario_id || !producto_id || !cantidad) {
+        return res.status(400).json({ success: false, error: 'usuario_id, producto_id y cantidad son requeridos' });
+    }
+
+    try {
+        // Obtener el precio del producto
+        const productoStmt = db.prepare('SELECT precio, stock FROM productos WHERE id = ?');
+        const producto = productoStmt.get(producto_id);
+
+        if (!producto) {
+            return res.status(404).json({ success: false, error: 'Producto no encontrado' });
+        }
+
+        if (producto.stock < cantidad) {
+            return res.status(400).json({ success: false, error: 'Stock insuficiente' });
+        }
+
+        const total_price = producto.precio * cantidad;
+
+        const stmt = db.prepare(`
+            INSERT INTO reservas (usuario_id, producto_id, cantidad, total_price, notas)
+            VALUES (?, ?, ?, ?, ?)
+        `);
+        const result = stmt.run(usuario_id, producto_id, cantidad, total_price, notas || null);
+
+        // Reducir el stock del producto
+        const updateStockStmt = db.prepare('UPDATE productos SET stock = stock - ? WHERE id = ?');
+        updateStockStmt.run(cantidad, producto_id);
+
+        res.json({
+            success: true,
+            message: 'Reserva creada exitosamente',
+            id: result.lastInsertRowid,
+            total_price: total_price
+        });
+    } catch (err) {
+        return res.status(500).json({ success: false, error: 'Database error', details: err.message });
+    }
+});
+
+// Actualizar estado de una reserva
+app.put('/api/reservas/:id', (req, res) => {
+    const { estado, notas } = req.body;
+
+    if (!estado) {
+        return res.status(400).json({ success: false, error: 'estado es requerido' });
+    }
+
+    try {
+        const stmt = db.prepare('UPDATE reservas SET estado = ?, notas = ? WHERE id = ?');
+        const result = stmt.run(estado, notas || null, req.params.id);
+
+        if (result.changes === 0) {
+            return res.status(404).json({ success: false, error: 'Reserva no encontrada' });
+        }
+
+        res.json({ success: true, message: 'Reserva actualizada exitosamente' });
+    } catch (err) {
+        return res.status(500).json({ success: false, error: 'Database error', details: err.message });
+    }
+});
+
+// Cancelar una reserva (eliminar)
+app.delete('/api/reservas/:id', (req, res) => {
+    try {
+        // Obtener los detalles de la reserva para devolver el stock
+        const getReservaStmt = db.prepare('SELECT producto_id, cantidad FROM reservas WHERE id = ?');
+        const reserva = getReservaStmt.get(req.params.id);
+
+        if (!reserva) {
+            return res.status(404).json({ success: false, error: 'Reserva no encontrada' });
+        }
+
+        // Devolver el stock al producto
+        const updateStockStmt = db.prepare('UPDATE productos SET stock = stock + ? WHERE id = ?');
+        updateStockStmt.run(reserva.cantidad, reserva.producto_id);
+
+        // Eliminar la reserva
+        const deleteStmt = db.prepare('DELETE FROM reservas WHERE id = ?');
+        deleteStmt.run(req.params.id);
+
+        res.json({ success: true, message: 'Reserva cancelada exitosamente' });
+    } catch (err) {
+        return res.status(500).json({ success: false, error: 'Database error', details: err.message });
+    }
+});
+
 app.get('/', (req, res) => {
     res.json({
         status: 'OK',
@@ -281,6 +507,16 @@ app.listen(PORT, () => {
     console.log('  POST /enviar-reserva        - Enviar email de pedido');
     console.log('  GET  /enviar-reserva/test   - Test de conexion SMTP');
     console.log('  GET  /api/clients           - Obtener lista de clientes');
+    console.log('  GET  /api/productos         - Obtener todos los productos');
+    console.log('  GET  /api/productos/:id     - Obtener un producto');
+    console.log('  POST /api/productos         - Crear nuevo producto');
+    console.log('  PUT  /api/productos/:id     - Actualizar producto');
+    console.log('  DELETE /api/productos/:id   - Eliminar producto');
+    console.log('  GET  /api/reservas          - Obtener todas las reservas');
+    console.log('  GET  /api/reservas/usuario/:id - Reservas de un usuario');
+    console.log('  POST /api/reservas          - Crear nueva reserva');
+    console.log('  PUT  /api/reservas/:id      - Actualizar estado de reserva');
+    console.log('  DELETE /api/reservas/:id    - Cancelar reserva');
     console.log('  GET  /                      - Health check');
     console.log('');
 });
