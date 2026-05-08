@@ -75,24 +75,33 @@ export async function onRequest({ request, env }) {
     <p><strong>ID de Reserva:</strong> ${reservaId}</p>
     `;
 
-    await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${env.RESEND_API_KEY}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        from: 'FotoTec <fototecventass@gmail.com>',
-        to: ['fototecventass@gmail.com'],
-        subject: `Nueva Reserva de ${nombre} - ${tipos[tipo_sesion] || tipo_sesion}`,
-        html: emailHtml
-      })
-    });
+    let emailResult;
+    try {
+      const res = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${env.RESEND_API_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          from: 'onboarding@resend.dev',
+          to: ['fototecventass@gmail.com'],
+          subject: `Nueva Reserva de ${nombre} - ${tipos[tipo_sesion] || tipo_sesion}`,
+          html: emailHtml
+        })
+      });
+      emailResult = await res.json();
+      console.log('Email result:', JSON.stringify(emailResult));
+    } catch (emailError) {
+      console.error('Email error:', emailError);
+    }
 
     return new Response(JSON.stringify({
       success: true,
       message: 'Reserva recibida. Te contactaremos pronto.',
-      reservaId
+      reservaId,
+      emailSent: !!emailResult?.id,
+      emailId: emailResult?.id || null
     }), { headers });
 
   } catch (error) {

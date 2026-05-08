@@ -7,6 +7,9 @@ pages_build_output_dir = "./"
 [dev]
 port = 8787
 
+[vars]
+RESEND_API_KEY = "re_Dc3SmDtr_5Rn32AYyBut5YH6okfHNxZj8"
+
 [[d1_databases]]
 binding = "DB"
 database_name = "fototec-db"

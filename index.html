@@ -1615,10 +1615,10 @@
                         localStorage.setItem('fotovecCurrentUser', JSON.stringify(this.currentUser));
                         return { success: true, message: 'Bienvenido ' };
                     } else {
-                        return { success: false, message: data.error || 'Credenciales incorrectas' };
+                        return { success: false, message: data.error || 'Credenciales incorrectas', needsVerification: data.needsVerification || false };
                     }
                 } catch (error) {
-                    return { success: false, message: 'Error de conexión con el servidor' };
+                    return { success: false, message: 'Error de conexion con el servidor' };
                 }
             },
 
@@ -1719,7 +1719,12 @@
                 closeAuthModal();
                 showUserProfile();
             } else {
-                errorDiv.textContent = result.message;
+                if (result.needsVerification) {
+                    errorDiv.textContent = 'Por favor verifica tu email antes de iniciar sesion';
+                    errorDiv.style.color = '#f39c12';
+                } else {
+                    errorDiv.textContent = result.message;
+                }
             }
         }
 
@@ -1750,8 +1755,9 @@
             const result = await authSystem.register(name, username, email, password);
             if (result.success) {
                 errorDiv.style.color = '#28a745';
-                errorDiv.textContent = '¡Cuenta creada! Ahora inicia sesión ';
-                setTimeout(() => switchAuthTab('login'), 1500);
+                errorDiv.textContent = '¡Cuenta creada! Revisa tu email para verificar tu cuenta.';
+                document.getElementById('registerForm').reset();
+                setTimeout(() => switchAuthTab('login'), 3000);
             } else {
                 errorDiv.textContent = result.message;
             }

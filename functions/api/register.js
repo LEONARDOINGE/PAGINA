@@ -18,11 +18,11 @@ export async function onRequest({ request, env }) {
     const { name, username, email, password } = await request.json();
 
     if (!name || !username || !email || !password) {
-      return new Response(JSON.stringify({ error: 'All fields are required' }), { status: 400, headers });
+      return new Response(JSON.stringify({ error: 'Todos los campos son requeridos' }), { status: 400, headers });
     }
 
     if (password.length < 6) {
-      return new Response(JSON.stringify({ error: 'Password must be at least 6 characters' }), { status: 400, headers });
+      return new Response(JSON.stringify({ error: 'La contrasena debe tener al menos 6 caracteres' }), { status: 400, headers });
     }
 
     const existing = await env.DB.prepare(
@@ -30,7 +30,10 @@ export async function onRequest({ request, env }) {
     ).bind(username, email).first();
 
     if (existing) {
-      return new Response(JSON.stringify({ error: 'Username or email already exists' }), { status: 400, headers });
+      return new Response(JSON.stringify({
+        accountExists: true,
+        message: 'Esta cuenta ya existe. Por favor inicia sesion.'
+      }), { status: 400, headers });
     }
 
     const hashedPassword = await hashPassword(password);
@@ -39,10 +42,19 @@ export async function onRequest({ request, env }) {
       'INSERT INTO users (name, username, email, password, role) VALUES (?, ?, ?, ?, ?)'
     ).bind(name, username, email, hashedPassword, 'user').run();
 
+    const userId = result.meta.last_row_id;
+
     return new Response(JSON.stringify({
       success: true,
-      message: 'User registered successfully',
-      userId: result.meta.last_row_id
+      message: 'Cuenta creada exitosamente. Iniciando sesion...',
+      userId: userId,
+      user: {
+        id: userId,
+        name: name,
+        username: username,
+        email: email,
+        userType: 'cliente'
+      }
     }), { headers });
 
   } catch (error) {
