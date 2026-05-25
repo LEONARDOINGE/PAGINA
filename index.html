@@ -1835,6 +1835,7 @@
         // ============ SISTEMA DE AUTENTICACIÓN ============
         const authSystem = {
             currentUser: JSON.parse(localStorage.getItem('fotovecCurrentUser')) || null,
+            token: localStorage.getItem('fotovecToken') || null,
 
             async register(name, username, email, password) {
                 try {
@@ -1845,7 +1846,11 @@
                     });
                     const data = await response.json();
                     if (response.ok) {
-                        return { success: true, message: 'Cuenta creada exitosamente ' };
+                        this.token = data.token;
+                        this.currentUser = data.user;
+                        localStorage.setItem('fotovecToken', this.token);
+                        localStorage.setItem('fotovecCurrentUser', JSON.stringify(this.currentUser));
+                        return { success: true, message: 'Cuenta creada', user: data.user, autoLogin: true };
                     } else {
                         return { success: false, message: data.error || 'Error en el registro' };
                     }
@@ -1863,15 +1868,46 @@
                     });
                     const data = await response.json();
                     if (response.ok) {
+                        this.token = data.token;
                         this.currentUser = data.user;
+                        localStorage.setItem('fotovecToken', this.token);
                         localStorage.setItem('fotovecCurrentUser', JSON.stringify(this.currentUser));
-                        return { success: true, message: 'Bienvenido ' };
+                        return { success: true, message: 'Bienvenido' };
                     } else {
-                        return { success: false, message: data.error || 'Credenciales incorrectas', needsVerification: data.needsVerification || false };
+                        return { success: false, message: data.error || 'Credenciales incorrectas' };
                     }
                 } catch (error) {
                     return { success: false, message: 'Error de conexion con el servidor' };
                 }
+            },
+
+            async restoreSession() {
+                if (this.token && this.currentUser) {
+                    try {
+                        const response = await fetch('/api/me', {
+                            headers: { 'Authorization': 'Bearer ' + this.token }
+                        });
+                        if (response.ok) {
+                            const data = await response.json();
+                            this.currentUser = data.user;
+                            localStorage.setItem('fotovecCurrentUser', JSON.stringify(this.currentUser));
+                            return true;
+                        } else {
+                            this.logout();
+                            return false;
+                        }
+                    } catch (e) {
+                        return false;
+                    }
+                }
+                return false;
+            },
+
+            logout() {
+                this.currentUser = null;
+                this.token = null;
+                localStorage.removeItem('fotovecCurrentUser');
+                localStorage.removeItem('fotovecToken');
             },
 
             async loginAdmin(username, password) {
@@ -1971,12 +2007,7 @@
                 closeAuthModal();
                 showUserProfile();
             } else {
-                if (result.needsVerification) {
-                    errorDiv.textContent = 'Por favor verifica tu email antes de iniciar sesion';
-                    errorDiv.style.color = '#f39c12';
-                } else {
-                    errorDiv.textContent = result.message;
-                }
+                errorDiv.textContent = result.message;
             }
         }
 
@@ -2007,9 +2038,13 @@
             const result = await authSystem.register(name, username, email, password);
             if (result.success) {
                 errorDiv.style.color = '#28a745';
-                errorDiv.textContent = '¡Cuenta creada! Revisa tu email para verificar tu cuenta.';
+                errorDiv.textContent = '¡Cuenta creada! Iniciando sesion...';
                 document.getElementById('registerForm').reset();
-                setTimeout(() => switchAuthTab('login'), 3000);
+                showUserProfile();
+                closeAuthModal();
+                if (authSystem.currentUser && authSystem.currentUser.userType === 'administrador') {
+                    document.getElementById('adminBtn').style.display = 'inline-block';
+                }
             } else {
                 errorDiv.textContent = result.message;
             }
@@ -2057,8 +2092,9 @@
         }
 
         // Verificar si hay usuario autenticado
-        window.addEventListener('load', function() {
-            if (authSystem.currentUser) {
+        window.addEventListener('load', async function() {
+            if (authSystem.token && authSystem.currentUser) {
+                await authSystem.restoreSession();
                 showUserProfile();
             }
         });

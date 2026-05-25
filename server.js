@@ -3,15 +3,38 @@ const cors = require('cors');
 const dbWrapper = require('./db');
 const bcrypt = require('bcryptjs');
 const path = require('path');
+const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
 const app = express();
+const JWT_SECRET = process.env.JWT_SECRET || 'fototec_secret_2024';
 const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static(path.join(__dirname)));
+
+function generateToken(user) {
+    const { password: _, role, ...userData } = user;
+    const userType = role === 'admin' ? 'administrador' : 'cliente';
+    return jwt.sign({ ...userData, userType }, JWT_SECRET, { expiresIn: '30d' });
+}
+
+function authMiddleware(req, res, next) {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ error: 'No autorizado' });
+    }
+    try {
+        const token = authHeader.split(' ')[1];
+        const decoded = jwt.verify(token, JWT_SECRET);
+        req.user = decoded;
+        next();
+    } catch (err) {
+        return res.status(401).json({ error: 'Token invalido' });
+    }
+}
 
 app.post("/api/register", (req, res) => {
     const { name, username, email, password } = req.body;
@@ -30,7 +53,10 @@ app.post("/api/register", (req, res) => {
         const stmt = dbWrapper.prepare(`INSERT INTO users (name, username, email, password, is_verified) VALUES (?, ?, ?, ?, 1)`);
         const result = stmt.run(name, username, email, hashedPassword);
 
-        res.json({ message: "Usuario registrado exitosamente!", userId: result.lastInsertRowid });
+        const newUser = dbWrapper.prepare(`SELECT * FROM users WHERE id = ?`).get(result.lastInsertRowid);
+        const token = generateToken(newUser);
+
+        res.json({ message: "Usuario registrado exitosamente!", token, user: { id: newUser.id, name: newUser.name, username: newUser.username, email: newUser.email, role: newUser.role, userType: newUser.role === 'admin' ? 'administrador' : 'cliente' } });
     } catch (err) {
         if (err.message && err.message.includes("UNIQUE")) {
             return res.status(400).json({ error: "El usuario o email ya existe" });
@@ -60,14 +86,16 @@ app.post("/api/login", (req, res) => {
             return res.status(401).json({ error: "Credenciales invalidas" });
         }
 
-        const { password: _, role, ...userWithoutPassword } = user;
-        const userType = role === 'admin' ? 'administrador' : 'cliente';
-        const userWithUserType = { ...userWithoutPassword, userType };
-        res.json({ message: "Login exitoso", user: userWithUserType });
+        const token = generateToken(user);
+        res.json({ message: "Login exitoso", token, user: { id: user.id, name: user.name, username: user.username, email: user.email, role: user.role, userType: user.role === 'admin' ? 'administrador' : 'cliente' } });
     } catch (err) {
         console.error('Error login:', err);
         return res.status(500).json({ error: "Error en el servidor" });
     }
+});
+
+app.get("/api/me", authMiddleware, (req, res) => {
+    res.json({ user: req.user });
 });
 
 app.get("/api/users", (req, res) => {
