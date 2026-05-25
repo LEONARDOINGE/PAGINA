@@ -4,18 +4,10 @@ const bcrypt = require('bcryptjs');
 const path = require('path');
 const jwt = require('jsonwebtoken');
 const fs = require('fs');
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 require('dotenv').config();
 
-const smtpTransport = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: parseInt(process.env.SMTP_PORT) || 587,
-    secure: false,
-    auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS
-    }
-});
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -230,7 +222,7 @@ app.put('/api/profile/update', authMiddleware, (req, res) => {
 });
 
 // Enviar reserva
-app.post('/enviar-reserva', (req, res) => {
+app.post('/enviar-reserva', async (req, res) => {
     const { clientEmail, clientName, telefono, tipoSesion, estilo, cantidadPersonas, fechaSesion, horaSesion, notas, tipoPapel } = req.body;
 
     if (!clientEmail || !clientName) {
@@ -278,29 +270,29 @@ app.post('/enviar-reserva', (req, res) => {
           <p style="color: #888; font-size: 0.85em;">FotoTec - Fotografía Profesional</p>
         </div>`;
 
-        const mailOptionsAdmin = {
-            from: `"FotoTec" <${process.env.SMTP_USER}>`,
-            to: process.env.SMTP_USER,
-            subject: `Nueva Reserva de ${clientName} - ${tipoNombre}`,
-            html: emailHtmlAdmin
-        };
+        try {
+            await resend.emails.send({
+                from: 'FotoTec <fototec@resend.dev>',
+                to: ['fototecventass@gmail.com'],
+                subject: `Nueva Reserva de ${clientName} - ${tipoNombre}`,
+                html: emailHtmlAdmin
+            });
+            console.log('Email admin enviado via Resend');
+        } catch (emailErr) {
+            console.error('Error enviando email admin:', emailErr.message);
+        }
 
-        const mailOptionsCliente = {
-            from: `"FotoTec" <${process.env.SMTP_USER}>`,
-            to: clientEmail,
-            subject: `Confirmación de tu reserva - FotoTec`,
-            html: emailHtmlCliente
-        };
-
-        smtpTransport.sendMail(mailOptionsAdmin, (err, info) => {
-            if (err) console.error('Error enviando email admin:', err);
-            else console.log('Email admin enviado:', info.messageId);
-        });
-
-        smtpTransport.sendMail(mailOptionsCliente, (err, info) => {
-            if (err) console.error('Error enviando email cliente:', err);
-            else console.log('Email cliente enviado:', info.messageId);
-        });
+        try {
+            await resend.emails.send({
+                from: 'FotoTec <fototec@resend.dev>',
+                to: [clientEmail],
+                subject: `Confirmación de tu reserva - FotoTec`,
+                html: emailHtmlCliente
+            });
+            console.log('Email cliente enviado via Resend');
+        } catch (emailErr) {
+            console.error('Error enviando email cliente:', emailErr.message);
+        }
 
         console.log('Reserva guardada:', clientName, clientEmail);
         res.json({ success: true, message: 'Reserva recibida. Te contactaremos pronto.' });
