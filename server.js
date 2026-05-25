@@ -338,12 +338,7 @@ app.get('/api/clients', (req, res) => {
 });
 
 app.get('/', (req, res) => {
-    res.json({
-        status: 'OK',
-        message: 'Servidor FotoTec Express esta corriendo',
-        port: PORT,
-        timestamp: new Date().toISOString()
-    });
+    res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 app.use((err, req, res, next) => {
