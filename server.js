@@ -262,7 +262,22 @@ app.post('/enviar-reserva', async (req, res) => {
         } else if (tipoSesion && tipoSesion.toLowerCase().includes('estudio')) {
             precioBase = 800;
         }
-        const totalFormateado = '$' + precioBase.toFixed(2) + ' MXN';
+
+        let totalFinal = precioBase;
+        let detallePapel = 'Papel Brillante (Glossy) - Incluido';
+        const papelMinuscula = (tipoPapel || '').toLowerCase();
+
+        if (papelMinuscula.includes('lustre') || papelMinuscula.includes('satinado')) {
+            totalFinal = precioBase * 1.25;
+            detallePapel = 'Papel Lustre/Satinado Premium (+25%)';
+        } else if (papelMinuscula.includes('mate')) {
+            detallePapel = 'Papel Mate Elegante - Sin reflejos';
+        } else if (papelMinuscula.includes('fine') || papelMinuscula.includes('art') || papelMinuscula.includes('algodon')) {
+            totalFinal = precioBase + 500;
+            detallePapel = 'Papel Fine Art Calidad Museo (+$500.00)';
+        }
+
+        const totalFormateado = '$' + totalFinal.toFixed(2) + ' MXN';
         const notasValor = notas || 'Ninguna';
         const estiloValor = estilo || 'No especificado';
         const telefonoValor = telefono || 'No proporcionado';
@@ -275,7 +290,7 @@ app.post('/enviar-reserva', async (req, res) => {
 
         <div style="background: linear-gradient(135deg, #5165ff 0%, #7a42f4 100%); padding: 30px; text-align: center; color: #ffffff;">
             <div style="font-size: 24px; font-weight: bold; margin-bottom: 5px;">📸 FotoTec</div>
-            <div style="font-size: 14px; opacity: 0.9; letter-spacing: 1px;">Solicitud de Reserva Recibida</div>
+            <div style="font-size: 14px; opacity: 0.9; letter-spacing: 1px;">Reserva y Configuración de Impresión</div>
         </div>
 
         <div style="padding: 30px; color: #333333;">
@@ -290,35 +305,34 @@ app.post('/enviar-reserva', async (req, res) => {
                 <tr><th style="padding: 8px; color: #555;">Email</th><td style="padding: 8px;">${clientEmail}</td></tr>
                 <tr style="background-color: #f9f9f9;"><th style="padding: 8px; color: #555;">Teléfono</th><td style="padding: 8px;">${telefonoValor}</td></tr>
                 <tr><th style="padding: 8px; color: #555;">Tipo de Sesión</th><td style="padding: 8px; font-weight: bold; color: #5165ff;">${tipoNombre}</td></tr>
-                <tr style="background-color: #f9f9f9;"><th style="padding: 8px; color: #555;">Estilo</th><td style="padding: 8px;">${estiloValor}</td></tr>
-                <tr><th style="padding: 8px; color: #555;">Personas</th><td style="padding: 8px;">${cantidadPersonas || 1}</td></tr>
-                <tr style="background-color: #f9f9f9;"><th style="padding: 8px; color: #555;">Fecha</th><td style="padding: 8px; font-weight: bold;">${fechaValor}</td></tr>
-                <tr><th style="padding: 8px; color: #555;">Hora</th><td style="padding: 8px; font-weight: bold;">${horaValor}</td></tr>
-                <tr style="background-color: #f9f9f9;"><th style="padding: 8px; color: #555;">Notas</th><td style="padding: 8px; color: #777; font-style: italic;">"${notasValor}"</td></tr>
+                <tr style="background-color: #f9f9f9;"><th style="padding: 8px; color: #555;">Acabado Textura</th><td style="padding: 8px; font-weight: bold; color: #7a42f4;">${detallePapel}</td></tr>
+                <tr><th style="padding: 8px; color: #555;">Estilo</th><td style="padding: 8px;">${estiloValor}</td></tr>
+                <tr style="background-color: #f9f9f9;"><th style="padding: 8px; color: #555;">Personas</th><td style="padding: 8px;">${cantidadPersonas || 1}</td></tr>
+                <tr><th style="padding: 8px; color: #555;">Fecha</th><td style="padding: 8px; font-weight: bold;">${fechaValor}</td></tr>
+                <tr style="background-color: #f9f9f9;"><th style="padding: 8px; color: #555;">Hora</th><td style="padding: 8px; font-weight: bold;">${horaValor}</td></tr>
+                <tr><th style="padding: 8px; color: #555;">Notas</th><td style="padding: 8px; color: #777; font-style: italic;">"${notasValor}"</td></tr>
             </table>
 
-            <h3 style="font-size: 15px; color: #333333; margin-top: 20px; margin-bottom: 10px;">📦 Resumen de Cobro</h3>
+            <h3 style="font-size: 15px; color: #333333; margin-top: 20px; margin-bottom: 10px;">📦 Resumen Comercial</h3>
             <table style="width: 100%; border-collapse: collapse; font-size: 13px; text-align: left;">
                 <thead>
                     <tr style="background-color: #5165ff; color: #ffffff;">
-                        <th style="padding: 10px;">Producto/Servicio</th>
+                        <th style="padding: 10px;">Concepto</th>
                         <th style="padding: 10px; text-align: center;">Cantidad</th>
-                        <th style="padding: 10px; text-align: right;">Precio</th>
-                        <th style="padding: 10px; text-align: right;">Subtotal</th>
+                        <th style="padding: 10px; text-align: right;">Total</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr style="border-bottom: 1px solid #eeeeee;">
-                        <td style="padding: 12px; font-weight: bold;">${tipoNombre}</td>
+                        <td style="padding: 12px; font-weight: bold;">${tipoNombre} <span style="font-weight:normal;color:#888;font-size:0.85em;">(${detallePapel})</span></td>
                         <td style="padding: 12px; text-align: center;">1</td>
-                        <td style="padding: 12px; text-align: right;">${totalFormateado}</td>
-                        <td style="padding: 12px; text-align: right;">${totalFormateado}</td>
+                        <td style="padding: 12px; text-align: right; font-weight: bold;">${totalFormateado}</td>
                     </tr>
                 </tbody>
             </table>
 
             <div style="text-align: right; margin-top: 15px; font-size: 18px; font-weight: bold; color: #5165ff;">
-                Total: ${totalFormateado}
+                Total Final Cobrado: ${totalFormateado}
             </div>
         </div>
 

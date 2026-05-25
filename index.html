@@ -2422,21 +2422,44 @@
                 "evento": 2500
             };
 
-            const tipoSesionSelect = document.getElementById('tipo_sesion');
-            if (tipoSesionSelect) {
-                tipoSesionSelect.addEventListener('change', function() {
-                    const precio = preciosFotoTec[this.value] || 0;
+            const papelLabels = {
+                "": "Sin impresión",
+                "brillante": "Papel Brillante (Incluido)",
+                "mate": "Papel Mate Profesional (+$30/u extra)",
+                "lustre": "Papel Lustre/Satinado (+25%)",
+                "fineart": "Fine Art Calidad Museo (+$500)"
+            };
+
+            function calcularTotalFormulario() {
+                const sesion = document.getElementById('tipo_sesion').value;
+                const papel = document.getElementById('tipo_papel').value;
+                let precioBase = preciosFotoTec[sesion] || 0;
+                let total = precioBase;
+
+                if (precioBase > 0) {
+                    if (papel === 'lustre' || papel === 'satinado') {
+                        total = precioBase * 1.25;
+                    } else if (papel === 'fineart' || papel === 'algodon') {
+                        total = precioBase + 500;
+                    }
+                    const papelTexto = papelLabels[papel] || '';
                     const contenedor = document.getElementById('resumen-total-pantalla');
                     if (contenedor) {
-                        if (precio > 0) {
-                            contenedor.style.display = 'block';
-                            contenedor.innerHTML = '<strong>Total a Pagar:</strong> $' + precio.toFixed(2) + ' MXN';
-                        } else {
-                            contenedor.style.display = 'none';
-                        }
+                        contenedor.style.display = 'block';
+                        let html = '<strong>Total Estimado:</strong> $' + total.toFixed(2) + ' MXN';
+                        if (papelTexto) html += '<br><span style="font-size:0.75em;color:#666;">' + papelTexto + '</span>';
+                        contenedor.innerHTML = html;
                     }
-                });
+                } else {
+                    const contenedor = document.getElementById('resumen-total-pantalla');
+                    if (contenedor) contenedor.style.display = 'none';
+                }
             }
+
+            const tipoSesionSelect = document.getElementById('tipo_sesion');
+            const tipoPapelSelect = document.getElementById('tipo_papel');
+            if (tipoSesionSelect) tipoSesionSelect.addEventListener('change', calcularTotalFormulario);
+            if (tipoPapelSelect) tipoPapelSelect.addEventListener('change', calcularTotalFormulario);
 
             if (reservasForm) {
                 reservasForm.addEventListener('submit', async function(e) {
@@ -2472,8 +2495,21 @@
                         "boda": 4500,
                         "evento": 2500
                     };
-                    const precioConfirm = preciosMap[data.tipo_sesion] || 0;
-                    const precioTexto = precioConfirm > 0 ? '\n\n📸 Servicio: ' + (data.tipo_sesion || 'N/A') + '\n💰 Total: $' + precioConfirm.toFixed(2) + ' MXN' : '';
+                    const papelConfirmMap = {
+                        "": "Sin impresión",
+                        "brillante": "Papel Brillante (Incluido)",
+                        "mate": "Papel Mate (+$30/u)",
+                        "lustre": "Papel Lustre (+25%)",
+                        "fineart": "Fine Art (+$500)"
+                    };
+                    let precioConfirm = preciosMap[data.tipo_sesion] || 0;
+                    if (precioConfirm > 0) {
+                        const papel = data.tipo_papel || '';
+                        if (papel === 'lustre' || papel === 'satinado') precioConfirm = precioConfirm * 1.25;
+                        else if (papel === 'fineart' || papel === 'algodon') precioConfirm = precioConfirm + 500;
+                    }
+                    const papelTextoConfirm = papelConfirmMap[data.tipo_papel] || '';
+                    const precioTexto = precioConfirm > 0 ? '\n\n📸 Servicio: ' + (data.tipo_sesion || 'N/A') + (papelTextoConfirm ? '\n📄 Papel: ' + papelTextoConfirm : '') + '\n💰 Total: $' + precioConfirm.toFixed(2) + ' MXN' : '';
 
                     if (!confirm('¿Confirmas tu reservación?' + precioTexto + '\n\nUna vez confirmada, nuestro equipo se pondrá en contacto contigo.')) {
                         return;
