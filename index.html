@@ -1300,13 +1300,13 @@
                 </div>
                 <form class="contact-form" id="contactForm">
                     <div class="form-group">
-                        <input type="text" placeholder="Tu nombre" required>
+                        <input type="text" id="contactName" placeholder="Tu nombre" required>
                     </div>
                     <div class="form-group">
-                        <input type="email" placeholder="Tu correo" required>
+                        <input type="email" id="contactEmail" placeholder="Tu correo" required>
                     </div>
                     <div class="form-group">
-                        <textarea placeholder="Tu mensaje" rows="5" required></textarea>
+                        <textarea id="contactMessage" placeholder="Tu mensaje" rows="5" required></textarea>
                     </div>
                     <button type="submit" class="cta-button">Enviar Mensaje</button>
                 </form>
@@ -2393,9 +2393,27 @@
             }
 
             if (contactForm) {
-                contactForm.addEventListener('submit', function(e) {
+                contactForm.addEventListener('submit', async function(e) {
                     e.preventDefault();
-                    alert('¡Gracias por tu mensaje! Te responderemos pronto.');
+                    const nombre = document.getElementById('contactName').value;
+                    const email = document.getElementById('contactEmail').value;
+                    const mensaje = document.getElementById('contactMessage').value;
+                    try {
+                        const response = await fetch('/api/contacto', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ nombre, email, mensaje })
+                        });
+                        const result = await response.json();
+                        if (result.success) {
+                            alert('¡Gracias por tu mensaje! Te responderemos pronto.');
+                            contactForm.reset();
+                        } else {
+                            alert('Error: ' + (result.error || 'No se pudo enviar el mensaje'));
+                        }
+                    } catch (error) {
+                        alert('Error de conexión. Por favor intenta más tarde.');
+                    }
                 });
             }
 

@@ -312,6 +312,37 @@ app.get('/api/reservas', (req, res) => {
     }
 });
 
+// Contacto
+app.post('/api/contacto', async (req, res) => {
+    const { nombre, email, mensaje } = req.body;
+    if (!nombre || !email || !mensaje) {
+        return res.status(400).json({ success: false, error: 'Todos los campos son requeridos' });
+    }
+
+    const emailHtml = `
+    <div style="font-family: Arial, sans-serif;">
+      <h2 style="color: #667eea;">Nuevo mensaje de contacto</h2>
+      <table style="border-collapse: collapse; width: 100%;">
+        <tr><td style="padding: 10px; border: 1px solid #ddd; font-weight: bold; background: #f5f5f5;">Nombre</td><td style="padding: 10px; border: 1px solid #ddd;">${nombre}</td></tr>
+        <tr><td style="padding: 10px; border: 1px solid #ddd; font-weight: bold; background: #f5f5f5;">Email</td><td style="padding: 10px; border: 1px solid #ddd;">${email}</td></tr>
+        <tr><td style="padding: 10px; border: 1px solid #ddd; font-weight: bold; background: #f5f5f5;">Mensaje</td><td style="padding: 10px; border: 1px solid #ddd;">${mensaje}</td></tr>
+      </table>
+    </div>`;
+
+    try {
+        await resend.emails.send({
+            from: 'Contacto FotoTec <onboarding@resend.dev>',
+            to: ['fototecventass@gmail.com'],
+            subject: `Mensaje de ${nombre}`,
+            html: emailHtml
+        });
+        res.json({ success: true, message: 'Mensaje enviado correctamente' });
+    } catch (err) {
+        console.error('Error enviando email de contacto:', err.message);
+        res.status(500).json({ success: false, error: 'Error al enviar el mensaje' });
+    }
+});
+
 // Mis reservas (usuario)
 app.get('/api/reservas/mis-reservas', (req, res) => {
     const { email } = req.query;
