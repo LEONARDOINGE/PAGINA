@@ -1932,8 +1932,9 @@
             token: localStorage.getItem('fotovecToken') || null,
 
             setUser(data) {
-                const userType = data.role === 'admin' ? 'administrador' : 'cliente';
-                this.currentUser = { ...data, userType };
+                const userData = data.user || data;
+                const userType = userData.role === 'admin' ? 'administrador' : 'cliente';
+                this.currentUser = { ...userData, userType };
                 this.token = data.token || this.token;
                 localStorage.setItem('fotovecToken', this.token);
                 localStorage.setItem('fotovecCurrentUser', JSON.stringify(this.currentUser));
