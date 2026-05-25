@@ -5,9 +5,11 @@ const fs = require("fs");
 
 const dbPath = process.env.DATABASE_PATH || path.join(__dirname, "database.db");
 const dbDir = path.dirname(dbPath);
-if (!fs.existsSync(dbDir)) {
-    fs.mkdirSync(dbDir, { recursive: true });
-}
+try {
+    if (!fs.existsSync(dbDir)) {
+        fs.mkdirSync(dbDir, { recursive: true });
+    }
+} catch (e) { console.log('No se pudo crear directorio de BD'); }
 
 let db;
 let SQL;
@@ -54,8 +56,12 @@ const dbWrapper = {
         db.run(sql);
     },
     save() {
-        const data = db.export();
-        fs.writeFileSync(dbPath, Buffer.from(data));
+        try {
+            const data = db.export();
+            fs.writeFileSync(dbPath, Buffer.from(data));
+        } catch (e) {
+            console.log('No se pudo guardar BD (puede que este en memoria)');
+        }
     }
 };
 
@@ -64,54 +70,53 @@ async function init() {
     SQL = await initSqlJs({ locateFile: () => wasmPath });
 
     let fileBuffer = null;
-    if (fs.existsSync(dbPath)) {
-        fileBuffer = fs.readFileSync(dbPath);
-    }
+    try {
+        if (fs.existsSync(dbPath)) {
+            fileBuffer = fs.readFileSync(dbPath);
+        }
+    } catch (e) { }
 
     db = new SQL.Database(fileBuffer);
 
-    db.run(`DROP TABLE IF EXISTS users`);
-    db.run(`DROP TABLE IF EXISTS reservas`);
+    db.run(`CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        username TEXT UNIQUE NOT NULL,
+        email TEXT UNIQUE NOT NULL,
+        password TEXT NOT NULL,
+        role TEXT DEFAULT 'user',
+        is_verified INTEGER DEFAULT 1,
+        verification_token TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`);
 
-    db.run(`
-        CREATE TABLE users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
-            username TEXT UNIQUE NOT NULL,
-            email TEXT UNIQUE NOT NULL,
-            password TEXT NOT NULL,
-            role TEXT DEFAULT 'user',
-            is_verified INTEGER DEFAULT 0,
-            verification_token TEXT,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )
-    `);
-
-    db.run(`
-        CREATE TABLE reservas (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            nombre TEXT NOT NULL,
-            email TEXT NOT NULL,
-            telefono TEXT NOT NULL,
-            tipo_sesion TEXT NOT NULL,
-            estilo TEXT,
-            cantidad_personas INTEGER,
-            fecha_sesion TEXT NOT NULL,
-            hora_sesion TEXT NOT NULL,
-            notas TEXT,
-            tipo_papel TEXT,
-            leido INTEGER DEFAULT 0,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )
-    `);
+    db.run(`CREATE TABLE IF NOT EXISTS reservas (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nombre TEXT NOT NULL,
+        email TEXT NOT NULL,
+        telefono TEXT NOT NULL,
+        tipo_sesion TEXT NOT NULL,
+        estilo TEXT,
+        cantidad_personas INTEGER,
+        fecha_sesion TEXT NOT NULL,
+        hora_sesion TEXT NOT NULL,
+        notas TEXT,
+        tipo_papel TEXT,
+        leido INTEGER DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`);
 
     const defaultAdminPassword = bcrypt.hashSync("admin123", 10);
-    db.run(
-        `INSERT OR IGNORE INTO users (name, username, email, password, role) VALUES (?, ?, ?, ?, ?)`,
-        ["Admin", "admin", "admin@fototec.com", defaultAdminPassword, "admin"]
-    );
+    try {
+        db.run(
+            `INSERT OR IGNORE INTO users (name, username, email, password, role, is_verified) VALUES (?, ?, ?, ?, ?, 1)`,
+            ["Admin", "admin", "admin@fototec.com", defaultAdminPassword, "admin"]
+        );
+    } catch (e) { }
 
-    dbWrapper.save();
+    try {
+        dbWrapper.save();
+    } catch (e) { }
 
     return dbWrapper;
 }

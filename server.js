@@ -3,7 +3,6 @@ const cors = require('cors');
 const dbWrapper = require('./db');
 const bcrypt = require('bcryptjs');
 const path = require('path');
-const crypto = require('crypto');
 require('dotenv').config();
 
 const app = express();
@@ -18,57 +17,26 @@ app.post("/api/register", (req, res) => {
     const { name, username, email, password } = req.body;
 
     if (!name || !username || !email || !password) {
-        return res.status(400).json({ error: "All fields are required" });
+        return res.status(400).json({ error: "Todos los campos son requeridos" });
     }
 
     if (password.length < 6) {
-        return res.status(400).json({ error: "Password must be at least 6 characters" });
+        return res.status(400).json({ error: "La contrasena debe tener al menos 6 caracteres" });
     }
 
     const hashedPassword = bcrypt.hashSync(password, 10);
-    const verificationToken = crypto.randomBytes(32).toString('hex');
 
     try {
-        const stmt = dbWrapper.prepare(`INSERT INTO users (name, username, email, password, verification_token) VALUES (?, ?, ?, ?, ?)`);
-        const result = stmt.run(name, username, email, hashedPassword, verificationToken);
-        
-        const baseUrl = process.env.BASE_URL || `http://localhost:${PORT}`;
-        const verifyUrl = `${baseUrl}/api/verify-email?token=${verificationToken}`;
-        
-        const mailOptions = {
-            from: process.env.SMTP_USER || 'fototecventass@gmail.com',
-            to: email,
-            subject: 'FotoTec - Verifica tu cuenta',
-            html: `
-                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                    <h1 style="color: #667eea;">FotoTec - Verificacion de Cuenta</h1>
-                    <p>Hola <strong>${name}</strong>!</p>
-                    <p>Gracias por registrarte en FotoTec. Para activar tu cuenta, haz clic en el siguiente enlace:</p>
-                    <p style="margin: 30px 0;">
-                        <a href="${verifyUrl}" style="background-color: #667eea; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">Verificar Cuenta</a>
-                    </p>
-                    <p>O copia y pega este enlace en tu navegador:</p>
-                    <p style="word-break: break-all; color: #667eea;">${verifyUrl}</p>
-                    <p>Este enlace expira en 24 horas.</p>
-                    <p>Si no creaste esta cuenta, puedes ignorar este email.</p>
-                </div>
-            `
-        };
+        const stmt = dbWrapper.prepare(`INSERT INTO users (name, username, email, password, is_verified) VALUES (?, ?, ?, ?, 1)`);
+        const result = stmt.run(name, username, email, hashedPassword);
 
-        transporter.sendMail(mailOptions, (err, info) => {
-            if (err) {
-                console.error('Error enviando email de verificacion:', err);
-            } else {
-                console.log('Email de verificacion enviado:', info.response);
-            }
-        });
-
-        res.json({ message: "User registered. Please check your email to verify your account.", userId: result.lastInsertRowid });
+        res.json({ message: "Usuario registrado exitosamente!", userId: result.lastInsertRowid });
     } catch (err) {
-        if (err.message.includes("UNIQUE constraint failed")) {
-            return res.status(400).json({ error: "Username or email already exists" });
+        if (err.message && err.message.includes("UNIQUE")) {
+            return res.status(400).json({ error: "El usuario o email ya existe" });
         }
-        return res.status(500).json({ error: "Database error" });
+        console.error('Error registro:', err);
+        return res.status(500).json({ error: "Error en el servidor" });
     }
 });
 
@@ -76,7 +44,7 @@ app.post("/api/login", (req, res) => {
     const { usernameOrEmail, password } = req.body;
 
     if (!usernameOrEmail || !password) {
-        return res.status(400).json({ error: "Username/email and password are required" });
+        return res.status(400).json({ error: "Usuario y contrasena son requeridos" });
     }
 
     try {
@@ -84,75 +52,21 @@ app.post("/api/login", (req, res) => {
         const user = stmt.get(usernameOrEmail, usernameOrEmail);
 
         if (!user) {
-            return res.status(401).json({ error: "Invalid credentials" });
+            return res.status(401).json({ error: "Credenciales invalidas" });
         }
 
         const isValidPassword = bcrypt.compareSync(password, user.password);
         if (!isValidPassword) {
-            return res.status(401).json({ error: "Invalid credentials" });
-        }
-
-        if (!user.is_verified) {
-            return res.status(403).json({ error: "Please verify your email before logging in", needsVerification: true });
+            return res.status(401).json({ error: "Credenciales invalidas" });
         }
 
         const { password: _, role, ...userWithoutPassword } = user;
         const userType = role === 'admin' ? 'administrador' : 'cliente';
         const userWithUserType = { ...userWithoutPassword, userType };
-        res.json({ message: "Login successful", user: userWithUserType });
+        res.json({ message: "Login exitoso", user: userWithUserType });
     } catch (err) {
-        return res.status(500).json({ error: "Database error" });
-    }
-});
-
-app.get("/api/verify-email", (req, res) => {
-    const { token } = req.query;
-
-    if (!token) {
-        return res.status(400).json({ error: "Token is required" });
-    }
-
-    try {
-        const stmt = dbWrapper.prepare(`SELECT * FROM users WHERE verification_token = ?`);
-        const user = stmt.get(token);
-
-        if (!user) {
-            return res.status(404).json({ error: "Invalid or expired token" });
-        }
-
-        if (user.is_verified) {
-            return res.json({ message: "Account already verified" });
-        }
-
-        dbWrapper.prepare(`UPDATE users SET is_verified = 1, verification_token = NULL WHERE id = ?`).run(user.id);
-        dbWrapper.save();
-
-        res.send(`
-            <!DOCTYPE html>
-            <html lang="es">
-            <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>Cuenta Verificada - FotoTec</title>
-                <style>
-                    body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-                    .container { background: white; padding: 40px; border-radius: 16px; text-align: center; box-shadow: 0 15px 50px rgba(0,0,0,0.3); max-width: 400px; }
-                    h1 { color: #667eea; margin-bottom: 20px; }
-                    p { color: #666; margin-bottom: 30px; }
-                    a { background-color: #667eea; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; display: inline-block; }
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <h1>Cuenta Verificada!</h1>
-                    <p>Tu cuenta ha sido verificada exitosamente. Ahora puedes iniciar sesion.</p>
-                    <a href="/">Ir a FotoTec</a>
-                </div>
-            </body>
-            </html>
-        `);
-    } catch (err) {
-        return res.status(500).json({ error: "Database error" });
+        console.error('Error login:', err);
+        return res.status(500).json({ error: "Error en el servidor" });
     }
 });
 
@@ -188,8 +102,6 @@ app.post('/enviar-reserva', (req, res) => {
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `).run(clientName, clientEmail, telefono || '', tipoSesion || '', estilo || '', cantidadPersonas || 1, fechaSesion || '', horaSesion || '', notas || '', tipoPapel || '');
 
-        dbWrapper.save();
-
         console.log('Reserva guardada:', idPedido, clientName, clientEmail);
         res.json({
             success: true,
@@ -219,7 +131,6 @@ app.get('/api/reservas', (req, res) => {
 app.put('/api/reservas/:id/leer', (req, res) => {
     try {
         dbWrapper.prepare(`UPDATE reservas SET leido = 1 WHERE id = ?`).run(req.params.id);
-        dbWrapper.save();
         res.json({ success: true });
     } catch (err) {
         res.status(500).json({ success: false, error: 'Error' });
@@ -229,7 +140,7 @@ app.put('/api/reservas/:id/leer', (req, res) => {
 app.get('/api/reservas/contador', (req, res) => {
     try {
         const result = dbWrapper.prepare(`SELECT COUNT(*) as total FROM reservas WHERE leido = 0`).get();
-        res.json({ total: result.total });
+        res.json({ total: result ? result.total : 0 });
     } catch (err) {
         res.status(500).json({ total: 0 });
     }
@@ -299,15 +210,6 @@ dbWrapper.ready.then(() => {
         console.log(`   Puerto: ${PORT}`);
         console.log(`   URL: http://localhost:${PORT}`);
         console.log('==================================');
-        console.log('');
-        console.log('Rutas disponibles:');
-        console.log('  POST /api/register           - Registrar nuevo usuario');
-        console.log('  POST /api/login             - Login de usuario');
-        console.log('  POST /api/verificar-admin   - Verificar credenciales admin');
-        console.log('  POST /enviar-reserva        - Enviar email de pedido');
-        console.log('  GET  /api/test-smtp        - Test de conexion SMTP');
-        console.log('  GET  /api/clients          - Obtener lista de clientes');
-        console.log('  GET  /                     - Health check');
         console.log('');
     });
 }).catch(err => {
