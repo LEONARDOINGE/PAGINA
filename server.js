@@ -3,9 +3,8 @@ const cors = require('cors');
 const dbWrapper = require('./db');
 const bcrypt = require('bcryptjs');
 const path = require('path');
-const nodemailer = require('nodemailer');
 const crypto = require('crypto');
-const dns = require('dns');
+const { Resend } = require('resend');
 require('dotenv').config();
 
 const app = express();
@@ -16,38 +15,28 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static(path.join(__dirname)));
 
-let transporter;
+const resend = new Resend(process.env.RESEND_API_KEY);
 
-function initTransporter() {
-    return new Promise((resolve) => {
-        const smtpUser = process.env.SMTP_USER;
-        const smtpPass = process.env.SMTP_PASS;
+console.log('=== CONFIG EMAIL ===');
+console.log('RESEND_API_KEY:', process.env.RESEND_API_KEY ? 'OK' : 'NO CONFIGURADO');
+console.log('====================');
 
-        console.log('=== CONFIG SMTP ===');
-        console.log('SMTP_USER:', smtpUser || 'NO CONFIGURADO');
-        console.log('SMTP_PASS:', smtpPass ? 'OK' : 'NO CONFIGURADO');
-        console.log('SMTP_HOST:', process.env.SMTP_HOST);
-        console.log('SMTP_PORT:', process.env.SMTP_PORT);
-        console.log('====================');
-
-        transporter = nodemailer.createTransport({
-            host: 'smtp.gmail.com',
-            port: parseInt(process.env.SMTP_PORT) || 587,
-            secure: false,
-            auth: { user: smtpUser, pass: smtpPass },
-            tls: { rejectUnauthorized: false, servername: 'smtp.gmail.com' }
+app.get('/api/test-smtp', async (req, res) => {
+    console.log('Test SMTP via Resend...');
+    try {
+        const data = await resend.emails.send({
+            from: 'FotoTec <onboarding@resend.dev>',
+            to: [process.env.SMTP_USER || 'fototecventass@gmail.com'],
+            subject: 'Test SMTP - FotoTec',
+            html: `<h1>Test SMTP</h1><p>Hora: ${new Date().toISOString()}</p><p>Si llegaste aqui, el email funciona!</p>`
         });
-
-        transporter.verify((error, success) => {
-            if (error) {
-                console.error('Nodemailer verify error:', error.message);
-            } else {
-                console.log('Nodemailer listo');
-            }
-            resolve();
-        });
-    });
-}
+        console.log('Test SMTP exitoso:', data);
+        res.json({ success: true, data });
+    } catch (error) {
+        console.error('Test SMTP error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
 
 app.get('/api/test-smtp', (req, res) => {
     console.log('=== DIAGNOSTICO SMTP ===');
@@ -230,7 +219,7 @@ app.get("/api/users", (req, res) => {
     }
 });
 
-app.post('/enviar-reserva', (req, res) => {
+app.post('/enviar-reserva', async (req, res) => {
     const {
         clientEmail, clientName, pedidoId, productos, total,
         telefono, tipoSesion, estilo, cantidadPersonas,
@@ -270,115 +259,73 @@ app.post('/enviar-reserva', (req, res) => {
         <tr><td style="padding: 6px; border: 1px solid #ddd;"><strong>Notas</strong></td><td style="padding: 6px; border: 1px solid #ddd;">${notas || 'Ninguna'}</td></tr>
     `;
 
-    const mailOptions = {
-        from: process.env.SMTP_USER || 'fototecventass@gmail.com',
-        to: clientEmail,
-        subject: `FotoTec - Solicitud de Reserva #${idPedido}`,
-        html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 16px 16px 0 0; text-align: center;">
-                    <h1 style="color: white; margin: 0; font-size: 2em;">📸 FotoTec</h1>
-                    <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0;">Solicitud de Reserva Recibida</p>
-                </div>
-                <div style="background: white; padding: 30px; border-radius: 0 0 16px 16px; border: 1px solid #eee;">
-                    <h2 style="color: #667eea; margin-top: 0;">¡Hola <strong>${clientName}</strong>!</h2>
-                    <p>Hemos recibido tu solicitud de reserva. Nuestro equipo se pondrá en contacto contigo pronto para confirmar la disponibilidad y los detalles.</p>
-
-                    <h3 style="color: #333; border-bottom: 2px solid #667eea; padding-bottom: 10px;">📋 Detalles de la Solicitud</h3>
-                    <table style="width: 100%; border-collapse: collapse; margin: 15px 0;">
-                        <tbody>
-                            ${sesionInfo}
-                        </tbody>
-                    </table>
-
-                    <h3 style="color: #333; border-bottom: 2px solid #667eea; padding-bottom: 10px;">📦 Resumen</h3>
-                    <table style="width: 100%; border-collapse: collapse; margin: 15px 0;">
-                        <thead>
-                            <tr style="background-color: #667eea; color: white;">
-                                <th style="padding: 10px; text-align: left;">Producto/Servicio</th>
-                                <th style="padding: 10px; text-align: center;">Cantidad</th>
-                                <th style="padding: 10px; text-align: right;">Precio</th>
-                                <th style="padding: 10px; text-align: right;">Subtotal</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${productosHTML}
-                        </tbody>
-                    </table>
-                    <h3 style="text-align: right; color: #667eea;">Total: <span style="font-size: 1.5em;">$${total?.toFixed(2) || '0.00'}</span></h3>
-
-                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-top: 20px;">
-                        <p style="margin: 0;"><strong>📞Teléfono:</strong> +52 899 207 0611</p>
-                        <p style="margin: 5px 0 0 0;"><strong>📧Email:</strong> fototecventass@gmail.com</p>
-                        <p style="margin: 5px 0 0 0;"><strong>📍Dirección:</strong> Av. Tecnológico 318, Reynosa, Tamps.</p>
-                    </div>
-                    <p style="color: #999; font-size: 0.85em; margin-top: 20px; text-align: center;">
-                        Esta es una confirmación de que recibimos tu solicitud. El pago se realiza al confirmar la cita.
-                    </p>
-                </div>
+    const emailHtml = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 16px 16px 0 0; text-align: center;">
+                <h1 style="color: white; margin: 0; font-size: 2em;">FotoTec</h1>
+                <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0;">Solicitud de Reserva Recibida</p>
             </div>
-        `
-    };
+            <div style="background: white; padding: 30px; border-radius: 0 0 16px 16px; border: 1px solid #eee;">
+                <h2 style="color: #667eea; margin-top: 0;">¡Hola <strong>${clientName}</strong>!</h2>
+                <p>Hemos recibido tu solicitud de reserva. Nuestro equipo se pondrá en contacto contigo pronto para confirmar la disponibilidad y los detalles.</p>
 
-    transporter.sendMail(mailOptions, (error, info) => {
-        if (error) {
-            console.error('Error al enviar email de reserva:', error);
-            let mensajeError = 'Error al enviar email';
-            if (error.message.includes('Invalid login')) {
-                mensajeError = 'Error de autenticacion SMTP. Verifica SMTP_PASS en Render.';
-            } else if (error.message.includes('ECONNREFUSED')) {
-                mensajeError = 'No se pudo conectar al servidor SMTP.';
-            } else if (error.message.includes('ETIMEDOUT')) {
-                mensajeError = 'Tiempo de espera agotado con el servidor SMTP.';
-            }
-            return res.status(500).json({
-                success: false,
-                error: mensajeError,
-                details: error.message
-            });
-        }
+                <h3 style="color: #333; border-bottom: 2px solid #667eea; padding-bottom: 10px;">Detalles de la Solicitud</h3>
+                <table style="width: 100%; border-collapse: collapse; margin: 15px 0;">
+                    <tbody>
+                        ${sesionInfo}
+                    </tbody>
+                </table>
 
-        console.log('Email de reserva enviado:', info.response);
+                <h3 style="color: #333; border-bottom: 2px solid #667eea; padding-bottom: 10px;">Resumen</h3>
+                <table style="width: 100%; border-collapse: collapse; margin: 15px 0;">
+                    <thead>
+                        <tr style="background-color: #667eea; color: white;">
+                            <th style="padding: 10px; text-align: left;">Producto/Servicio</th>
+                            <th style="padding: 10px; text-align: center;">Cantidad</th>
+                            <th style="padding: 10px; text-align: right;">Precio</th>
+                            <th style="padding: 10px; text-align: right;">Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${productosHTML}
+                    </tbody>
+                </table>
+                <h3 style="text-align: right; color: #667eea;">Total: <span style="font-size: 1.5em;">$${total?.toFixed(2) || '0.00'}</span></h3>
+
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-top: 20px;">
+                    <p style="margin: 0;"><strong>Teléfono:</strong> +52 899 207 0611</p>
+                    <p style="margin: 5px 0 0 0;"><strong>Email:</strong> fototecventass@gmail.com</p>
+                    <p style="margin: 5px 0 0 0;"><strong>Dirección:</strong> Av. Tecnológico 318, Reynosa, Tamps.</p>
+                </div>
+                <p style="color: #999; font-size: 0.85em; margin-top: 20px; text-align: center;">
+                    Esta es una confirmación de que recibimos tu solicitud. El pago se realiza al confirmar la cita.
+                </p>
+            </div>
+        </div>
+    `;
+
+    try {
+        const data = await resend.emails.send({
+            from: 'FotoTec <onboarding@resend.dev>',
+            to: [clientEmail],
+            subject: `FotoTec - Solicitud de Reserva #${idPedido}`,
+            html: emailHtml
+        });
+
+        console.log('Email de reserva enviado:', data);
         res.json({
             success: true,
             message: 'Reserva recibida. Te contactaremos pronto.',
-            pedidoId: idPedido,
-            emailSent: info.response
+            pedidoId: idPedido
         });
-    });
-});
-
-app.get('/enviar-reserva/test', (req, res) => {
-    const testEmail = process.env.SMTP_USER || 'fototecventass@gmail.com';
-
-    const mailOptions = {
-        from: testEmail,
-        to: testEmail,
-        subject: 'Test de SMTP - FotoTec',
-        html: `
-            <h1>Test de Conexion SMTP</h1>
-            <p>Si recibes este email, la configuracion de SMTP esta correcta.</p>
-            <p><strong>Hora:</strong> ${new Date().toLocaleString('es-ES')}</p>
-        `
-    };
-
-    transporter.sendMail(mailOptions, (error, info) => {
-        if (error) {
-            console.error('Error en test SMTP:', error);
-            return res.status(500).json({
-                success: false,
-                error: 'Error al conectar SMTP',
-                details: error.message
-            });
-        }
-
-        console.log('Test SMTP exitoso:', info.response);
-        res.json({
-            success: true,
-            message: 'Test SMTP exitoso - Email enviado',
-            smtpUser: testEmail
+    } catch (error) {
+        console.error('Error al enviar email de reserva:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Error al enviar email',
+            details: error.message
         });
-    });
+    }
 });
 
 app.post('/api/verificar-admin', (req, res) => {
@@ -434,9 +381,8 @@ app.use((err, req, res, next) => {
     });
 });
 
-dbWrapper.ready.then(async () => {
+dbWrapper.ready.then(() => {
     console.log('Base de datos lista');
-    await initTransporter();
 
     app.listen(PORT, () => {
         console.log('');

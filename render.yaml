@@ -8,14 +8,9 @@ services:
     envVars:
       - key: PORT
         value: 3000
-      - key: SMTP_HOST
-        value: smtp.gmail.com
-      - key: SMTP_PORT
-        value: 587
       - key: SMTP_USER
         value: fototecventass@gmail.com
-      - key: SMTP_PASS
+      - key: RESEND_API_KEY
         sync: false
-        # IMPORTANTE: Configurar como Variable de Entorno en el Dashboard de Render
-        # Ir a: Render Dashboard > fototec > Environment > Environment Variables
-        # Agregar: SMTP_PASS = "drhw ebwc ruoi rhbs"
+        # IMPORTANTE: Agregar en Render Dashboard > Environment > Environment Variables
+        # RESEND_API_KEY = "re_xxxxxxxxxxxx"
