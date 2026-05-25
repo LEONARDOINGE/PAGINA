@@ -234,7 +234,6 @@ app.get('/api/reservas/contador', (req, res) => {
         res.status(500).json({ total: 0 });
     }
 });
-});
 
 app.post('/api/verificar-admin', (req, res) => {
     const { username, password } = req.body;
