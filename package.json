@@ -1,49 +1,22 @@
 {
   "name": "fototec",
   "version": "1.0.0",
-  "description": "FotoTec - Sistema de reservas y gestion de clientes para fotografia profesional",
+  "description": "FotoTec - Studio de fotografia profesional",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "node server.js"
   },
   "engines": {
     "node": ">=18.0.0"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/LEONARDOINGE/PAGINA.git"
-  },
-  "keywords": [
-    "fotografia",
-    "reservas",
-    "express",
-    "sqlite"
-  ],
-  "author": "FotoTec",
-  "license": "ISC",
   "type": "commonjs",
-  "bugs": {
-    "url": "https://github.com/LEONARDOINGE/PAGINA/issues"
-  },
-  "homepage": "https://github.com/LEONARDOINGE/PAGINA#readme",
   "dependencies": {
-    "bcryptjs": "^3.0.3",
-    "cors": "^2.8.6",
-    "dotenv": "^17.4.2",
-    "express": "^5.2.1",
-    "express-session": "^1.19.0",
-    "hono": "^4.12.15",
-    "jsonwebtoken": "^9.0.3",
-    "nodemailer": "^8.0.7",
-    "passport": "^0.7.0",
-    "passport-google-oauth20": "^2.0.0",
-    "resend": "^6.12.3",
-    "sql.js": "^1.12.0"
-  },
-  "devDependencies": {
-    "@cloudflare/workers-types": "^4.20260426.1",
-    "wrangler": "^4.86.0"
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.0",
+    "jsonwebtoken": "^9.0.2",
+    "sql.js": "^1.11.0"
   }
 }

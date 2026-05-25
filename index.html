@@ -1883,6 +1883,14 @@
             currentUser: JSON.parse(localStorage.getItem('fotovecCurrentUser')) || null,
             token: localStorage.getItem('fotovecToken') || null,
 
+            setUser(data) {
+                const userType = data.role === 'admin' ? 'administrador' : 'cliente';
+                this.currentUser = { ...data, userType };
+                this.token = data.token || this.token;
+                localStorage.setItem('fotovecToken', this.token);
+                localStorage.setItem('fotovecCurrentUser', JSON.stringify(this.currentUser));
+            },
+
             async register(name, username, email, password) {
                 try {
                     const response = await fetch('/api/register', {
@@ -1892,16 +1900,13 @@
                     });
                     const data = await response.json();
                     if (response.ok) {
-                        this.token = data.token;
-                        this.currentUser = data.user;
-                        localStorage.setItem('fotovecToken', this.token);
-                        localStorage.setItem('fotovecCurrentUser', JSON.stringify(this.currentUser));
-                        return { success: true, message: 'Cuenta creada', user: data.user, autoLogin: true };
+                        this.setUser(data);
+                        return { success: true, user: this.currentUser };
                     } else {
                         return { success: false, message: data.error || 'Error en el registro' };
                     }
                 } catch (error) {
-                    return { success: false, message: 'Error de conexión con el servidor' };
+                    return { success: false, message: 'Error de conexion con el servidor' };
                 }
             },
 
@@ -1914,46 +1919,14 @@
                     });
                     const data = await response.json();
                     if (response.ok) {
-                        this.token = data.token;
-                        this.currentUser = data.user;
-                        localStorage.setItem('fotovecToken', this.token);
-                        localStorage.setItem('fotovecCurrentUser', JSON.stringify(this.currentUser));
-                        return { success: true, message: 'Bienvenido' };
+                        this.setUser(data);
+                        return { success: true, user: this.currentUser };
                     } else {
-                        return { success: false, message: data.error || 'Credenciales incorrectas' };
+                        return { success: false, message: data.error || 'Credenciales invalidas' };
                     }
                 } catch (error) {
                     return { success: false, message: 'Error de conexion con el servidor' };
                 }
-            },
-
-            async restoreSession() {
-                if (this.token && this.currentUser) {
-                    try {
-                        const response = await fetch('/api/me', {
-                            headers: { 'Authorization': 'Bearer ' + this.token }
-                        });
-                        if (response.ok) {
-                            const data = await response.json();
-                            this.currentUser = data.user;
-                            localStorage.setItem('fotovecCurrentUser', JSON.stringify(this.currentUser));
-                            return true;
-                        } else {
-                            this.logout();
-                            return false;
-                        }
-                    } catch (e) {
-                        return false;
-                    }
-                }
-                return false;
-            },
-
-            logout() {
-                this.currentUser = null;
-                this.token = null;
-                localStorage.removeItem('fotovecCurrentUser');
-                localStorage.removeItem('fotovecToken');
             },
 
             async loginAdmin(username, password) {
@@ -1965,28 +1938,44 @@
                     });
                     const data = await response.json();
                     if (response.ok && data.success) {
-                        this.currentUser = data.user;
+                        this.currentUser = { ...data.user, userType: 'administrador' };
                         localStorage.setItem('fotovecCurrentUser', JSON.stringify(this.currentUser));
-                        return { success: true, message: 'Admin conectado 🔧' };
+                        return { success: true };
                     } else {
-                        return { success: false, message: data.error || 'Credenciales incorrectas' };
+                        return { success: false, message: data.error || 'Credenciales invalidas' };
                     }
                 } catch (error) {
-                    return { success: false, message: 'Error de conexión con el servidor' };
+                    return { success: false, message: 'Error de conexion' };
                 }
+            },
+
+            async restoreSession() {
+                if (!this.token || !this.currentUser) return false;
+                try {
+                    const response = await fetch('/api/me', {
+                        headers: { 'Authorization': 'Bearer ' + this.token }
+                    });
+                    if (response.ok) {
+                        const data = await response.json();
+                        this.setUser(data);
+                        return true;
+                    }
+                } catch (e) {}
+                this.logout();
+                return false;
             },
 
             logout() {
                 this.currentUser = null;
+                this.token = null;
                 localStorage.removeItem('fotovecCurrentUser');
+                localStorage.removeItem('fotovecToken');
             }
         };
 
-        // ============ FUNCIONES DEL MODAL NUEVO ============
         function showAuthSection(section) {
             const loginSide = document.querySelector('.auth-login-side');
             const registerSide = document.querySelector('.auth-register-side');
-            
             if (section === 'register') {
                 loginSide.classList.add('auth-side-hidden');
                 registerSide.classList.remove('auth-side-hidden');
@@ -2042,12 +2031,7 @@
             const username = document.getElementById('authLoginUsername').value;
             const password = document.getElementById('authLoginPassword').value;
             const errorDiv = document.getElementById('authLoginError');
-
-            if (!username || !password) {
-                errorDiv.textContent = 'Por favor completa todos los campos';
-                return;
-            }
-
+            if (!username || !password) { errorDiv.textContent = 'Completa todos los campos'; return; }
             const result = await authSystem.login(username, password);
             if (result.success) {
                 closeAuthModal();
@@ -2065,32 +2049,13 @@
             const password = document.getElementById('authRegPassword').value;
             const confirm = document.getElementById('authRegConfirm').value;
             const errorDiv = document.getElementById('authRegError');
-
-            if (!name || !username || !email || !password || !confirm) {
-                errorDiv.textContent = 'Por favor completa todos los campos';
-                return;
-            }
-
-            if (password !== confirm) {
-                errorDiv.textContent = 'Las contraseñas no coinciden ';
-                return;
-            }
-
-            if (password.length < 6) {
-                errorDiv.textContent = 'La contraseña debe tener al menos 6 caracteres';
-                return;
-            }
-
+            if (!name || !username || !email || !password || !confirm) { errorDiv.textContent = 'Completa todos los campos'; return; }
+            if (password !== confirm) { errorDiv.textContent = 'Las contrasenas no coinciden'; return; }
+            if (password.length < 6) { errorDiv.textContent = 'Minimo 6 caracteres'; return; }
             const result = await authSystem.register(name, username, email, password);
             if (result.success) {
-                errorDiv.style.color = '#28a745';
-                errorDiv.textContent = '¡Cuenta creada! Iniciando sesion...';
-                document.getElementById('registerForm').reset();
-                showUserProfile();
                 closeAuthModal();
-                if (authSystem.currentUser && authSystem.currentUser.userType === 'administrador') {
-                    document.getElementById('adminBtn').style.display = 'inline-block';
-                }
+                showUserProfile();
             } else {
                 errorDiv.textContent = result.message;
             }
@@ -2101,12 +2066,7 @@
             const username = document.getElementById('authAdminUsername').value;
             const password = document.getElementById('authAdminPassword').value;
             const errorDiv = document.getElementById('authAdminError');
-
-            if (!username || !password) {
-                errorDiv.textContent = 'Por favor completa todos los campos';
-                return;
-            }
-
+            if (!username || !password) { errorDiv.textContent = 'Completa todos los campos'; return; }
             const result = await authSystem.loginAdmin(username, password);
             if (result.success) {
                 closeAuthModal();
@@ -2118,32 +2078,23 @@
 
         function showUserProfile() {
             const userInfo = document.getElementById('userInfo');
-            if (userInfo && authSystem.currentUser) {
-                const u = authSystem.currentUser;
-                const adminBtn = u.userType === 'administrador'
-                    ? '<button onclick="toggleAdminPanel()" style="margin-left:8px;background:#667eea;color:white;border:none;padding:8px 14px;border-radius:20px;cursor:pointer;font-size:0.8em;">Panel Admin</button>'
-                    : '';
-                userInfo.innerHTML = `
-                    <div style="display:flex;align-items:center;gap:10px;">
-                        <button id="btnMiPerfil" style="background:linear-gradient(135deg,#667eea,#764ba2);color:white;border:none;padding:8px 16px;border-radius:20px;cursor:pointer;font-size:0.9em;font-weight:600;">
-                            👤 ${u.name}
-                        </button>
-                        ${adminBtn}
-                        <button onclick="logout()" style="background:rgba(255,255,255,0.2);color:white;border:none;padding:8px 12px;border-radius:20px;cursor:pointer;font-size:0.8em;">
-                            Salir
-                        </button>
-                    </div>
-                `;
-                document.getElementById('btnMiPerfil').addEventListener('click', openProfileModal);
-            }
+            if (!userInfo || !authSystem.currentUser) return;
+            const u = authSystem.currentUser;
+            const isAdmin = u.userType === 'administrador';
+            userInfo.innerHTML = `
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <button id="btnMiPerfil" onclick="openProfileModal()" style="background:linear-gradient(135deg,#667eea,#764ba2);color:white;border:none;padding:8px 16px;border-radius:20px;cursor:pointer;font-size:0.9em;font-weight:600;">
+                        ${u.name}
+                    </button>
+                    ${isAdmin ? '<button onclick="toggleAdminPanel()" style="background:#667eea;color:white;border:none;padding:8px 14px;border-radius:20px;cursor:pointer;font-size:0.8em;">Panel Admin</button>' : ''}
+                    <button onclick="logout()" style="background:rgba(255,255,255,0.2);color:white;border:none;padding:8px 12px;border-radius:20px;cursor:pointer;font-size:0.8em;">Salir</button>
+                </div>`;
         }
 
         function logout() {
             authSystem.logout();
             const userInfo = document.getElementById('userInfo');
-            userInfo.innerHTML = `
-                <button class="login-btn-navbar" onclick="openLoginModal()">🔐 Iniciar Sesión</button>
-            `;
+            if (userInfo) userInfo.innerHTML = '<button class="login-btn-navbar" onclick="openLoginModal()">Iniciar Sesion</button>';
             closeAuthModal();
             closeProfileModal();
         }
@@ -2180,21 +2131,21 @@
             const name = document.getElementById('profileName').value;
             const email = document.getElementById('profileEmail').value;
             const password = document.getElementById('profilePassword').value;
-
-            const body = { id: authSystem.currentUser.id, name, email };
+            const body = { name, email };
             if (password) body.password = password;
 
             try {
                 const res = await fetch('/api/profile/update', {
                     method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + authSystem.token
+                    },
                     body: JSON.stringify(body)
                 });
                 const data = await res.json();
                 if (data.success) {
-                    authSystem.currentUser = data.user;
-                    authSystem.currentUser.userType = data.user.role === 'admin' ? 'administrador' : 'cliente';
-                    localStorage.setItem('fotovecCurrentUser', JSON.stringify(authSystem.currentUser));
+                    authSystem.setUser(data);
                     msg.style.color = '#28a745';
                     msg.textContent = 'Perfil actualizado!';
                     document.getElementById('profilePassword').value = '';
