@@ -2403,7 +2403,20 @@
                         notas: data.notas,
                         tipoPapel: data.tipo_papel
                     };
-                    console.log('Enviando reserva:', reservaData);
+
+                    const preciosMap = {
+                        "estudio": 800,
+                        "estudio_tematico": 1200,
+                        "tecnica": 250,
+                        "boda": 4500,
+                        "evento": 2500
+                    };
+                    const precioConfirm = preciosMap[data.tipo_sesion] || 0;
+                    const precioTexto = precioConfirm > 0 ? '\n\n📸 Servicio: ' + (data.tipo_sesion || 'N/A') + '\n💰 Total: $' + precioConfirm.toFixed(2) + ' MXN' : '';
+
+                    if (!confirm('¿Confirmas tu reservación?' + precioTexto + '\n\nUna vez confirmada, nuestro equipo se pondrá en contacto contigo.')) {
+                        return;
+                    }
 
                     try {
                         const response = await fetch('/enviar-reserva', {
@@ -2415,6 +2428,7 @@
                         if (result.success) {
                             alert('¡Gracias por tu reserva! Te contactaremos pronto para confirmar.');
                             reservasForm.reset();
+                            document.getElementById('resumen-total-pantalla').style.display = 'none';
                         } else {
                             alert('Error: ' + (result.error || 'No se pudo enviar la reserva'));
                         }
