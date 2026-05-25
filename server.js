@@ -244,17 +244,31 @@ app.post('/enviar-reserva', async (req, res) => {
         };
         const tipoNombre = tiposMap[tipoSesion] || tipoSesion || 'No especificado';
 
+        let precioBase = 80;
+        if (tipoSesion && tipoSesion.includes('boda')) {
+            precioBase = 300;
+        } else if (tipoSesion && (tipoSesion.includes('estudio') || tipoSesion.includes('tem'))) {
+            precioBase = 50;
+        }
+        const totalFormateado = '$' + precioBase.toFixed(2);
+
+        const notasValor = notas || 'Ninguna';
+        const estiloValor = estilo || 'No especificado';
+        const telefonoValor = telefono || 'No proporcionado';
+        const fechaValor = fechaSesion || 'Por confirmar';
+        const horaValor = horaSesion || 'Por confirmar';
+
         const emailHtmlAdmin = `
         <h2>Nueva Reserva Recibida</h2>
         <table style="border-collapse: collapse; width: 100%; font-family: Arial, sans-serif;">
           <tr><td style="padding: 10px; border: 1px solid #ddd; font-weight: bold; background: #f5f5f5;">Nombre</td><td style="padding: 10px; border: 1px solid #ddd;">${clientName}</td></tr>
           <tr><td style="padding: 10px; border: 1px solid #ddd; font-weight: bold; background: #f5f5f5;">Email</td><td style="padding: 10px; border: 1px solid #ddd;">${clientEmail}</td></tr>
-          <tr><td style="padding: 10px; border: 1px solid #ddd; font-weight: bold; background: #f5f5f5;">Teléfono</td><td style="padding: 10px; border: 1px solid #ddd;">${telefono || 'No proporcionado'}</td></tr>
+          <tr><td style="padding: 10px; border: 1px solid #ddd; font-weight: bold; background: #f5f5f5;">Teléfono</td><td style="padding: 10px; border: 1px solid #ddd;">${telefonoValor}</td></tr>
           <tr><td style="padding: 10px; border: 1px solid #ddd; font-weight: bold; background: #f5f5f5;">Tipo de Sesión</td><td style="padding: 10px; border: 1px solid #ddd;">${tipoNombre}</td></tr>
-          <tr><td style="padding: 10px; border: 1px solid #ddd; font-weight: bold; background: #f5f5f5;">Fecha</td><td style="padding: 10px; border: 1px solid #ddd;">${fechaSesion || 'No especificada'}</td></tr>
-          <tr><td style="padding: 10px; border: 1px solid #ddd; font-weight: bold; background: #f5f5f5;">Hora</td><td style="padding: 10px; border: 1px solid #ddd;">${horaSesion || 'No especificada'}</td></tr>
+          <tr><td style="padding: 10px; border: 1px solid #ddd; font-weight: bold; background: #f5f5f5;">Fecha</td><td style="padding: 10px; border: 1px solid #ddd;">${fechaValor}</td></tr>
+          <tr><td style="padding: 10px; border: 1px solid #ddd; font-weight: bold; background: #f5f5f5;">Hora</td><td style="padding: 10px; border: 1px solid #ddd;">${horaValor}</td></tr>
           <tr><td style="padding: 10px; border: 1px solid #ddd; font-weight: bold; background: #f5f5f5;">Personas</td><td style="padding: 10px; border: 1px solid #ddd;">${cantidadPersonas || '1'}</td></tr>
-          <tr><td style="padding: 10px; border: 1px solid #ddd; font-weight: bold; background: #f5f5f5;">Notas</td><td style="padding: 10px; border: 1px solid #ddd;">${notas || 'Ninguna'}</td></tr>
+          <tr><td style="padding: 10px; border: 1px solid #ddd; font-weight: bold; background: #f5f5f5;">Notas</td><td style="padding: 10px; border: 1px solid #ddd;">${notasValor}</td></tr>
         </table>`;
 
         const emailHtmlCliente = `
@@ -275,12 +289,12 @@ app.post('/enviar-reserva', async (req, res) => {
                     <h3 style="font-size: 15px; color: #333333; margin-top: 25px; margin-bottom: 10px; border-bottom: 1px solid #eeeeee; padding-bottom: 5px;">📋 Detalles de la Solicitud</h3>
                     <table style="width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; margin-bottom: 25px;">
                         <tr style="background-color: #f9f9f9;"><th style="padding: 8px; width: 35%; color: #555;">Tipo de Sesión</th><td style="padding: 8px;">${tipoNombre}</td></tr>
-                        <tr><th style="padding: 8px; color: #555;">Estilo</th><td style="padding: 8px;">${estilo || 'No especificado'}</td></tr>
+                        <tr><th style="padding: 8px; color: #555;">Estilo</th><td style="padding: 8px;">${estiloValor}</td></tr>
                         <tr style="background-color: #f9f9f9;"><th style="padding: 8px; color: #555;">Personas</th><td style="padding: 8px;">${cantidadPersonas || 1}</td></tr>
-                        <tr><th style="padding: 8px; color: #555;">Fecha</th><td style="padding: 8px; font-weight: bold;">${fechaSesion || 'Por confirmar'}</td></tr>
-                        <tr style="background-color: #f9f9f9;"><th style="padding: 8px; color: #555;">Hora</th><td style="padding: 8px; font-weight: bold;">${horaSesion || 'Por confirmar'}</td></tr>
-                        <tr><th style="padding: 8px; color: #555;">Teléfono</th><td style="padding: 8px;">${telefono || 'No proporcionado'}</td></tr>
-                        <tr style="background-color: #f9f9f9;"><th style="padding: 8px; color: #555;">Notas</th><td style="padding: 8px; color: #777;">${notas || 'Ninguna'}</td></tr>
+                        <tr><th style="padding: 8px; color: #555;">Fecha</th><td style="padding: 8px; font-weight: bold;">${fechaValor}</td></tr>
+                        <tr style="background-color: #f9f9f9;"><th style="padding: 8px; color: #555;">Hora</th><td style="padding: 8px; font-weight: bold;">${horaValor}</td></tr>
+                        <tr><th style="padding: 8px; color: #555;">Teléfono</th><td style="padding: 8px;">${telefonoValor}</td></tr>
+                        <tr style="background-color: #f9f9f9;"><th style="padding: 8px; color: #555;">Notas</th><td style="padding: 8px; color: #777;">${notasValor}</td></tr>
                     </table>
 
                     <h3 style="font-size: 15px; color: #333333; margin-top: 20px; margin-bottom: 10px;">📦 Resumen</h3>
@@ -297,14 +311,14 @@ app.post('/enviar-reserva', async (req, res) => {
                             <tr style="border-bottom: 1px solid #eeeeee;">
                                 <td style="padding: 12px; font-weight: bold;">${tipoNombre}</td>
                                 <td style="padding: 12px; text-align: center;">1</td>
-                                <td style="padding: 12px; text-align: right;">$80.00</td>
-                                <td style="padding: 12px; text-align: right;">$80.00</td>
+                                <td style="padding: 12px; text-align: right;">${totalFormateado}</td>
+                                <td style="padding: 12px; text-align: right;">${totalFormateado}</td>
                             </tr>
                         </tbody>
                     </table>
 
                     <div style="text-align: right; margin-top: 15px; font-size: 18px; font-weight: bold; color: #5165ff;">
-                        Total: $80.00
+                        Total: ${totalFormateado}
                     </div>
                 </div>
 
