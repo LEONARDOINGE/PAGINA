@@ -5,6 +5,7 @@ const bcrypt = require('bcryptjs');
 const path = require('path');
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
+const dns = require('dns');
 require('dotenv').config();
 
 const app = express();
@@ -15,23 +16,76 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static(path.join(__dirname)));
 
-const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST || 'smtp.gmail.com',
-    port: parseInt(process.env.SMTP_PORT) || 587,
-    secure: false,
-    auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS
-    },
-    tls: { rejectUnauthorized: false }
-});
+let transporter;
 
-transporter.verify((error, success) => {
-    if (error) {
-        console.error('Nodemailer verify error:', error);
-    } else {
-        console.log('Nodemailer está listo para enviar mensajes');
-    }
+function initTransporter() {
+    return new Promise((resolve) => {
+        const smtpUser = process.env.SMTP_USER;
+        const smtpPass = process.env.SMTP_PASS;
+
+        console.log('Configurando SMTP...');
+        console.log('Usuario SMTP:', smtpUser);
+        console.log('Pass SMTP:', smtpPass ? '[configurado]' : '[VACIO]');
+
+        try {
+            const { address: smtpIp } = dns.lookupSync('smtp.gmail.com', { family: 4 });
+            console.log('SMTP IPv4:', smtpIp);
+            transporter = nodemailer.createTransport({
+                host: smtpIp,
+                port: parseInt(process.env.SMTP_PORT) || 587,
+                secure: false,
+                auth: { user: smtpUser, pass: smtpPass },
+                tls: { rejectUnauthorized: false }
+            });
+        } catch (dnsErr) {
+            console.error('DNS lookup failed, usando hostname:', dnsErr.message);
+            transporter = nodemailer.createTransport({
+                host: 'smtp.gmail.com',
+                port: parseInt(process.env.SMTP_PORT) || 587,
+                secure: false,
+                auth: { user: smtpUser, pass: smtpPass },
+                tls: { rejectUnauthorized: false }
+            });
+        }
+
+        transporter.verify((error, success) => {
+            if (error) {
+                console.error('Nodemailer verify error:', error.message);
+            } else {
+                console.log('Nodemailer listo');
+            }
+            resolve();
+        });
+    });
+}
+
+app.get('/api/test-smtp', (req, res) => {
+    console.log('=== DIAGNOSTICO SMTP ===');
+    console.log('SMTP_USER:', process.env.SMTP_USER);
+    console.log('SMTP_PASS:', process.env.SMTP_PASS ? '(configurado)' : '(VACIO)');
+    console.log('========================');
+
+    const testEmail = process.env.SMTP_USER || 'fototecventass@gmail.com';
+    const mailOptions = {
+        from: testEmail,
+        to: testEmail,
+        subject: 'Test SMTP - FotoTec',
+        html: `<h1>Test SMTP</h1><p>Hora: ${new Date().toISOString()}</p>`
+    };
+
+    transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+            console.error('Test SMTP error:', error);
+            return res.status(500).json({
+                success: false,
+                error: error.message,
+                code: error.code,
+                command: error.command
+            });
+        }
+        console.log('Test SMTP exitoso');
+        res.json({ success: true, message: 'SMTP funciona!' });
+    });
 });
 
 app.post("/api/register", (req, res) => {
@@ -390,8 +444,9 @@ app.use((err, req, res, next) => {
     });
 });
 
-dbWrapper.ready.then(() => {
+dbWrapper.ready.then(async () => {
     console.log('Base de datos lista');
+    await initTransporter();
 
     app.listen(PORT, () => {
         console.log('');
@@ -407,7 +462,7 @@ dbWrapper.ready.then(() => {
         console.log('  POST /api/login             - Login de usuario');
         console.log('  POST /api/verificar-admin   - Verificar credenciales admin');
         console.log('  POST /enviar-reserva        - Enviar email de pedido');
-        console.log('  GET  /enviar-reserva/test  - Test de conexion SMTP');
+        console.log('  GET  /api/test-smtp        - Test de conexion SMTP');
         console.log('  GET  /api/clients          - Obtener lista de clientes');
         console.log('  GET  /                     - Health check');
         console.log('');
