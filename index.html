@@ -1295,11 +1295,14 @@
             <h2>🔧 Panel de Administrador</h2>
             <p>Gestiona productos, pedidos, usuarios y configuración del sistema</p>
 
-            <!-- Tabs de navegación del admin -->
+            <!-- Tabs de navegación del admin (ERP + SCM + CRM) -->
             <div class="admin-tabs">
                 <button class="admin-tab-btn active" onclick="mostrarTabAdmin('dashboard')">📊 Dashboard</button>
                 <button class="admin-tab-btn" onclick="mostrarTabAdmin('productos')">📦 Productos</button>
                 <button class="admin-tab-btn" onclick="mostrarTabAdmin('pedidos')">🛒 Pedidos</button>
+                <button class="admin-tab-btn" onclick="mostrarTabAdmin('proveedores')">🚚 Proveedores</button>
+                <button class="admin-tab-btn" onclick="mostrarTabAdmin('empleados')">👔 Recursos Humanos</button>
+                <button class="admin-tab-btn" onclick="mostrarTabAdmin('compras')">📥 Pedidos Compra</button>
                 <button class="admin-tab-btn" onclick="mostrarTabAdmin('usuarios')">👥 Usuarios</button>
                 <button class="admin-tab-btn" onclick="mostrarTabAdmin('reportes')">📈 Reportes</button>
             </div>
@@ -1307,23 +1310,39 @@
             <!-- TAB: Dashboard -->
             <div id="adminDashboard" class="admin-content active">
                 <div class="admin-section">
-                    <h3>📊 Resumen General</h3>
-                    <div id="dashboardResumen" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px;">
-                        <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; text-align: center;">
-                            <div style="font-size: 2em; font-weight: bold;" id="totalProductos">0</div>
-                            <div style="font-size: 0.9em; opacity: 0.8;">Productos</div>
+                    <h3>📊 Resumen Integral (ERP + SCM + CRM)</h3>
+                    <div id="dashboardResumen" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px;">
+                        <div style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 5px; text-align: center;">
+                            <div style="font-size: 1.8em; font-weight: bold;" id="totalProductos">0</div>
+                            <div style="font-size: 0.8em; opacity: 0.8;">Productos</div>
                         </div>
-                        <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; text-align: center;">
-                            <div style="font-size: 2em; font-weight: bold;" id="totalPedidos">0</div>
-                            <div style="font-size: 0.9em; opacity: 0.8;">Pedidos</div>
+                        <div style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 5px; text-align: center;">
+                            <div style="font-size: 1.8em; font-weight: bold;" id="totalPedidos">0</div>
+                            <div style="font-size: 0.8em; opacity: 0.8;">Pedidos (CRM)</div>
                         </div>
-                        <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; text-align: center;">
-                            <div style="font-size: 2em; font-weight: bold; color: #90ee90;" id="ingresos">$0</div>
-                            <div style="font-size: 0.9em; opacity: 0.8;">Ingresos</div>
+                        <div style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 5px; text-align: center;">
+                            <div style="font-size: 1.8em; font-weight: bold; color: #90ee90;" id="ingresos">$0</div>
+                            <div style="font-size: 0.8em; opacity: 0.8;">Ingresos</div>
                         </div>
-                        <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; text-align: center;">
-                            <div style="font-size: 2em; font-weight: bold; color: #ff6b6b;" id="productosAgotados">0</div>
-                            <div style="font-size: 0.9em; opacity: 0.8;">Agotados</div>
+                        <div style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 5px; text-align: center;">
+                            <div style="font-size: 1.8em; font-weight: bold; color: #ff6b6b;" id="productosAgotados">0</div>
+                            <div style="font-size: 0.8em; opacity: 0.8;">Agotados</div>
+                        </div>
+                        <div style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 5px; text-align: center;">
+                            <div style="font-size: 1.8em; font-weight: bold; color: #87ceeb;" id="totalProveedores">0</div>
+                            <div style="font-size: 0.8em; opacity: 0.8;">Proveedores (SCM)</div>
+                        </div>
+                        <div style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 5px; text-align: center;">
+                            <div style="font-size: 1.8em; font-weight: bold; color: #ffb366;" id="totalEmpleados">0</div>
+                            <div style="font-size: 0.8em; opacity: 0.8;">Empleados (RH)</div>
+                        </div>
+                        <div style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 5px; text-align: center;">
+                            <div style="font-size: 1.8em; font-weight: bold; color: #dda0dd;" id="pedidosCompraPendientes">0</div>
+                            <div style="font-size: 0.8em; opacity: 0.8;">Ped. Compra</div>
+                        </div>
+                        <div style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 5px; text-align: center;">
+                            <div style="font-size: 1.8em; font-weight: bold; color: #ffd700;" id="nominaTotal">$0</div>
+                            <div style="font-size: 0.8em; opacity: 0.8;">Nómina Mensual</div>
                         </div>
                     </div>
                 </div>
@@ -1333,7 +1352,7 @@
             <!-- TAB: Productos -->
             <div id="adminProductos" class="admin-content">
                 <div class="admin-section">
-                    <h3>➕ Crear Nuevo Producto</h3>
+                    <h3>➕ Crear / Editar Producto (con Estrategia SCM)</h3>
                     <div class="admin-form">
                         <div class="admin-form-row">
                             <div class="admin-form-group">
@@ -1360,9 +1379,28 @@
                                 <input type="number" id="newProdPrecio" placeholder="50" step="0.01">
                             </div>
                             <div class="admin-form-group">
-                                <label for="newProdStock">Stock</label>
+                                <label for="newProdStock">Stock Inicial</label>
                                 <input type="number" id="newProdStock" placeholder="100">
                             </div>
+                        </div>
+                        <div class="admin-form-row">
+                            <div class="admin-form-group">
+                                <label for="newProdEstrategia">Estrategia de Reabastecimiento (SCM)</label>
+                                <select id="newProdEstrategia">
+                                    <option value="pull">🔄 PULL - Bajo demanda del cliente</option>
+                                    <option value="push">📦 PUSH - Basado en pronóstico / Stock mínimo</option>
+                                </select>
+                            </div>
+                            <div class="admin-form-group">
+                                <label for="newProdStockMinimo">Stock Mínimo (para activar PUSH)</label>
+                                <input type="number" id="newProdStockMinimo" placeholder="20" value="10">
+                            </div>
+                        </div>
+                        <div class="admin-form-group">
+                            <label for="newProdProveedor">Proveedor Asociado (SCM)</label>
+                            <select id="newProdProveedor">
+                                <option value="">-- Sin proveedor --</option>
+                            </select>
                         </div>
                         <button onclick="crearNuevoProducto()" class="btn-success" style="width: 100%;">✅ Crear Producto</button>
                     </div>
@@ -1370,6 +1408,10 @@
 
                 <div class="admin-section">
                     <h3>📋 Lista de Productos</h3>
+                    <div style="margin-bottom: 10px; display: flex; gap: 10px; flex-wrap: wrap;">
+                        <span style="background: rgba(135,206,235,0.2); padding: 4px 8px; border-radius: 4px; font-size: 0.8em;">🔄 PULL = Bajo demanda</span>
+                        <span style="background: rgba(255,179,102,0.2); padding: 4px 8px; border-radius: 4px; font-size: 0.8em;">📦 PUSH = Reabastecimiento automático</span>
+                    </div>
                     <div id="productosListaDiv" style="overflow-x: auto;"></div>
                 </div>
             </div>
@@ -1377,8 +1419,127 @@
             <!-- TAB: Pedidos -->
             <div id="adminPedidos" class="admin-content">
                 <div class="admin-section">
-                    <h3>📋 Gestión de Pedidos</h3>
+                    <h3>📋 Gestión de Pedidos (CRM)</h3>
                     <div id="pedidosListaDiv" style="overflow-x: auto;"></div>
+                </div>
+            </div>
+
+            <!-- TAB: Proveedores (SCM) -->
+            <div id="adminProveedores" class="admin-content">
+                <div class="admin-section">
+                    <h3>🚚 Gestión de Proveedores (SCM)</h3>
+                    <div class="admin-form">
+                        <div class="admin-form-row">
+                            <div class="admin-form-group">
+                                <label for="newProvNombre">Nombre / Razón Social</label>
+                                <input type="text" id="newProvNombre" placeholder="Ej: Distribuidora ABC">
+                            </div>
+                            <div class="admin-form-group">
+                                <label for="newProvContacto">Persona de Contacto</label>
+                                <input type="text" id="newProvContacto" placeholder="Nombre del contacto">
+                            </div>
+                        </div>
+                        <div class="admin-form-row">
+                            <div class="admin-form-group">
+                                <label for="newProvTelefono">Teléfono</label>
+                                <input type="text" id="newProvTelefono" placeholder="8991234567">
+                            </div>
+                            <div class="admin-form-group">
+                                <label for="newProvEmail">Email</label>
+                                <input type="email" id="newProvEmail" placeholder="proveedor@email.com">
+                            </div>
+                        </div>
+                        <div class="admin-form-row">
+                            <div class="admin-form-group">
+                                <label for="newProvTipoInsumo">Tipo de Insumo</label>
+                                <select id="newProvTipoInsumo">
+                                    <option value="papel_fotografico">Papel Fotográfico</option>
+                                    <option value="equipo">Equipo Fotográfico</option>
+                                    <option value="tintas">Tintas y Cartuchos</option>
+                                    <option value="marcos">Marcos y Acabados</option>
+                                    <option value="iluminacion">Iluminación y Estudio</option>
+                                    <option value="otro">Otro</option>
+                                </select>
+                            </div>
+                            <div class="admin-form-group">
+                                <label for="newProvInsumoDetalle">Detalle de Insumos</label>
+                                <input type="text" id="newProvInsumoDetalle" placeholder="Ej: Papel Glossy 4x6, 8x10...">
+                            </div>
+                        </div>
+                        <button onclick="crearNuevoProveedor()" class="btn-success" style="width: 100%;">✅ Registrar Proveedor</button>
+                    </div>
+                </div>
+                <div class="admin-section">
+                    <h3>📋 Catálogo de Proveedores</h3>
+                    <div id="proveedoresListaDiv" style="overflow-x: auto;"></div>
+                </div>
+            </div>
+
+            <!-- TAB: Recursos Humanos (ERP) -->
+            <div id="adminEmpleados" class="admin-content">
+                <div class="admin-section">
+                    <h3>👔 Gestión de Recursos Humanos (ERP)</h3>
+                    <div class="admin-form">
+                        <div class="admin-form-row">
+                            <div class="admin-form-group">
+                                <label for="newEmpNombre">Nombre Completo</label>
+                                <input type="text" id="newEmpNombre" placeholder="Nombre del empleado">
+                            </div>
+                            <div class="admin-form-group">
+                                <label for="newEmpPuesto">Puesto</label>
+                                <input type="text" id="newEmpPuesto" placeholder="Ej: Fotógrafo">
+                            </div>
+                        </div>
+                        <div class="admin-form-row">
+                            <div class="admin-form-group">
+                                <label for="newEmpArea">Área / Departamento</label>
+                                <select id="newEmpArea">
+                                    <option value="Producción">Producción</option>
+                                    <option value="Post-producción">Post-producción</option>
+                                    <option value="Administración">Administración</option>
+                                    <option value="Ventas">Ventas</option>
+                                    <option value="Marketing">Marketing</option>
+                                    <option value="Otro">Otro</option>
+                                </select>
+                            </div>
+                            <div class="admin-form-group">
+                                <label for="newEmpFechaIngreso">Fecha de Ingreso</label>
+                                <input type="date" id="newEmpFechaIngreso">
+                            </div>
+                        </div>
+                        <div class="admin-form-row">
+                            <div class="admin-form-group">
+                                <label for="newEmpTelefono">Teléfono</label>
+                                <input type="text" id="newEmpTelefono" placeholder="8991234567">
+                            </div>
+                            <div class="admin-form-group">
+                                <label for="newEmpEmail">Email</label>
+                                <input type="email" id="newEmpEmail" placeholder="email@fototec.com">
+                            </div>
+                        </div>
+                        <div class="admin-form-group">
+                            <label for="newEmpSalario">Salario Mensual ($)</label>
+                            <input type="number" id="newEmpSalario" placeholder="10000" step="0.01">
+                        </div>
+                        <button onclick="crearNuevoEmpleado()" class="btn-success" style="width: 100%;">✅ Registrar Empleado</button>
+                    </div>
+                </div>
+                <div class="admin-section">
+                    <h3>📋 Nómina de Personal</h3>
+                    <div id="empleadosListaDiv" style="overflow-x: auto;"></div>
+                </div>
+            </div>
+
+            <!-- TAB: Pedidos de Compra (SCM) -->
+            <div id="adminCompras" class="admin-content">
+                <div class="admin-section">
+                    <h3>📥 Pedidos de Compra a Proveedores (SCM)</h3>
+                    <div class="admin-alert alert-info" style="margin-bottom: 15px;">
+                        <strong>📌 Estrategia PUSH:</strong> Cuando el stock de un producto baja del mínimo, se genera automáticamente un borrador de pedido de compra dirigido al proveedor asociado.
+                    </div>
+                    <button onclick="verificarStockYPush()" class="btn-success" style="width: 100%; margin-bottom: 15px;">🔍 Verificar Stock y Generar Pedidos PUSH</button>
+                    <div id="comprasMensajeDiv" style="margin-bottom: 15px;"></div>
+                    <div id="comprasListaDiv" style="overflow-x: auto;"></div>
                 </div>
             </div>
 
@@ -1393,7 +1554,7 @@
             <!-- TAB: Reportes -->
             <div id="adminReportes" class="admin-content">
                 <div class="admin-section">
-                    <h3>📊 Reportes y Estadísticas</h3>
+                    <h3>📊 Reportes Consolidados (ERP + SCM + CRM)</h3>
                     <button onclick="generarReporte()" class="btn-success" style="width: 100%; margin-bottom: 15px;">📄 Generar Reporte Completo</button>
                     <div id="reporteDiv"></div>
                 </div>
@@ -1636,7 +1797,10 @@
         </div>
     </div>
 
-    <!-- Script para funcionalidad -->
+    <!-- Scripts de funcionalidad (ERP + SCM) -->
+    <script src="database.js"></script>
+    <script src="permissions.js"></script>
+
     <script>
         // ============ MENÚ HAMBURGUESA ============
         function toggleMenu() {
@@ -1923,11 +2087,31 @@
                     const formData = new FormData(reservasForm);
                     const data = Object.fromEntries(formData.entries());
 
+                    const reservaData = {
+                        clientEmail: data.email,
+                        clientName: data.nombre,
+                        pedidoId: 'RES-' + Date.now(),
+                        productos: [{
+                            nombre: data.tipo_sesion || 'Sesión fotográfica',
+                            cantidad: 1,
+                            precio: 0
+                        }],
+                        total: 0,
+                        telefono: data.telefono,
+                        tipoSesion: data.tipo_sesion,
+                        estilo: data.estilo,
+                        cantidadPersonas: data.cantidad_personas,
+                        fechaSesion: data.fecha_sesion,
+                        horaSesion: data.hora_sesion,
+                        notas: data.notas,
+                        tipoPapel: data.tipo_papel
+                    };
+
                     try {
                         const response = await fetch('/enviar-reserva', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(data)
+                            body: JSON.stringify(reservaData)
                         });
                         const result = await response.json();
                         if (result.success) {
@@ -1988,9 +2172,16 @@
 
             // Cargar datos según la pestaña
             if (tabName === 'productos') {
+                cargarSelectProveedores();
                 cargarProductosAdmin();
             } else if (tabName === 'pedidos') {
                 cargarPedidosAdmin();
+            } else if (tabName === 'proveedores') {
+                cargarProveedoresAdmin();
+            } else if (tabName === 'empleados') {
+                cargarEmpleadosAdmin();
+            } else if (tabName === 'compras') {
+                cargarPedidosCompraAdmin();
             } else if (tabName === 'usuarios') {
                 cargarUsuariosAdmin();
             } else if (tabName === 'dashboard') {
@@ -1999,7 +2190,7 @@
         }
 
         /**
-         * Actualiza el dashboard con estadísticas
+         * Actualiza el dashboard con estadísticas (ERP + SCM + CRM)
          */
         function actualizarDashboard() {
             const reporte = database.generarReporte();
@@ -2007,6 +2198,22 @@
             document.getElementById('totalPedidos').textContent = reporte.totalPedidos;
             document.getElementById('ingresos').textContent = '$' + reporte.ingresosTotales.toFixed(2);
             document.getElementById('productosAgotados').textContent = reporte.productosAgotados;
+            document.getElementById('totalProveedores').textContent = reporte.totalProveedores;
+            document.getElementById('totalEmpleados').textContent = reporte.empleadosActivos + '/' + reporte.totalEmpleados;
+            document.getElementById('pedidosCompraPendientes').textContent = reporte.pedidosCompraPendientes;
+            document.getElementById('nominaTotal').textContent = '$' + reporte.nominaTotal.toFixed(0);
+        }
+
+        // ============ PRODUCTOS (con Estrategia Push/Pull SCM) ============
+
+        function cargarSelectProveedores() {
+            const select = document.getElementById('newProdProveedor');
+            if (!select) return;
+            const proveedores = database.obtenerProveedores(true);
+            select.innerHTML = '<option value="">-- Sin proveedor --</option>';
+            proveedores.forEach(p => {
+                select.innerHTML += `<option value="${p.id}">${p.nombre} (${p.tipoInsumo})</option>`;
+            });
         }
 
         /**
@@ -2022,26 +2229,29 @@
             const precio = document.getElementById('newProdPrecio').value;
             const stock = document.getElementById('newProdStock').value;
             const categoria = document.getElementById('newProdCategoria').value;
+            const estrategia = document.getElementById('newProdEstrategia').value;
+            const stockMinimo = document.getElementById('newProdStockMinimo').value;
+            const proveedorId = document.getElementById('newProdProveedor').value;
 
             if (!nombre || !precio || !stock) {
                 alert('Por favor rellena todos los campos obligatorios');
                 return;
             }
 
-            const result = database.crearProducto(nombre, descripcion, precio, stock, categoria);
+            const result = database.crearProducto(nombre, descripcion, precio, stock, categoria, estrategia, stockMinimo, proveedorId);
             alert('✅ Producto creado exitosamente');
-            
-            // Limpiar formulario
+
             document.getElementById('newProdNombre').value = '';
             document.getElementById('newProdDescripcion').value = '';
             document.getElementById('newProdPrecio').value = '';
             document.getElementById('newProdStock').value = '';
+            document.getElementById('newProdStockMinimo').value = '10';
 
             cargarProductosAdmin();
         }
 
         /**
-         * Carga la lista de productos en el admin
+         * Carga la lista de productos en el admin (con Push/Pull y proveedor)
          */
         function cargarProductosAdmin() {
             if (!verificarPermiso(authSystem.currentUser?.userType, 'ver_productos')) {
@@ -2049,15 +2259,23 @@
             }
 
             const productos = database.obtenerProductos();
-            let html = '<table class="admin-table"><thead><tr><th>ID</th><th>Nombre</th><th>Precio</th><th>Stock</th><th>Acciones</th></tr></thead><tbody>';
+            let html = '<table class="admin-table"><thead><tr><th>ID</th><th>Nombre</th><th>Precio</th><th>Stock</th><th>Estrategia</th><th>Proveedor</th><th>Acciones</th></tr></thead><tbody>';
 
             productos.forEach(prod => {
+                const proveedor = prod.proveedorId ? database.obtenerProveedor(prod.proveedorId) : null;
+                const estrategiaBadge = prod.estrategia === 'push'
+                    ? '<span style="background:#ffb366;color:#333;padding:2px 6px;border-radius:4px;font-size:0.75em;">📦 PUSH</span>'
+                    : '<span style="background:#87ceeb;color:#333;padding:2px 6px;border-radius:4px;font-size:0.75em;">🔄 PULL</span>';
+                const stockClass = prod.stock <= prod.stockMinimo ? 'style="color:#ff6b6b;font-weight:bold;"' : '';
+
                 html += `
                     <tr>
                         <td>${prod.id}</td>
                         <td><strong>${prod.nombre}</strong><br><small>${prod.descripcion}</small></td>
                         <td>$${prod.precio.toFixed(2)}</td>
-                        <td>${prod.stock}</td>
+                        <td ${stockClass}>${prod.stock} <small>(min: ${prod.stockMinimo})</small></td>
+                        <td>${estrategiaBadge}</td>
+                        <td>${proveedor ? proveedor.nombre : '<span style="opacity:0.5;">—</span>'}</td>
                         <td>
                             <button onclick="editarProductoAdmin(${prod.id})" class="btn-success" style="padding: 5px 10px; font-size: 0.8em;">✏️ Editar</button>
                             <button onclick="eliminarProductoAdmin(${prod.id})" class="btn-danger" style="padding: 5px 10px; font-size: 0.8em;">🗑️ Eliminar</button>
@@ -2071,7 +2289,7 @@
         }
 
         /**
-         * Edita un producto
+         * Edita un producto (incluye estrategia y proveedor)
          */
         function editarProductoAdmin(productoId) {
             if (!verificarPermiso(authSystem.currentUser?.userType, 'editar_productos')) {
@@ -2081,19 +2299,27 @@
             const producto = database.obtenerProducto(productoId);
             if (!producto) return;
 
-            const nuevoPrecio = prompt(`Nuevo precio para "${producto.nombre}":`, producto.precio);
+            const nuevoNombre = prompt('Nuevo nombre:', producto.nombre);
+            if (nuevoNombre === null) return;
+
+            const nuevoPrecio = prompt(`Nuevo precio (${producto.nombre}):`, producto.precio);
             if (nuevoPrecio === null) return;
 
             const nuevoStock = prompt('Nuevo stock:', producto.stock);
             if (nuevoStock === null) return;
 
-            const nuevoNombre = prompt('Nuevo nombre:', producto.nombre);
-            if (nuevoNombre === null) return;
+            const nuevaEstrategia = prompt('Estrategia (push/pull):', producto.estrategia || 'pull');
+            if (nuevaEstrategia === null) return;
+
+            const nuevoStockMin = prompt('Stock mínimo:', producto.stockMinimo || 10);
+            if (nuevoStockMin === null) return;
 
             const result = database.editarProducto(productoId, {
                 nombre: nuevoNombre,
                 precio: nuevoPrecio,
-                stock: nuevoStock
+                stock: nuevoStock,
+                estrategia: nuevaEstrategia,
+                stockMinimo: nuevoStockMin
             });
 
             if (result.success) {
@@ -2125,6 +2351,8 @@
             }
         }
 
+        // ============ PEDIDOS (CRM) ============
+
         /**
          * Carga la lista de pedidos en el admin
          */
@@ -2134,7 +2362,7 @@
             }
 
             const pedidos = database.obtenerPedidos();
-            let html = '<table class="admin-table"><thead><tr><th>ID Pedido</th><th>Cliente</th><th>Total</th><th>Estado</th><th>Fecha</th><th>Acciones</th></tr></thead><tbody>';
+            let html = '<table class="admin-table"><thead><tr><th>ID</th><th>Cliente</th><th>Total</th><th>Estado</th><th>Fecha</th><th>Acciones</th></tr></thead><tbody>';
 
             pedidos.forEach(ped => {
                 html += `
@@ -2145,9 +2373,9 @@
                         <td>${ped.estado}</td>
                         <td>${ped.fechaCreacion}</td>
                         <td>
-                            <button onclick="cambiarEstadoPedidoAdmin(${ped.id})" class="btn-success" style="padding: 5px 10px; font-size: 0.8em;">📝 Cambiar Estado</button>
+                            <button onclick="cambiarEstadoPedidoAdmin(${ped.id})" class="btn-success" style="padding: 5px 10px; font-size: 0.8em;">📝 Estado</button>
                             <button onclick="verDetallesPedido(${ped.id})" class="btn-success" style="padding: 5px 10px; font-size: 0.8em;">👁️ Ver</button>
-                            ${!ped.protegido ? `<button onclick="eliminarPedidoAdmin(${ped.id})" class="btn-danger" style="padding: 5px 10px; font-size: 0.8em;">🗑️ Eliminar</button>` : '<span style="opacity: 0.5;">🔒 Protegido</span>'}
+                            ${!ped.protegido ? `<button onclick="eliminarPedidoAdmin(${ped.id})" class="btn-danger" style="padding: 5px 10px; font-size: 0.8em;">🗑️</button>` : '<span style="opacity:0.5;">🔒</span>'}
                         </td>
                     </tr>
                 `;
@@ -2157,72 +2385,316 @@
             document.getElementById('pedidosListaDiv').innerHTML = html;
         }
 
-        /**
-         * Cambia el estado de un pedido
-         */
         function cambiarEstadoPedidoAdmin(pedidoId) {
-            if (!verificarPermiso(authSystem.currentUser?.userType, 'cambiar_estado_pedido')) {
-                return;
-            }
-
+            if (!verificarPermiso(authSystem.currentUser?.userType, 'cambiar_estado_pedido')) return;
             const nuevoEstado = prompt('Nuevo estado (Pendiente, Confirmado, Enviado, Entregado, Cancelado):', 'Pendiente');
             if (!nuevoEstado) return;
-
             const result = database.cambiarEstadoPedido(pedidoId, nuevoEstado);
-            if (result.success) {
-                alert('✅ ' + result.message);
-                cargarPedidosAdmin();
-            } else {
-                alert('❌ ' + result.message);
-            }
+            if (result.success) { alert('✅ ' + result.message); cargarPedidosAdmin(); }
+            else alert('❌ ' + result.message);
         }
 
-        /**
-         * Ve los detalles de un pedido
-         */
         function verDetallesPedido(pedidoId) {
             const pedido = database.obtenerPedido(pedidoId);
             if (!pedido) return;
-
-            alert(`📋 DETALLES DEL PEDIDO #${pedido.id}
-Cliente: ${pedido.clienteNombre}
-Total: $${pedido.total.toFixed(2)}
-Estado: ${pedido.estado}
-Fecha: ${pedido.fechaCreacion}
-Notas: ${pedido.notas || 'Ninguna'}`);
+            alert(`📋 PEDIDO #${pedido.id}\nCliente: ${pedido.clienteNombre}\nTotal: $${pedido.total.toFixed(2)}\nEstado: ${pedido.estado}\nFecha: ${pedido.fechaCreacion}\nNotas: ${pedido.notas || 'Ninguna'}`);
         }
 
-        /**
-         * Elimina un pedido
-         */
         function eliminarPedidoAdmin(pedidoId) {
-            if (!verificarPermiso(authSystem.currentUser?.userType, 'eliminar_productos')) {
-                return;
-            }
-
-            if (!confirm('⚠️ ¿Estás seguro? Esta acción no se puede deshacer.')) {
-                return;
-            }
-
+            if (!verificarPermiso(authSystem.currentUser?.userType, 'eliminar_productos')) return;
+            if (!confirm('⚠️ ¿Eliminar este pedido?')) return;
             const result = database.eliminarPedido(pedidoId);
+            if (result.success) { alert('✅ Pedido eliminado'); cargarPedidosAdmin(); }
+            else alert('❌ ' + result.message);
+        }
+
+        // ============ PROVEEDORES (SCM) ============
+
+        function crearNuevoProveedor() {
+            const nombre = document.getElementById('newProvNombre').value;
+            const contacto = document.getElementById('newProvContacto').value;
+            const telefono = document.getElementById('newProvTelefono').value;
+            const email = document.getElementById('newProvEmail').value;
+            const tipoInsumo = document.getElementById('newProvTipoInsumo').value;
+            const insumoDetalle = document.getElementById('newProvInsumoDetalle').value;
+
+            if (!nombre) { alert('El nombre es requerido'); return; }
+
+            const result = database.crearProveedor(nombre, contacto, telefono, email, tipoInsumo, insumoDetalle);
             if (result.success) {
-                alert('✅ Pedido eliminado');
-                cargarPedidosAdmin();
+                alert('✅ Proveedor registrado');
+                document.getElementById('newProvNombre').value = '';
+                document.getElementById('newProvContacto').value = '';
+                document.getElementById('newProvTelefono').value = '';
+                document.getElementById('newProvEmail').value = '';
+                document.getElementById('newProvInsumoDetalle').value = '';
+                cargarProveedoresAdmin();
+                cargarSelectProveedores();
             } else {
                 alert('❌ ' + result.message);
             }
         }
 
-        /**
-         * Carga la lista de usuarios en el admin
-         */
-        function cargarUsuariosAdmin() {
-            if (!verificarPermiso(authSystem.currentUser?.userType, 'ver_usuarios')) {
-                return;
+        function cargarProveedoresAdmin() {
+            const proveedores = database.obtenerProveedores();
+            let html = '<table class="admin-table"><thead><tr><th>ID</th><th>Nombre</th><th>Contacto</th><th>Tipo Insumo</th><th>Teléfono</th><th>Email</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>';
+
+            proveedores.forEach(prov => {
+                const estadoBadge = prov.activo
+                    ? '<span style="background:#28a745;padding:2px 6px;border-radius:4px;font-size:0.75em;">Activo</span>'
+                    : '<span style="background:#dc3545;padding:2px 6px;border-radius:4px;font-size:0.75em;">Inactivo</span>';
+                html += `
+                    <tr>
+                        <td>${prov.id}</td>
+                        <td><strong>${prov.nombre}</strong><br><small>${prov.insumoDetalle}</small></td>
+                        <td>${prov.contacto}</td>
+                        <td>${prov.tipoInsumo}</td>
+                        <td>${prov.telefono}</td>
+                        <td>${prov.email}</td>
+                        <td>${estadoBadge}</td>
+                        <td>
+                            <button onclick="editarProveedorAdmin(${prov.id})" class="btn-success" style="padding: 5px 10px; font-size: 0.8em;">✏️ Editar</button>
+                            <button onclick="toggleActivoProveedor(${prov.id})" class="btn-success" style="padding: 5px 10px; font-size: 0.8em;">🔄</button>
+                            <button onclick="eliminarProveedorAdmin(${prov.id})" class="btn-danger" style="padding: 5px 10px; font-size: 0.8em;">🗑️</button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += '</tbody></table>';
+            document.getElementById('proveedoresListaDiv').innerHTML = html;
+        }
+
+        function editarProveedorAdmin(proveedorId) {
+            const prov = database.obtenerProveedor(proveedorId);
+            if (!prov) return;
+
+            const nuevoNombre = prompt('Nombre:', prov.nombre);
+            if (nuevoNombre === null) return;
+            const nuevoContacto = prompt('Contacto:', prov.contacto);
+            if (nuevoContacto === null) return;
+            const nuevoTel = prompt('Teléfono:', prov.telefono);
+            if (nuevoTel === null) return;
+            const nuevoEmail = prompt('Email:', prov.email);
+            if (nuevoEmail === null) return;
+
+            const result = database.editarProveedor(proveedorId, {
+                nombre: nuevoNombre, contacto: nuevoContacto, telefono: nuevoTel, email: nuevoEmail
+            });
+            if (result.success) { alert('✅ Proveedor actualizado'); cargarProveedoresAdmin(); }
+            else alert('❌ ' + result.message);
+        }
+
+        function toggleActivoProveedor(proveedorId) {
+            const prov = database.obtenerProveedor(proveedorId);
+            if (!prov) return;
+            const result = database.editarProveedor(proveedorId, { activo: !prov.activo });
+            if (result.success) { alert('✅ Estado actualizado'); cargarProveedoresAdmin(); }
+            else alert('❌ ' + result.message);
+        }
+
+        function eliminarProveedorAdmin(proveedorId) {
+            if (!confirm('¿Eliminar este proveedor?')) return;
+            const result = database.eliminarProveedor(proveedorId);
+            if (result.success) { alert('✅ Proveedor eliminado'); cargarProveedoresAdmin(); }
+            else alert('❌ ' + result.message);
+        }
+
+        // ============ RECURSOS HUMANOS (ERP) ============
+
+        function crearNuevoEmpleado() {
+            const nombre = document.getElementById('newEmpNombre').value;
+            const puesto = document.getElementById('newEmpPuesto').value;
+            const area = document.getElementById('newEmpArea').value;
+            const telefono = document.getElementById('newEmpTelefono').value;
+            const email = document.getElementById('newEmpEmail').value;
+            const salario = document.getElementById('newEmpSalario').value;
+            const fechaIngreso = document.getElementById('newEmpFechaIngreso').value;
+
+            if (!nombre || !puesto || !area) { alert('Nombre, puesto y área son requeridos'); return; }
+
+            const result = database.crearEmpleado(nombre, puesto, area, telefono, email, salario, fechaIngreso);
+            if (result.success) {
+                alert('✅ Empleado registrado');
+                document.getElementById('newEmpNombre').value = '';
+                document.getElementById('newEmpPuesto').value = '';
+                document.getElementById('newEmpTelefono').value = '';
+                document.getElementById('newEmpEmail').value = '';
+                document.getElementById('newEmpSalario').value = '';
+                cargarEmpleadosAdmin();
+                actualizarDashboard();
+            } else {
+                alert('❌ ' + result.message);
+            }
+        }
+
+        function cargarEmpleadosAdmin() {
+            const empleados = database.obtenerEmpleados();
+            let html = '<table class="admin-table"><thead><tr><th>ID</th><th>Nombre</th><th>Puesto</th><th>Área</th><th>Salario</th><th>Ingreso</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>';
+
+            empleados.forEach(emp => {
+                const estadoBadge = emp.activo
+                    ? '<span style="background:#28a745;padding:2px 6px;border-radius:4px;font-size:0.75em;">Activo</span>'
+                    : '<span style="background:#dc3545;padding:2px 6px;border-radius:4px;font-size:0.75em;">Inactivo</span>';
+                html += `
+                    <tr>
+                        <td>${emp.id}</td>
+                        <td><strong>${emp.nombre}</strong><br><small>${emp.email || ''}</small></td>
+                        <td>${emp.puesto}</td>
+                        <td>${emp.area}</td>
+                        <td>$${(emp.salario || 0).toFixed(2)}</td>
+                        <td>${emp.fechaIngreso}</td>
+                        <td>${estadoBadge}</td>
+                        <td>
+                            <button onclick="editarEmpleadoAdmin(${emp.id})" class="btn-success" style="padding: 5px 10px; font-size: 0.8em;">✏️ Editar</button>
+                            <button onclick="toggleActivoEmpleado(${emp.id})" class="btn-success" style="padding: 5px 10px; font-size: 0.8em;">🔄</button>
+                            <button onclick="eliminarEmpleadoAdmin(${emp.id})" class="btn-danger" style="padding: 5px 10px; font-size: 0.8em;">🗑️</button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += '</tbody></table>';
+            document.getElementById('empleadosListaDiv').innerHTML = html;
+        }
+
+        function editarEmpleadoAdmin(empleadoId) {
+            const emp = database.obtenerEmpleado(empleadoId);
+            if (!emp) return;
+
+            const nuevoNombre = prompt('Nombre:', emp.nombre);
+            if (nuevoNombre === null) return;
+            const nuevoPuesto = prompt('Puesto:', emp.puesto);
+            if (nuevoPuesto === null) return;
+            const nuevoSalario = prompt('Salario:', emp.salario);
+            if (nuevoSalario === null) return;
+
+            const result = database.editarEmpleado(empleadoId, {
+                nombre: nuevoNombre, puesto: nuevoPuesto, salario: nuevoSalario
+            });
+            if (result.success) { alert('✅ Empleado actualizado'); cargarEmpleadosAdmin(); actualizarDashboard(); }
+            else alert('❌ ' + result.message);
+        }
+
+        function toggleActivoEmpleado(empleadoId) {
+            const emp = database.obtenerEmpleado(empleadoId);
+            if (!emp) return;
+            const result = database.editarEmpleado(empleadoId, { activo: !emp.activo });
+            if (result.success) { alert('✅ Estado actualizado'); cargarEmpleadosAdmin(); actualizarDashboard(); }
+            else alert('❌ ' + result.message);
+        }
+
+        function eliminarEmpleadoAdmin(empleadoId) {
+            if (!confirm('¿Dar de baja este empleado?')) return;
+            const result = database.eliminarEmpleado(empleadoId);
+            if (result.success) { alert('✅ Empleado dado de baja'); cargarEmpleadosAdmin(); actualizarDashboard(); }
+            else alert('❌ ' + result.message);
+        }
+
+        // ============ PEDIDOS DE COMPRA (SCM - PUSH/PULL) ============
+
+        function verificarStockYPush() {
+            const productos = database.obtenerProductos();
+            let generados = 0;
+            let mensaje = '';
+
+            productos.forEach(prod => {
+                if (prod.estrategia === 'push' && prod.stock <= prod.stockMinimo) {
+                    const cantidad = Math.max(prod.stockMinimo * 2, 20);
+                    const result = database.generarPedidoCompra(prod.id, cantidad,
+                        `Auto-generado: Stock ${prod.stock}/${prod.stockMinimo} - Estrategia PUSH`);
+                    if (result.success) {
+                        generados++;
+                        mensaje += `✅ Pedido #${result.pedido.id} generado para "${prod.nombre}" (x${cantidad})\n`;
+                    }
+                }
+            });
+
+            const div = document.getElementById('comprasMensajeDiv');
+            if (generados > 0) {
+                div.innerHTML = `<div class="admin-alert alert-success"><strong>🔔 ${generados} pedido(s) de compra generado(s) automáticamente:</strong><br><pre style="margin:5px 0 0 0;font-size:0.8em;">${mensaje}</pre></div>`;
+            } else {
+                div.innerHTML = `<div class="admin-alert alert-info"><strong>✅ No se necesitan pedidos de compra. El stock está por encima del mínimo.</strong></div>`;
             }
 
+            cargarPedidosCompraAdmin();
+            actualizarDashboard();
+        }
+
+        function cargarPedidosCompraAdmin() {
+            const pedidos = database.obtenerPedidosCompra();
+            let html = '<table class="admin-table"><thead><tr><th>ID</th><th>Proveedor</th><th>Total</th><th>Estado</th><th>Fecha</th><th>Recibido</th><th>Notas</th><th>Acciones</th></tr></thead><tbody>';
+
+            if (pedidos.length === 0) {
+                html += '<tr><td colspan="8" style="text-align:center;opacity:0.6;padding:20px;">No hay pedidos de compra</td></tr>';
+            }
+
+            pedidos.forEach(ped => {
+                const estadoColor = {
+                    'Pendiente': '#ffb366',
+                    'Confirmado': '#87ceeb',
+                    'Recibido': '#28a745',
+                    'Cancelado': '#dc3545'
+                }[ped.estado] || '#aaa';
+                html += `
+                    <tr>
+                        <td>#${ped.id}</td>
+                        <td>${ped.proveedorNombre}</td>
+                        <td>$${ped.total.toFixed(2)}</td>
+                        <td><span style="background:${estadoColor};color:white;padding:2px 8px;border-radius:4px;font-size:0.8em;">${ped.estado}</span></td>
+                        <td>${ped.fechaCreacion}</td>
+                        <td>${ped.fechaRecepcion || '—'}</td>
+                        <td><small>${ped.notas || ''}</small></td>
+                        <td>
+                            <button onclick="cambiarEstadoCompraAdmin(${ped.id})" class="btn-success" style="padding: 5px 10px; font-size: 0.8em;">📝 Estado</button>
+                            <button onclick="verDetallesCompra(${ped.id})" class="btn-success" style="padding: 5px 10px; font-size: 0.8em;">👁️</button>
+                            ${ped.estado !== 'Recibido' ? `<button onclick="eliminarPedidoCompraAdmin(${ped.id})" class="btn-danger" style="padding: 5px 10px; font-size: 0.8em;">🗑️</button>` : '<span style="opacity:0.5;">✅</span>'}
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += '</tbody></table>';
+            document.getElementById('comprasListaDiv').innerHTML = html;
+        }
+
+        function cambiarEstadoCompraAdmin(pedidoId) {
+            const nuevoEstado = prompt('Nuevo estado (Pendiente, Confirmado, Recibido, Cancelado):', 'Pendiente');
+            if (!nuevoEstado) return;
+            const result = database.cambiarEstadoPedidoCompra(pedidoId, nuevoEstado);
+            if (result.success) {
+                alert('✅ ' + result.message);
+                if (nuevoEstado === 'Recibido') {
+                    alert('📦 El stock de los productos ha sido actualizado automáticamente.');
+                }
+                cargarPedidosCompraAdmin();
+                cargarProductosAdmin();
+                actualizarDashboard();
+            } else {
+                alert('❌ ' + result.message);
+            }
+        }
+
+        function verDetallesCompra(pedidoId) {
+            const ped = database.obtenerPedidoCompra(pedidoId);
+            if (!ped) return;
+            let productos = ped.productos.map(p => `  - ${p.nombre}: x${p.cantidad} @ $${p.costoUnitario.toFixed(2)}`).join('\n');
+            alert(`📥 PEDIDO DE COMPRA #${ped.id}\n\nProveedor: ${ped.proveedorNombre}\nEstado: ${ped.estado}\nTotal: $${ped.total.toFixed(2)}\nFecha: ${ped.fechaCreacion}\nRecibido: ${ped.fechaRecepcion || 'Pendiente'}\n\nProductos:\n${productos}\n\nNotas: ${ped.notas || 'Ninguna'}`);
+        }
+
+        function eliminarPedidoCompraAdmin(pedidoId) {
+            if (!confirm('¿Eliminar este pedido de compra?')) return;
+            const result = database.eliminarPedidoCompra(pedidoId);
+            if (result.success) { alert('✅ Pedido eliminado'); cargarPedidosCompraAdmin(); actualizarDashboard(); }
+            else alert('❌ ' + result.message);
+        }
+
+        // ============ USUARIOS ============
+
+        function cargarUsuariosAdmin() {
+            if (!verificarPermiso(authSystem.currentUser?.userType, 'ver_usuarios')) return;
             const clientes = authSystem.clients;
-            let html = '<div class="admin-alert alert-info">Total de clientes registrados: ' + clientes.length + '</div>';
+            let html = '<div class="admin-alert alert-info">Total: ' + clientes.length + ' clientes</div>';
             html += '<table class="admin-table"><thead><tr><th>ID</th><th>Nombre</th><th>Usuario</th><th>Email</th><th>Teléfono</th><th>Acciones</th></tr></thead><tbody>';
 
             clientes.forEach(cliente => {
@@ -2232,9 +2704,9 @@ Notas: ${pedido.notas || 'Ninguna'}`);
                         <td>${cliente.name}</td>
                         <td>${cliente.username}</td>
                         <td>${cliente.email}</td>
-                        <td>${cliente.phone}</td>
+                        <td>${cliente.phone || '—'}</td>
                         <td>
-                            <button onclick="resetearContrasenaAdmin('${cliente.username}')" class="btn-success" style="padding: 5px 10px; font-size: 0.8em;">🔑 Reset Pass</button>
+                            <button onclick="resetearContrasenaAdmin('${cliente.username}')" class="btn-success" style="padding: 5px 10px; font-size: 0.8em;">🔑 Reset</button>
                         </td>
                     </tr>
                 `;
@@ -2244,67 +2716,67 @@ Notas: ${pedido.notas || 'Ninguna'}`);
             document.getElementById('usuariosListaDiv').innerHTML = html;
         }
 
-        /**
-         * Resetea la contraseña de un usuario (sin verla)
-         */
         function resetearContrasenaAdmin(username) {
-            if (!verificarPermiso(authSystem.currentUser?.userType, 'resetear_contrasena')) {
-                return;
-            }
-
+            if (!verificarPermiso(authSystem.currentUser?.userType, 'resetear_contrasena')) return;
             const newPass = prompt(`Nueva contraseña para "${username}":`);
             if (!newPass) return;
-
-            if (newPass.length < 6) {
-                alert('La contraseña debe tener al menos 6 caracteres');
-                return;
-            }
-
+            if (newPass.length < 6) { alert('La contraseña debe tener al menos 6 caracteres'); return; }
             const cliente = authSystem.clients.find(c => c.username === username);
             if (cliente) {
                 cliente.password = newPass;
                 localStorage.setItem('fotovecClients', JSON.stringify(authSystem.clients));
-                alert('✅ Contraseña actualizada para ' + username);
+                alert('✅ Contraseña actualizada');
             }
         }
 
-        /**
-         * Genera un reporte completo
-         */
+        // ============ REPORTES CONSOLIDADOS ============
+
         function generarReporte() {
-            if (!verificarPermiso(authSystem.currentUser?.userType, 'ver_reportes')) {
-                return;
-            }
+            if (!verificarPermiso(authSystem.currentUser?.userType, 'ver_reportes')) return;
 
             const reporte = database.generarReporte();
+            let nominaHtml = '';
+            for (const [area, monto] of Object.entries(reporte.costoEmpleadosArea)) {
+                nominaHtml += `<div style="background:rgba(0,0,0,0.2);padding:8px;border-radius:4px;margin-top:4px;"><strong>${area}:</strong> $${monto.toFixed(2)}</div>`;
+            }
+
             let html = `
-                <div class="admin-alert alert-info">
-                    <h4>📊 Reporte Generado: ${reporte.timestamp}</h4>
+                <div class="admin-alert alert-info"><h4>📊 Reporte Consolidado: ${reporte.timestamp}</h4></div>
+
+                <div style="margin-bottom:20px;">
+                    <h4 style="color:#87ceeb;margin-bottom:10px;">🛒 CRM - Ventas y Pedidos</h4>
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;">
+                        <div style="background:rgba(0,0,0,0.2);padding:12px;border-radius:5px;text-align:center;"><div style="font-size:1.5em;font-weight:bold;">${reporte.totalProductos}</div><div>Productos</div></div>
+                        <div style="background:rgba(0,0,0,0.2);padding:12px;border-radius:5px;text-align:center;"><div style="font-size:1.5em;font-weight:bold;">${reporte.totalPedidos}</div><div>Pedidos</div></div>
+                        <div style="background:rgba(0,0,0,0.2);padding:12px;border-radius:5px;text-align:center;"><div style="font-size:1.5em;font-weight:bold;color:#90ee90;">$${reporte.ingresosTotales.toFixed(2)}</div><div>Ingresos</div></div>
+                        <div style="background:rgba(0,0,0,0.2);padding:12px;border-radius:5px;text-align:center;"><div style="font-size:1.5em;font-weight:bold;color:#ff6b6b;">${reporte.productosAgotados}</div><div>Agotados</div></div>
+                        <div style="background:rgba(0,0,0,0.2);padding:12px;border-radius:5px;text-align:center;"><div style="font-size:1.5em;font-weight:bold;">${reporte.productosStockBajo}</div><div>Stock Bajo</div></div>
+                    </div>
                 </div>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px;">
-                    <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 5px;">
-                        <div style="font-size: 1.5em; font-weight: bold;">📦 ${reporte.totalProductos}</div>
-                        <div>Productos en Catálogo</div>
+
+                <div style="margin-bottom:20px;">
+                    <h4 style="color:#ffb366;margin-bottom:10px;">🚚 SCM - Cadena de Suministro</h4>
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;">
+                        <div style="background:rgba(0,0,0,0.2);padding:12px;border-radius:5px;text-align:center;"><div style="font-size:1.5em;font-weight:bold;">${reporte.totalProveedores}</div><div>Proveedores</div></div>
+                        <div style="background:rgba(0,0,0,0.2);padding:12px;border-radius:5px;text-align:center;"><div style="font-size:1.5em;font-weight:bold;">${reporte.proveedoresActivos}</div><div>Activos</div></div>
+                        <div style="background:rgba(0,0,0,0.2);padding:12px;border-radius:5px;text-align:center;"><div style="font-size:1.5em;font-weight:bold;color:#87ceeb;">📦 ${reporte.productosPush}</div><div>Push</div></div>
+                        <div style="background:rgba(0,0,0,0.2);padding:12px;border-radius:5px;text-align:center;"><div style="font-size:1.5em;font-weight:bold;color:#dda0dd;">🔄 ${reporte.productosPull}</div><div>Pull</div></div>
+                        <div style="background:rgba(0,0,0,0.2);padding:12px;border-radius:5px;text-align:center;"><div style="font-size:1.5em;font-weight:bold;color:#ffb366;">${reporte.pedidosCompraPendientes}</div><div>Ped. Compra Pend.</div></div>
+                        <div style="background:rgba(0,0,0,0.2);padding:12px;border-radius:5px;text-align:center;"><div style="font-size:1.5em;font-weight:bold;">${reporte.totalPedidosCompra}</div><div>Total Ped. Compra</div></div>
                     </div>
-                    <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 5px;">
-                        <div style="font-size: 1.5em; font-weight: bold;">🛒 ${reporte.totalPedidos}</div>
-                        <div>Pedidos Totales</div>
+                </div>
+
+                <div style="margin-bottom:20px;">
+                    <h4 style="color:#dda0dd;margin-bottom:10px;">👔 ERP - Recursos Humanos</h4>
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;">
+                        <div style="background:rgba(0,0,0,0.2);padding:12px;border-radius:5px;text-align:center;"><div style="font-size:1.5em;font-weight:bold;">${reporte.totalEmpleados}</div><div>Total Empleados</div></div>
+                        <div style="background:rgba(0,0,0,0.2);padding:12px;border-radius:5px;text-align:center;"><div style="font-size:1.5em;font-weight:bold;color:#90ee90;">${reporte.empleadosActivos}</div><div>Activos</div></div>
+                        <div style="background:rgba(0,0,0,0.2);padding:12px;border-radius:5px;text-align:center;"><div style="font-size:1.5em;font-weight:bold;color:#dc3545;">${reporte.empleadosInactivos}</div><div>Inactivos</div></div>
+                        <div style="background:rgba(0,0,0,0.2);padding:12px;border-radius:5px;text-align:center;"><div style="font-size:1.5em;font-weight:bold;color:#ffd700;">$${reporte.nominaTotal.toFixed(2)}</div><div>Nómina Mensual</div></div>
                     </div>
-                    <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 5px;">
-                        <div style="font-size: 1.5em; font-weight: bold; color: #90ee90;">$${reporte.ingresosTotales.toFixed(2)}</div>
-                        <div>Ingresos Totales</div>
-                    </div>
-                    <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 5px;">
-                        <div style="font-size: 1.5em; font-weight: bold;">⏳ ${reporte.pedidosPendientes}</div>
-                        <div>Pedidos Pendientes</div>
-                    </div>
-                    <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 5px;">
-                        <div style="font-size: 1.5em; font-weight: bold; color: #90ee90;">✅ ${reporte.pedidosEntregados}</div>
-                        <div>Pedidos Entregados</div>
-                    </div>
-                    <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 5px;">
-                        <div style="font-size: 1.5em; font-weight: bold; color: #ff6b6b;">⚠️ ${reporte.productosAgotados}</div>
-                        <div>Productos Agotados</div>
+                    <div style="margin-top:10px;">
+                        <strong style="font-size:0.9em;">Nómina por Área:</strong>
+                        ${nominaHtml}
                     </div>
                 </div>
             `;

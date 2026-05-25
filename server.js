@@ -187,59 +187,91 @@ app.get("/api/users", (req, res) => {
 });
 
 app.post('/enviar-reserva', (req, res) => {
-    const { clientEmail, clientName, pedidoId, productos, total } = req.body;
+    const {
+        clientEmail, clientName, pedidoId, productos, total,
+        telefono, tipoSesion, estilo, cantidadPersonas,
+        fechaSesion, horaSesion, notas, tipoPapel
+    } = req.body;
 
-    if (!clientEmail || !clientName || !pedidoId) {
+    if (!clientEmail || !clientName) {
         return res.status(400).json({
             success: false,
-            error: 'Faltan datos requeridos (email, nombre, pedidoId)'
+            error: 'Faltan datos requeridos (email, nombre)'
         });
     }
 
+    const idPedido = pedidoId || 'RES-' + Date.now();
+
     let productosHTML = '';
-    if (productos && Array.isArray(productos)) {
+    if (productos && Array.isArray(productos) && productos.length > 0) {
         productosHTML = productos.map(p => `
             <tr>
-                <td>${p.nombre}</td>
-                <td>${p.cantidad}</td>
-                <td>$${p.precio}</td>
-                <td>$${(p.cantidad * p.precio).toFixed(2)}</td>
+                <td style="padding: 8px; border: 1px solid #ddd;">${p.nombre || 'Sesión fotográfica'}</td>
+                <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${p.cantidad || 1}</td>
+                <td style="padding: 8px; border: 1px solid #ddd; text-align: right;">$${p.precio || 0}</td>
+                <td style="padding: 8px; border: 1px solid #ddd; text-align: right;">$${((p.cantidad || 1) * (p.precio || 0)).toFixed(2)}</td>
             </tr>
         `).join('');
+    } else {
+        productosHTML = `<tr><td style="padding: 8px; border: 1px solid #ddd;">Sesión fotográfica</td><td style="padding: 8px; border: 1px solid #ddd; text-align: center;">1</td><td style="padding: 8px; border: 1px solid #ddd; text-align: right;">$0</td><td style="padding: 8px; border: 1px solid #ddd; text-align: right;">$0</td></tr>`;
     }
+
+    const sesionInfo = `
+        <tr><td style="padding: 6px; border: 1px solid #ddd;"><strong>Tipo de Sesión</strong></td><td style="padding: 6px; border: 1px solid #ddd;">${tipoSesion || 'No especificado'}</td></tr>
+        <tr><td style="padding: 6px; border: 1px solid #ddd;"><strong>Estilo</strong></td><td style="padding: 6px; border: 1px solid #ddd;">${estilo || 'No especificado'}</td></tr>
+        <tr><td style="padding: 6px; border: 1px solid #ddd;"><strong>Personas</strong></td><td style="padding: 6px; border: 1px solid #ddd;">${cantidadPersonas || 'No especificado'}</td></tr>
+        <tr><td style="padding: 6px; border: 1px solid #ddd;"><strong>Fecha</strong></td><td style="padding: 6px; border: 1px solid #ddd;">${fechaSesion || 'No especificada'}</td></tr>
+        <tr><td style="padding: 6px; border: 1px solid #ddd;"><strong>Hora</strong></td><td style="padding: 6px; border: 1px solid #ddd;">${horaSesion || 'No especificada'}</td></tr>
+        <tr><td style="padding: 6px; border: 1px solid #ddd;"><strong>Teléfono</strong></td><td style="padding: 6px; border: 1px solid #ddd;">${telefono || 'No proporcionado'}</td></tr>
+        <tr><td style="padding: 6px; border: 1px solid #ddd;"><strong>Notas</strong></td><td style="padding: 6px; border: 1px solid #ddd;">${notas || 'Ninguna'}</td></tr>
+    `;
 
     const mailOptions = {
         from: process.env.SMTP_USER || 'fototecventass@gmail.com',
         to: clientEmail,
-        subject: `Pedido Confirmado #${pedidoId}`,
+        subject: `FotoTec - Solicitud de Reserva #${idPedido}`,
         html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                <h1>FotoTec - Confirmacion de Pedido</h1>
-                <p>Hola <strong>${clientName}</strong>!</p>
-                <p>Tu pedido ha sido recibido. Detalles:</p>
-                <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
-                    <thead>
-                        <tr style="background-color: #667eea; color: white;">
-                            <th style="padding: 10px; text-align: left;">Producto</th>
-                            <th style="padding: 10px; text-align: center;">Cantidad</th>
-                            <th style="padding: 10px; text-align: right;">Precio</th>
-                            <th style="padding: 10px; text-align: right;">Subtotal</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${productosHTML}
-                    </tbody>
-                </table>
-                <h3 style="text-align: right;">Total: <span style="color: #667eea; font-size: 1.5em;">$${total?.toFixed(2) || '0.00'}</span></h3>
-                <hr style="margin: 30px 0; border: none; border-top: 2px solid #eee;">
-                <p>ID Pedido: #${pedidoId}</p>
-                <p>Estado: Pendiente de Confirmacion</p>
-                <p>Fecha: ${new Date().toLocaleDateString('es-ES')}</p>
-                <hr style="margin: 30px 0; border: none; border-top: 2px solid #eee;">
-                <p>En breve recibiras un email confirmando el envio.</p>
-                <p style="color: #999; font-size: 0.9em;">
-                    Contacto: fototecventass@gmail.com
-                </p>
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 16px 16px 0 0; text-align: center;">
+                    <h1 style="color: white; margin: 0; font-size: 2em;">📸 FotoTec</h1>
+                    <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0;">Solicitud de Reserva Recibida</p>
+                </div>
+                <div style="background: white; padding: 30px; border-radius: 0 0 16px 16px; border: 1px solid #eee;">
+                    <h2 style="color: #667eea; margin-top: 0;">¡Hola <strong>${clientName}</strong>!</h2>
+                    <p>Hemos recibido tu solicitud de reserva. Nuestro equipo se pondrá en contacto contigo pronto para confirmar la disponibilidad y los detalles.</p>
+
+                    <h3 style="color: #333; border-bottom: 2px solid #667eea; padding-bottom: 10px;">📋 Detalles de la Solicitud</h3>
+                    <table style="width: 100%; border-collapse: collapse; margin: 15px 0;">
+                        <tbody>
+                            ${sesionInfo}
+                        </tbody>
+                    </table>
+
+                    <h3 style="color: #333; border-bottom: 2px solid #667eea; padding-bottom: 10px;">📦 Resumen</h3>
+                    <table style="width: 100%; border-collapse: collapse; margin: 15px 0;">
+                        <thead>
+                            <tr style="background-color: #667eea; color: white;">
+                                <th style="padding: 10px; text-align: left;">Producto/Servicio</th>
+                                <th style="padding: 10px; text-align: center;">Cantidad</th>
+                                <th style="padding: 10px; text-align: right;">Precio</th>
+                                <th style="padding: 10px; text-align: right;">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${productosHTML}
+                        </tbody>
+                    </table>
+                    <h3 style="text-align: right; color: #667eea;">Total: <span style="font-size: 1.5em;">$${total?.toFixed(2) || '0.00'}</span></h3>
+
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-top: 20px;">
+                        <p style="margin: 0;"><strong>📞Teléfono:</strong> +52 899 207 0611</p>
+                        <p style="margin: 5px 0 0 0;"><strong>📧Email:</strong> fototecventass@gmail.com</p>
+                        <p style="margin: 5px 0 0 0;"><strong>📍Dirección:</strong> Av. Tecnológico 318, Reynosa, Tamps.</p>
+                    </div>
+                    <p style="color: #999; font-size: 0.85em; margin-top: 20px; text-align: center;">
+                        Esta es una confirmación de que recibimos tu solicitud. El pago se realiza al confirmar la cita.
+                    </p>
+                </div>
             </div>
         `
     };
@@ -257,7 +289,8 @@ app.post('/enviar-reserva', (req, res) => {
         console.log('Email de reserva enviado:', info.response);
         res.json({
             success: true,
-            message: 'Email de confirmacion enviado exitosamente',
+            message: 'Reserva recibida. Te contactaremos pronto.',
+            pedidoId: idPedido,
             emailSent: info.response
         });
     });
