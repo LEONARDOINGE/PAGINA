@@ -258,16 +258,60 @@ app.post('/enviar-reserva', async (req, res) => {
         </table>`;
 
         const emailHtmlCliente = `
-        <div style="font-family: Arial, sans-serif; text-align: center; max-width: 600px; margin: 0 auto;">
-          <h1 style="color: #667eea;">¡Gracias por tu reserva, ${clientName}!</h1>
-          <p>Hemos recibido tu solicitud de reserva. Nuestro equipo se pondrá en contacto contigo pronto para confirmar los detalles.</p>
-          <h3 style="color: #333;">Resumen de tu reserva:</h3>
-          <table style="border-collapse: collapse; width: 100%; margin: 15px 0;">
-            <tr><td style="padding: 10px; border: 1px solid #ddd; font-weight: bold;">Tipo de Sesión</td><td style="padding: 10px; border: 1px solid #ddd;">${tipoNombre}</td></tr>
-            <tr><td style="padding: 10px; border: 1px solid #ddd; font-weight: bold;">Fecha</td><td style="padding: 10px; border: 1px solid #ddd;">${fechaSesion || 'Por confirmar'}</td></tr>
-            <tr><td style="padding: 10px; border: 1px solid #ddd; font-weight: bold;">Hora</td><td style="padding: 10px; border: 1px solid #ddd;">${horaSesion || 'Por confirmar'}</td></tr>
-          </table>
-          <p style="color: #888; font-size: 0.85em;">FotoTec - Fotografía Profesional</p>
+        <div style="font-family: 'Segoe UI', Helvetica, Arial, sans-serif; background-color: #f4f5f7; padding: 20px; min-height: 100%;">
+            <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
+
+                <div style="background: linear-gradient(135deg, #5165ff 0%, #7a42f4 100%); padding: 30px; text-align: center; color: #ffffff;">
+                    <div style="font-size: 24px; font-weight: bold; margin-bottom: 5px;">📸 FotoTec</div>
+                    <div style="font-size: 14px; opacity: 0.9; letter-spacing: 1px;">Solicitud de Reserva Recibida</div>
+                </div>
+
+                <div style="padding: 30px; color: #333333;">
+                    <h2 style="color: #5165ff; margin-top: 0; font-size: 20px;">¡Hola ${clientName}!</h2>
+                    <p style="color: #666666; font-size: 14px; line-height: 1.6;">
+                        Hemos recibido tu solicitud de reserva. Nuestro equipo se pondrá en contacto contigo pronto para confirmar la disponibilidad y los detalles.
+                    </p>
+
+                    <h3 style="font-size: 15px; color: #333333; margin-top: 25px; margin-bottom: 10px; border-bottom: 1px solid #eeeeee; padding-bottom: 5px;">📋 Detalles de la Solicitud</h3>
+                    <table style="width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; margin-bottom: 25px;">
+                        <tr style="background-color: #f9f9f9;"><th style="padding: 8px; width: 35%; color: #555;">Tipo de Sesión</th><td style="padding: 8px;">${tipoNombre}</td></tr>
+                        <tr><th style="padding: 8px; color: #555;">Estilo</th><td style="padding: 8px;">${estilo || 'No especificado'}</td></tr>
+                        <tr style="background-color: #f9f9f9;"><th style="padding: 8px; color: #555;">Personas</th><td style="padding: 8px;">${cantidadPersonas || 1}</td></tr>
+                        <tr><th style="padding: 8px; color: #555;">Fecha</th><td style="padding: 8px; font-weight: bold;">${fechaSesion || 'Por confirmar'}</td></tr>
+                        <tr style="background-color: #f9f9f9;"><th style="padding: 8px; color: #555;">Hora</th><td style="padding: 8px; font-weight: bold;">${horaSesion || 'Por confirmar'}</td></tr>
+                        <tr><th style="padding: 8px; color: #555;">Teléfono</th><td style="padding: 8px;">${telefono || 'No proporcionado'}</td></tr>
+                        <tr style="background-color: #f9f9f9;"><th style="padding: 8px; color: #555;">Notas</th><td style="padding: 8px; color: #777;">${notas || 'Ninguna'}</td></tr>
+                    </table>
+
+                    <h3 style="font-size: 15px; color: #333333; margin-top: 20px; margin-bottom: 10px;">📦 Resumen</h3>
+                    <table style="width: 100%; border-collapse: collapse; font-size: 13px; text-align: left;">
+                        <thead>
+                            <tr style="background-color: #5165ff; color: #ffffff;">
+                                <th style="padding: 10px;">Producto/Servicio</th>
+                                <th style="padding: 10px; text-align: center;">Cantidad</th>
+                                <th style="padding: 10px; text-align: right;">Precio</th>
+                                <th style="padding: 10px; text-align: right;">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="border-bottom: 1px solid #eeeeee;">
+                                <td style="padding: 12px; font-weight: bold;">${tipoNombre}</td>
+                                <td style="padding: 12px; text-align: center;">1</td>
+                                <td style="padding: 12px; text-align: right;">$80.00</td>
+                                <td style="padding: 12px; text-align: right;">$80.00</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div style="text-align: right; margin-top: 15px; font-size: 18px; font-weight: bold; color: #5165ff;">
+                        Total: $80.00
+                    </div>
+                </div>
+
+                <div style="background-color: #f8f9fa; padding: 15px; text-align: center; font-size: 11px; color: #999999; border-top: 1px solid #eeeeee;">
+                    Este es un correo automático generado por el sistema de FotoTec. Por favor no respondas a este mensaje.
+                </div>
+            </div>
         </div>`;
 
         try {
