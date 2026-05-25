@@ -1242,6 +1242,7 @@
                             </div>
                         </div>
 
+                        <div id="resumen-total-pantalla" style="display:none; text-align:center; font-size:1.1rem; padding:12px; background:#f0f4ff; border-radius:10px; margin-bottom:12px; border:2px solid #5165ff;"></div>
                         <button type="submit" class="cta-button submit-btn">Reservar Sesión</button>
                     </form>
                 </div>
@@ -2350,6 +2351,30 @@
                 const nombreInput = document.getElementById('nombre');
                 if (emailInput && !emailInput.value) emailInput.value = authSystem.currentUser.email;
                 if (nombreInput && !nombreInput.value) nombreInput.value = authSystem.currentUser.name || '';
+            }
+
+            const preciosFotoTec = {
+                "estudio": 800,
+                "estudio_tematico": 1200,
+                "tecnica": 250,
+                "boda": 4500,
+                "evento": 2500
+            };
+
+            const tipoSesionSelect = document.getElementById('tipo_sesion');
+            if (tipoSesionSelect) {
+                tipoSesionSelect.addEventListener('change', function() {
+                    const precio = preciosFotoTec[this.value] || 0;
+                    const contenedor = document.getElementById('resumen-total-pantalla');
+                    if (contenedor) {
+                        if (precio > 0) {
+                            contenedor.style.display = 'block';
+                            contenedor.innerHTML = '<strong>Total a Pagar:</strong> $' + precio.toFixed(2) + ' MXN';
+                        } else {
+                            contenedor.style.display = 'none';
+                        }
+                    }
+                });
             }
 
             if (reservasForm) {

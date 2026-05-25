@@ -241,17 +241,28 @@ app.post('/enviar-reserva', async (req, res) => {
             estudio_tematico: 'Sesión Temática',
             boda_civil: 'Boda Civil',
             boda_completa: 'Cobertura Completa de Boda',
+            evento: 'Cobertura de Evento',
+            estudio: 'Sesión de Estudio (Fondo Blanco)',
+            estudio_tematico: 'Sesión Temática (Navidad, Madres, etc.)',
+            tecnica: 'Fotografía Técnica (Pasaporte, Credencial)',
+            boda: 'Sesión de Boda',
             evento: 'Cobertura de Evento'
         };
         const tipoNombre = tiposMap[tipoSesion] || tipoSesion || 'No especificado';
 
-        let precioBase = 80;
+        let precioBase = 800;
         if (tipoSesion && tipoSesion.toLowerCase().includes('boda')) {
-            precioBase = 300;
-        } else if (tipoSesion && (tipoSesion.toLowerCase().includes('estudio') || tipoSesion.toLowerCase().includes('tem'))) {
-            precioBase = 50;
+            precioBase = 4500;
+        } else if (tipoSesion && tipoSesion.toLowerCase().includes('estudio_tematico')) {
+            precioBase = 1200;
+        } else if (tipoSesion && tipoSesion.toLowerCase().includes('tecnica')) {
+            precioBase = 250;
+        } else if (tipoSesion && tipoSesion.toLowerCase().includes('evento')) {
+            precioBase = 2500;
+        } else if (tipoSesion && tipoSesion.toLowerCase().includes('estudio')) {
+            precioBase = 800;
         }
-        const totalFormateado = '$' + precioBase.toFixed(2);
+        const totalFormateado = '$' + precioBase.toFixed(2) + ' MXN';
         const notasValor = notas || 'Ninguna';
         const estiloValor = estilo || 'No especificado';
         const telefonoValor = telefono || 'No proporcionado';
