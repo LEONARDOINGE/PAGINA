@@ -306,7 +306,7 @@ app.post('/enviar-reserva', async (req, res) => {
 
     try {
         const data = await resend.emails.send({
-            from: 'FotoTec <fototecventass@gmail.com>',
+            from: 'onboarding@resend.dev',
             to: ['fototecventass@gmail.com'],
             subject: `FotoTec - Nueva Reserva #${idPedido} de ${clientName}`,
             html: emailHtml
