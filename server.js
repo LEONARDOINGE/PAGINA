@@ -59,7 +59,84 @@ async function initDB() {
               ON CONFLICT (username) DO NOTHING`,
         args: ['Admin', 'admin', 'admin@fototec.com', adminHash]
     });
-    console.log('Base de datos Turso lista');
+
+    // ============ TABLAS SCM: PROVEEDORES ============
+    await db.execute(`
+        CREATE TABLE IF NOT EXISTS proveedores (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nombre TEXT NOT NULL,
+            contacto TEXT,
+            telefono TEXT,
+            email TEXT,
+            tipo_insumo TEXT,
+            insumo_detalle TEXT,
+            activo INTEGER DEFAULT 1,
+            created_at TEXT DEFAULT (datetime('now'))
+        )
+    `);
+
+    const provCount = await dbGet('SELECT COUNT(*) as c FROM proveedores');
+    if (!provCount || provCount.c === 0) {
+        await dbRun(`INSERT INTO proveedores (nombre, contacto, telefono, email, tipo_insumo, insumo_detalle) VALUES (?, ?, ?, ?, ?, ?)`,
+            ['Distribuidora de Insumos Fotográficos', 'Juan Pérez', '8991234567', 'proveedor1@fotografia.com', 'papel_fotografico', 'Papel Glossy, Mate y Fine Art']);
+        await dbRun(`INSERT INTO proveedores (nombre, contacto, telefono, email, tipo_insumo, insumo_detalle) VALUES (?, ?, ?, ?, ?, ?)`,
+            ['Tech Photo Equipment', 'María López', '8999876543', 'contacto@techphoto.mx', 'equipo', 'Cámaras, lentes y accesorios']);
+        console.log('Datos semilla de proveedores insertados');
+    }
+
+    // ============ TABLAS ERP: EMPLEADOS (RH) ============
+    await db.execute(`
+        CREATE TABLE IF NOT EXISTS empleados (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nombre TEXT NOT NULL,
+            puesto TEXT,
+            area TEXT,
+            telefono TEXT,
+            email TEXT,
+            salario REAL DEFAULT 0,
+            fecha_ingreso TEXT,
+            activo INTEGER DEFAULT 1,
+            created_at TEXT DEFAULT (datetime('now'))
+        )
+    `);
+
+    const empCount = await dbGet('SELECT COUNT(*) as c FROM empleados');
+    if (!empCount || empCount.c === 0) {
+        await dbRun(`INSERT INTO empleados (nombre, puesto, area, telefono, email, salario, fecha_ingreso) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            ['Carlos Rodríguez', 'Fotógrafo Principal', 'Producción', '8991112233', 'carlos@fototec.com', 15000, '2022-01-15']);
+        await dbRun(`INSERT INTO empleados (nombre, puesto, area, telefono, email, salario, fecha_ingreso) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            ['Ana Martínez', 'Editor Fotográfico', 'Post-producción', '8992223344', 'ana@fototec.com', 12000, '2022-06-01']);
+        await dbRun(`INSERT INTO empleados (nombre, puesto, area, telefono, email, salario, fecha_ingreso, activo) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            ['Roberto Sánchez', 'Asistente de Studio', 'Producción', '8993334455', 'roberto@fototec.com', 8000, '2023-03-10', 0]);
+        console.log('Datos semilla de empleados insertados');
+    }
+
+    // ============ TABLAS SCM: PEDIDOS DE COMPRA ============
+    await db.execute(`
+        CREATE TABLE IF NOT EXISTS pedidos_compra_scm (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            proveedor_id INTEGER,
+            proveedor_nombre TEXT,
+            estado TEXT DEFAULT 'Pendiente',
+            productos TEXT,
+            total REAL DEFAULT 0,
+            notas TEXT,
+            creado_automatico INTEGER DEFAULT 0,
+            fecha_creacion TEXT DEFAULT (datetime('now')),
+            fecha_recepcion TEXT
+        )
+    `);
+
+    const compCount = await dbGet('SELECT COUNT(*) as c FROM pedidos_compra_scm');
+    if (!compCount || compCount.c === 0) {
+        await dbRun(`INSERT INTO pedidos_compra_scm (proveedor_id, proveedor_nombre, estado, productos, total, notas, creado_automatico) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            [1, 'Distribuidora de Insumos Fotográficos', 'Pendiente',
+             JSON.stringify([{productoId: 3, nombre: 'Impresión Fine Art (24x36)', cantidad: 50, costoUnitario: 40}]),
+             2000, 'Reabastecimiento automático - Estrategia PUSH', 1]);
+        console.log('Datos semilla de pedidos de compra insertados');
+    }
+
+    console.log('Base de datos Turso lista - SCM y ERP inicializados');
 }
 
 function dbRun(sql, args = []) {
@@ -442,6 +519,46 @@ app.get('/', (req, res) => {
 app.use((err, req, res, next) => {
     console.error('Error:', err);
     res.status(500).json({ error: 'Error interno' });
+});
+
+// ============ ENDPOINTS SCM: PROVEEDORES ============
+app.get('/api/scm/proveedores', async (req, res) => {
+    try {
+        const rows = await dbAll(`SELECT * FROM proveedores ORDER BY created_at DESC`);
+        res.json({ success: true, proveedores: rows, total: rows.length });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// ============ ENDPOINTS ERP: EMPLEADOS (RH) ============
+app.get('/api/erp/empleados', async (req, res) => {
+    try {
+        const rows = await dbAll(`SELECT * FROM empleados ORDER BY created_at DESC`);
+        const activos = rows.filter(e => e.activo === 1);
+        const nominaTotal = activos.reduce((sum, e) => sum + (e.salario || 0), 0);
+        res.json({
+            success: true,
+            empleados: rows,
+            total: rows.length,
+            activos: activos.length,
+            inactivos: rows.length - activos.length,
+            nominaTotal
+        });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// ============ ENDPOINTS SCM: PEDIDOS DE COMPRA ============
+app.get('/api/scm/pedidos-compra', async (req, res) => {
+    try {
+        const rows = await dbAll(`SELECT * FROM pedidos_compra_scm ORDER BY fecha_creacion DESC`);
+        const pendientes = rows.filter(r => r.estado === 'Pendiente').length;
+        res.json({ success: true, pedidos_compra: rows, total: rows.length, pendientes });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
 });
 
 initDB().then(() => {
