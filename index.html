@@ -1393,6 +1393,7 @@
                 <button class="admin-tab-btn" onclick="mostrarTabAdmin('compras')">📥 Pedidos Compra</button>
                 <button class="admin-tab-btn" onclick="mostrarTabAdmin('usuarios')">👥 Usuarios</button>
                 <button class="admin-tab-btn" onclick="mostrarTabAdmin('reportes')">📈 Reportes</button>
+                <button class="admin-tab-btn" onclick="mostrarTabAdmin('auditoria')" style="background: rgba(255,215,0,0.2); border: 1px solid rgba(255,215,0,0.4);">📋 Auditoría Escolar</button>
             </div>
 
             <!-- TAB: Dashboard -->
@@ -1654,6 +1655,21 @@
                     <h3>📊 Reportes Consolidados (ERP + SCM + CRM)</h3>
                     <button onclick="generarReporte()" class="btn-success" style="width: 100%; margin-bottom: 15px;">📄 Generar Reporte Completo</button>
                     <div id="reporteDiv"></div>
+                </div>
+            </div>
+
+            <!-- TAB: Auditoría Escolar (SCM + ERP) -->
+            <div id="adminAuditoria" class="admin-content">
+                <div class="admin-section">
+                    <h3>📋 Auditoría Escolar - Módulos SCM y ERP</h3>
+                    <p style="opacity:0.8; font-size:0.85rem; margin-bottom: 15px;">Consulta en tiempo real las tablas de Proveedores, Recursos Humanos y Pedidos de Compra desde Turso.</p>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px;">
+                        <button onclick="activarAuditoria('proveedores')" class="btn-success" style="flex:1; min-width: 180px;">🚚 Proveedores (SCM)</button>
+                        <button onclick="activarAuditoria('empleados')" class="btn-success" style="flex:1; min-width: 180px;">👔 Recursos Humanos (ERP)</button>
+                        <button onclick="activarAuditoria('pedidos-compra')" class="btn-success" style="flex:1; min-width: 180px;">📥 Pedidos de Compra (SCM)</button>
+                    </div>
+                    <div id="auditoriaResumen" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 15px;"></div>
+                    <div id="auditoriaTabla" style="overflow-x: auto;"></div>
                 </div>
             </div>
 
@@ -3274,6 +3290,96 @@
         function cerrarPanelAdmin() {
             const adminPanel = document.getElementById('adminPanel');
             adminPanel.classList.remove('active');
+        }
+
+        // ============ AUDITORÍA ESCOLAR (SCM + ERP) ============
+        async function activarAuditoria(modulo) {
+            const tablaDiv = document.getElementById('auditoriaTabla');
+            const resumenDiv = document.getElementById('auditoriaResumen');
+            tablaDiv.innerHTML = '<p style="text-align:center; opacity:0.7;">Cargando datos desde Turso...</p>';
+
+            const rutas = {
+                'proveedores': { url: '/api/scm/proveedores', titulo: '🚚 Proveedores (SCM)', cols: ['id','nombre','contacto','telefono','email','tipo_insumo','activo'] },
+                'empleados': { url: '/api/erp/empleados', titulo: '👔 Recursos Humanos (ERP)', cols: ['id','nombre','puesto','area','telefono','email','salario','fecha_ingreso','activo'] },
+                'pedidos-compra': { url: '/api/scm/pedidos-compra', titulo: '📥 Pedidos de Compra (SCM)', cols: ['id','proveedor_nombre','estado','productos','total','creado_automatico','fecha_creacion'] }
+            };
+
+            const config = rutas[modulo];
+            if (!config) return;
+
+            try {
+                const res = await fetch(config.url);
+                const data = await res.json();
+
+                if (!data.success) {
+                    tablaDiv.innerHTML = '<p style="color:#ff6b6b;">Error: ' + (data.error || 'Sin respuesta') + '</p>';
+                    return;
+                }
+
+                let items = data.proveedores || data.empleados || data.pedidos_compra || [];
+                let total = data.total || items.length;
+                let extra = '';
+
+                if (modulo === 'empleados') {
+                    extra = `<div style="background:rgba(0,0,0,0.2);padding:10px;border-radius:5px;text-align:center;"><div style="font-size:1.2em;font-weight:bold;color:#ffd700;">$${(data.nominaTotal||0).toFixed(2)}</div><div>Nómina Total</div></div>
+                             <div style="background:rgba(0,0,0,0.2);padding:10px;border-radius:5px;text-align:center;"><div style="font-size:1.2em;font-weight:bold;color:#90ee90;">${data.activos||0}</div><div>Activos</div></div>
+                             <div style="background:rgba(0,0,0,0.2);padding:10px;border-radius:5px;text-align:center;"><div style="font-size:1.2em;font-weight:bold;color:#ff6b6b;">${data.inactivos||0}</div><div>Inactivos</div></div>`;
+                } else if (modulo === 'proveedores') {
+                    const activos = items.filter(p => p.activo == 1).length;
+                    extra = `<div style="background:rgba(0,0,0,0.2);padding:10px;border-radius:5px;text-align:center;"><div style="font-size:1.2em;font-weight:bold;color:#90ee90;">${activos}</div><div>Activos</div></div>
+                             <div style="background:rgba(0,0,0,0.2);padding:10px;border-radius:5px;text-align:center;"><div style="font-size:1.2em;font-weight:bold;">${total}</div><div>Total</div></div>`;
+                } else if (modulo === 'pedidos-compra') {
+                    extra = `<div style="background:rgba(0,0,0,0.2);padding:10px;border-radius:5px;text-align:center;"><div style="font-size:1.2em;font-weight:bold;color:#ffb366;">${data.pendientes||0}</div><div>Pendientes</div></div>
+                             <div style="background:rgba(0,0,0,0.2);padding:10px;border-radius:5px;text-align:center;"><div style="font-size:1.2em;font-weight:bold;">$${(items.reduce((s,p)=>s+(p.total||0),0)).toFixed(2)}</div><div>Total Compras</div></div>`;
+                }
+
+                resumenDiv.innerHTML = extra;
+
+                if (items.length === 0) {
+                    tablaDiv.innerHTML = '<p style="text-align:center; opacity:0.6;">No hay datos registrados en este módulo.</p>';
+                    return;
+                }
+
+                let html = `<table class="admin-table"><thead><tr>`;
+                config.cols.forEach(col => {
+                    const labels = {
+                        'id':'ID','nombre':'Nombre / Razón Social','contacto':'Contacto','telefono':'Teléfono',
+                        'email':'Email','tipo_insumo':'Tipo Insumo','activo':'Activo','puesto':'Puesto',
+                        'area':'Área','salario':'Salario','fecha_ingreso':'F. Ingreso',
+                        'proveedor_nombre':'Proveedor','estado':'Estado','productos':'Productos',
+                        'total':'Total','creado_automatico':'Auto','fecha_creacion':'Fecha Creación'
+                    };
+                    html += `<th>${labels[col] || col}</th>`;
+                });
+                html += '</tr></thead><tbody>';
+
+                items.forEach(item => {
+                    html += '<tr>';
+                    config.cols.forEach(col => {
+                        let val = item[col];
+                        if (col === 'activo') {
+                            val = val == 1 ? '<span style="color:#90ee90;font-weight:bold;">● Activo</span>' : '<span style="color:#ff6b6b;">○ Inactivo</span>';
+                        } else if (col === 'creado_automatico') {
+                            val = val == 1 ? '<span style="color:#87ceeb;">Sí</span>' : 'No';
+                        } else if (col === 'productos') {
+                            try { val = JSON.parse(val).map(p => p.nombre + ' x' + p.cantidad).join(', '); } catch(e) { val = val || '-'; }
+                        } else if (col === 'total') {
+                            val = '$' + parseFloat(val || 0).toFixed(2) + ' MXN';
+                        } else if (col === 'salario') {
+                            val = '$' + parseFloat(val || 0).toFixed(2);
+                        } else {
+                            val = val !== null && val !== undefined ? val : '-';
+                        }
+                        html += `<td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${val}</td>`;
+                    });
+                    html += '</tr>';
+                });
+
+                html += '</tbody></table>';
+                tablaDiv.innerHTML = `<div style="margin-bottom:10px;padding:10px;background:rgba(255,215,0,0.1);border:1px solid rgba(255,215,0,0.3);border-radius:6px;font-size:0.85rem;"><strong>📋 Módulo:</strong> ${config.titulo} | <strong>Registros:</strong> ${total} | <strong>Fuente:</strong> Turso SQLite (Nube)</div>` + html;
+            } catch (err) {
+                tablaDiv.innerHTML = '<p style="color:#ff6b6b;">Error de conexión: ' + err.message + '</p>';
+            }
         }
 
     </script>
