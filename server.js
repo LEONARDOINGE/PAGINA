@@ -20,7 +20,15 @@ app.use(express.static(path.join(__dirname)));
 
 let db;
 let SQL;
-const dbPath = path.join(__dirname, 'database.db');
+const dbPath = process.env.DB_PATH || path.join(__dirname, 'database.db');
+
+function saveDB() {
+    try {
+        saveDB();
+    } catch (e) {
+        console.error('Error guardando DB:', e.message);
+    }
+}
 
 async function initDB() {
     const initSqlJs = require('sql.js');
@@ -29,6 +37,8 @@ async function initDB() {
 
     let fileBuffer = null;
     try {
+        const dir = path.dirname(dbPath);
+        if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
         if (fs.existsSync(dbPath)) {
             fileBuffer = fs.readFileSync(dbPath);
         }
@@ -67,13 +77,13 @@ async function initDB() {
     db.run(`INSERT OR IGNORE INTO users (name, username, email, password, role, is_verified) VALUES (?, ?, ?, ?, ?, 1)`,
         ['Admin', 'admin', 'admin@fototec.com', adminHash, 'admin']);
 
-    try { fs.writeFileSync(dbPath, Buffer.from(db.export())); } catch (e) {}
+    try { saveDB(); } catch (e) {}
     console.log('Base de datos lista');
 }
 
 function dbRun(sql, params = []) {
     db.run(sql, params);
-    try { fs.writeFileSync(dbPath, Buffer.from(db.export())); } catch (e) {}
+    try { saveDB(); } catch (e) {}
 }
 
 function dbGet(sql, params = []) {
@@ -142,7 +152,7 @@ app.post('/api/register', (req, res) => {
     try {
         db.run(`INSERT INTO users (name, username, email, password, is_verified) VALUES (?, ?, ?, ?, 1)`,
             [name, username, email, hashedPassword]);
-        fs.writeFileSync(dbPath, Buffer.from(db.export()));
+        saveDB();
 
         const user = dbGet(`SELECT * FROM users WHERE username = ?`, [username]);
         const token = generateToken(user);
@@ -208,7 +218,7 @@ app.put('/api/profile/update', authMiddleware, (req, res) => {
         } else {
             db.run(`UPDATE users SET name = ?, email = ? WHERE id = ?`, [name, email, userId]);
         }
-        fs.writeFileSync(dbPath, Buffer.from(db.export()));
+        saveDB();
 
         const user = dbGet(`SELECT * FROM users WHERE id = ?`, [userId]);
         res.json({
@@ -233,7 +243,7 @@ app.post('/enviar-reserva', async (req, res) => {
         db.run(`INSERT INTO reservas (nombre, email, telefono, tipo_sesion, estilo, cantidad_personas, fecha_sesion, hora_sesion, notas, tipo_papel)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [clientName, clientEmail, telefono || '', tipoSesion || '', estilo || '', cantidadPersonas || 1, fechaSesion || '', horaSesion || '', notas || '', tipoPapel || '']);
-        fs.writeFileSync(dbPath, Buffer.from(db.export()));
+        saveDB();
 
         const tiposMap = {
             estudio_basico: 'Estudio Básico',
@@ -440,7 +450,7 @@ app.get('/api/reservas/mis-reservas', (req, res) => {
 app.put('/api/reservas/:id/leer', (req, res) => {
     try {
         db.run(`UPDATE reservas SET leido = 1 WHERE id = ?`, [req.params.id]);
-        fs.writeFileSync(dbPath, Buffer.from(db.export()));
+        saveDB();
         res.json({ success: true });
     } catch (err) {
         res.status(500).json({ success: false, error: 'Error' });
