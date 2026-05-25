@@ -79,6 +79,31 @@
         }
         /* ========== FIN DECORACIONES ========== */
 
+        /* ========== MODAL AUTH ========== */
+        .auth-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(4px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            padding: 20px;
+        }
+        .auth-modal.active {
+            display: flex;
+        }
+        .auth-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+        }
+
         /* ========== MODAL AUTH NUEVO Y ESTETICO ========== */
         .auth-split {
             display: flex;
