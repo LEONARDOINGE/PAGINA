@@ -1809,54 +1809,97 @@
 
     <!-- Modal de Perfil de Usuario -->
     <div id="profileModal" onclick="if(event.target === this) closeProfileModal()" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);display:none;justify-content:center;align-items:center;z-index:9999;padding:20px;">
-        <div style="background:white;border-radius:16px;max-width:600px;width:100%;max-height:90vh;overflow-y:auto;position:relative;box-shadow:0 15px 50px rgba(0,0,0,0.3);">
-            <div style="background:linear-gradient(135deg,#667eea,#764ba2);padding:20px 25px;border-radius:16px 16px 0 0;display:flex;justify-content:space-between;align-items:center;">
-                <h2 style="margin:0;color:white;">👤 Mi Perfil</h2>
-                <button onclick="closeProfileModal()" onmouseover="this.style.background='rgba(255,100,100,0.8)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'" style="background:rgba(255,255,255,0.2);border:none;color:white;font-size:20px;cursor:pointer;padding:6px 10px;border-radius:50%;transition:all 0.3s;width:36px;height:36px;display:flex;align-items:center;justify-content:center;">✕</button>
+        <div style="background:white;border-radius:16px;max-width:520px;width:100%;max-height:90vh;overflow-y:auto;position:relative;box-shadow:0 20px 60px rgba(0,0,0,0.2);">
+            <!-- Header con gradiente -->
+            <div style="background:linear-gradient(135deg,#667eea,#764ba2);padding:24px 32px;border-radius:16px 16px 0 0;display:flex;justify-content:space-between;align-items:center;">
+                <h2 style="margin:0;color:white;font-size:1.1rem;font-weight:600;">Mi Perfil</h2>
+                <button onclick="closeProfileModal()" onmouseover="this.style.background='rgba(255,100,100,0.8)';this.style.transform='rotate(90deg)'" onmouseout="this.style.background='rgba(255,255,255,0.2)';this.style.transform='rotate(0deg)'" style="background:rgba(255,255,255,0.2);border:none;color:white;font-size:18px;cursor:pointer;padding:6px;border-radius:50%;transition:all 0.3s;width:32px;height:32px;display:flex;align-items:center;justify-content:center;">✕</button>
             </div>
-            <div style="padding:25px;">
-                <div style="display:flex;gap:10px;margin-bottom:20px;border-bottom:1px solid #ddd;padding-bottom:15px;">
-                    <button onclick="showProfileTab('datos')" id="tabBtnDatos" style="background:#667eea;color:white;border:none;padding:10px 20px;border-radius:8px;cursor:pointer;font-weight:600;">👤 Mis Datos</button>
-                    <button onclick="showProfileTab('reservas')" id="tabBtnReservas" style="background:#eee;color:#333;border:none;padding:10px 20px;border-radius:8px;cursor:pointer;font-weight:600;">📅 Mis Reservas</button>
-                </div>
 
+            <!-- Avatar -->
+            <div style="text-align:center;padding:32px 32px 16px;">
+                <div style="position:relative;display:inline-block;">
+                    <div id="avatarContainer" style="width:96px;height:96px;border-radius:50%;background:linear-gradient(135deg,#667eea,#764ba2);display:flex;align-items:center;justify-content:center;margin:0 auto;font-size:2.2rem;font-weight:700;color:white;box-shadow:0 4px 20px rgba(102,126,234,0.35);">
+                        <span id="avatarInicial">U</span>
+                    </div>
+                    <button onclick="triggerAvatarUpload()" style="position:absolute;bottom:0;right:0;width:32px;height:32px;border-radius:50%;background:#667eea;border:3px solid white;color:white;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.15);">📷</button>
+                    <input type="file" id="avatarInput" accept="image/*" style="display:none;" onchange="handleAvatarUpload(event)">
+                </div>
+                <p id="avatarNombre" style="margin:12px 0 0;font-size:1.1rem;font-weight:600;color:#333;"></p>
+                <p id="avatarEmail" style="margin:4px 0 0;font-size:0.85rem;color:#999;"></p>
+            </div>
+
+            <!-- Tabs modernas -->
+            <div style="padding:0 32px;border-bottom:1px solid #eee;">
+                <button onclick="showProfileTab('datos')" id="tabBtnDatos" class="profile-tab active">Mis Datos</button>
+                <button onclick="showProfileTab('reservas')" id="tabBtnReservas" class="profile-tab">Mis Reservas</button>
+            </div>
+
+            <!-- Contenido del tab -->
+            <div style="padding:24px 32px 32px;">
                 <div id="profileTabDatos">
                     <form onsubmit="saveProfile(event)">
-                        <div style="margin-bottom:15px;">
-                            <label style="display:block;font-weight:600;margin-bottom:5px;">Nombre completo</label>
-                            <input type="text" id="profileName" style="width:100%;padding:12px;border:1px solid #ddd;border-radius:8px;font-size:1em;" required>
+                        <div style="margin-bottom:18px;">
+                            <label style="display:block;font-weight:500;margin-bottom:6px;color:#444;font-size:0.88rem;">Nombre completo</label>
+                            <input type="text" id="profileName" style="width:100%;padding:11px 14px;border:1px solid #e0e0e0;border-radius:10px;font-size:0.95rem;transition:all 0.2s;outline:none;background:#fff;color:#333;box-sizing:border-box;" onfocus="this.style.borderColor='#667eea';this.style.boxShadow='0 0 0 3px rgba(102,126,234,0.1)'" onblur="this.style.borderColor='#e0e0e0';this.style.boxShadow='none'" required>
                         </div>
-                        <div style="margin-bottom:15px;">
-                            <label style="display:block;font-weight:600;margin-bottom:5px;">Correo electrónico</label>
-                            <input type="email" id="profileEmail" style="width:100%;padding:12px;border:1px solid #ddd;border-radius:8px;font-size:1em;" required>
+                        <div style="margin-bottom:18px;">
+                            <label style="display:block;font-weight:500;margin-bottom:6px;color:#444;font-size:0.88rem;">Correo electrónico</label>
+                            <input type="email" id="profileEmail" style="width:100%;padding:11px 14px;border:1px solid #e0e0e0;border-radius:10px;font-size:0.95rem;transition:all 0.2s;outline:none;background:#fff;color:#333;box-sizing:border-box;" onfocus="this.style.borderColor='#667eea';this.style.boxShadow='0 0 0 3px rgba(102,126,234,0.1)'" onblur="this.style.borderColor='#e0e0e0';this.style.boxShadow='none'" required>
                         </div>
-                        <div style="margin-bottom:15px;">
-                            <label style="display:block;font-weight:600;margin-bottom:5px;">Usuario</label>
-                            <input type="text" id="profileUsername" style="width:100%;padding:12px;border:1px solid #ddd;border-radius:8px;font-size:1em;background:#f5f5f5;" readonly>
+                        <div style="margin-bottom:18px;">
+                            <label style="display:block;font-weight:500;margin-bottom:6px;color:#444;font-size:0.88rem;">Usuario</label>
+                            <input type="text" id="profileUsername" style="width:100%;padding:11px 14px;border:1px solid #e0e0e0;border-radius:10px;font-size:0.95rem;background:#fafafa;color:#888;cursor:not-allowed;box-sizing:border-box;" readonly>
                         </div>
-                        <div style="margin-bottom:20px;">
-                            <label style="display:block;font-weight:600;margin-bottom:5px;">Nueva contraseña (dejar vacío para no cambiar)</label>
-                            <input type="password" id="profilePassword" placeholder="Nueva contraseña" style="width:100%;padding:12px;border:1px solid #ddd;border-radius:8px;font-size:1em;">
+                        <div style="margin-bottom:24px;">
+                            <label style="display:block;font-weight:500;margin-bottom:6px;color:#444;font-size:0.88rem;">Nueva contraseña</label>
+                            <input type="password" id="profilePassword" placeholder="Escribe para cambiar" style="width:100%;padding:11px 14px;border:1px solid #e0e0e0;border-radius:10px;font-size:0.95rem;transition:all 0.2s;outline:none;background:#fff;color:#333;box-sizing:border-box;" onfocus="this.style.borderColor='#667eea';this.style.boxShadow='0 0 0 3px rgba(102,126,234,0.1)'" onblur="this.style.borderColor='#e0e0e0';this.style.boxShadow='none'">
+                            <span style="font-size:0.78rem;color:#aaa;margin-top:5px;display:block;">Deja vacío si no deseas cambiarla</span>
                         </div>
-                        <div id="profileMsg" style="margin-bottom:15px;font-weight:600;"></div>
-                        <button type="submit" style="width:100%;background:linear-gradient(135deg,#667eea,#764ba2);color:white;border:none;padding:14px;border-radius:8px;font-size:1em;cursor:pointer;font-weight:600;">
+                        <div id="profileMsg" style="margin-bottom:14px;font-weight:500;font-size:0.9rem;"></div>
+                        <button type="submit" style="width:100%;background:linear-gradient(135deg,#667eea,#764ba2);color:white;border:none;padding:13px;border-radius:10px;font-size:0.95rem;cursor:pointer;font-weight:600;transition:all 0.3s;box-shadow:0 4px 15px rgba(102,126,234,0.3);" onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 20px rgba(102,126,234,0.4)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 15px rgba(102,126,234,0.3)'">
                             Guardar Cambios
                         </button>
                     </form>
                 </div>
 
                 <div id="profileTabReservas" style="display:none;">
-                    <div id="misReservasLista" style="margin-top:10px;"></div>
+                    <div id="misReservasLista" style="min-height:100px;"></div>
                 </div>
 
-                <div style="margin-top:20px;padding-top:20px;border-top:1px solid #ddd;">
-                    <button onclick="logout(); closeProfileModal();" style="width:100%;background:rgba(220,53,69,0.1);color:#dc3545;border:1px solid rgba(220,53,69,0.3);padding:12px;border-radius:8px;font-size:1em;cursor:pointer;font-weight:600;">
-                        🚪 Cerrar Sesión
+                <!-- Cerrar Sesion -->
+                <div style="margin-top:28px;padding-top:20px;border-top:1px solid #f0f0f0;text-align:center;">
+                    <button onclick="logout(); closeProfileModal();" style="background:none;border:none;color:#dc3545;font-size:0.88rem;cursor:pointer;font-weight:500;padding:8px 16px;border-radius:8px;transition:all 0.2s;" onmouseover="this.style.background='rgba(220,53,69,0.08)'" onmouseout="this.style.background='none'">
+                        Cerrar Sesión
                     </button>
                 </div>
             </div>
         </div>
     </div>
+
+    <style>
+    .profile-tab {
+        background:none;
+        border:none;
+        padding:12px 16px;
+        font-size:0.9rem;
+        cursor:pointer;
+        color:#999;
+        font-weight:400;
+        border-bottom:2px solid transparent;
+        margin-bottom:-1px;
+        transition:all 0.2s;
+        position:relative;
+    }
+    .profile-tab.active {
+        color:#667eea;
+        font-weight:600;
+        border-bottom-color:#667eea;
+    }
+    .profile-tab:hover:not(.active) {
+        color:#667;
+    }
+    </style>
 
     <!-- Scripts de funcionalidad (ERP + SCM) -->
     <script src="database.js" onerror="console.error('database.js no cargo')"></script>
@@ -2086,13 +2129,15 @@
             if (!userInfo || !authSystem.currentUser) return;
             const u = authSystem.currentUser;
             const isAdmin = u.userType === 'administrador';
+            const inicial = u.name ? u.name.charAt(0).toUpperCase() : 'U';
             userInfo.innerHTML = `
                 <div style="display:flex;align-items:center;gap:8px;">
-                    <button id="btnMiPerfil" onclick="openProfileModal()" style="background:linear-gradient(135deg,#667eea,#764ba2);color:white;border:none;padding:8px 16px;border-radius:20px;cursor:pointer;font-size:0.9em;font-weight:600;">
-                        ${u.name}
+                    <button id="btnMiPerfil" onclick="openProfileModal()" style="background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:8px;padding:6px 12px;border-radius:24px;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.15)'" onmouseout="this.style.background='none'">
+                        <div style="width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.25);display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;color:white;">${inicial}</div>
+                        <span style="color:white;font-size:0.88rem;font-weight:500;">${u.name}</span>
                     </button>
-                    ${isAdmin ? '<button onclick="toggleAdminPanel()" style="background:#667eea;color:white;border:none;padding:8px 14px;border-radius:20px;cursor:pointer;font-size:0.8em;">Panel Admin</button>' : ''}
-                    <button onclick="logout()" style="background:rgba(255,255,255,0.2);color:white;border:none;padding:8px 12px;border-radius:20px;cursor:pointer;font-size:0.8em;">Salir</button>
+                    ${isAdmin ? '<button onclick="toggleAdminPanel()" style="background:rgba(255,255,255,0.15);color:white;border:none;padding:6px 12px;border-radius:16px;cursor:pointer;font-size:0.8em;font-weight:500;">Panel Admin</button>' : ''}
+                    <button onclick="logout()" style="background:none;border:none;color:rgba(255,255,255,0.7);cursor:pointer;font-size:0.85rem;padding:6px 8px;transition:color 0.2s;" onmouseover="this.style.color='white'" onmouseout="this.style.color='rgba(255,255,255,0.7)'">Salir</button>
                 </div>`;
         }
 
@@ -2111,8 +2156,34 @@
             document.getElementById('profileUsername').value = u.username || '';
             document.getElementById('profilePassword').value = '';
             document.getElementById('profileMsg').textContent = '';
+            document.getElementById('profileMsg').style.color = '';
+
+            // Avatar
+            const inicial = (u.name ? u.name.charAt(0).toUpperCase() : 'U');
+            document.getElementById('avatarInicial').textContent = inicial;
+            document.getElementById('avatarNombre').textContent = u.name || '';
+            document.getElementById('avatarEmail').textContent = u.email || '';
+
             document.getElementById('profileModal').style.display = 'flex';
             showProfileTab('datos');
+        }
+
+        function triggerAvatarUpload() {
+            document.getElementById('avatarInput').click();
+        }
+
+        function handleAvatarUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const container = document.getElementById('avatarContainer');
+                container.style.backgroundImage = 'url(' + e.target.result + ')';
+                container.style.backgroundSize = 'cover';
+                container.style.backgroundPosition = 'center';
+                container.querySelector('span').style.display = 'none';
+            };
+            reader.readAsDataURL(file);
         }
 
         function closeProfileModal() {
@@ -2122,10 +2193,8 @@
         function showProfileTab(tab) {
             document.getElementById('profileTabDatos').style.display = tab === 'datos' ? 'block' : 'none';
             document.getElementById('profileTabReservas').style.display = tab === 'reservas' ? 'block' : 'none';
-            document.getElementById('tabBtnDatos').style.background = tab === 'datos' ? '#667eea' : '#eee';
-            document.getElementById('tabBtnDatos').style.color = tab === 'datos' ? 'white' : '#333';
-            document.getElementById('tabBtnReservas').style.background = tab === 'reservas' ? '#667eea' : '#eee';
-            document.getElementById('tabBtnReservas').style.color = tab === 'reservas' ? 'white' : '#333';
+            document.getElementById('tabBtnDatos').className = 'profile-tab' + (tab === 'datos' ? ' active' : '');
+            document.getElementById('tabBtnReservas').className = 'profile-tab' + (tab === 'reservas' ? ' active' : '');
             if (tab === 'reservas') cargarMisReservas();
         }
 
@@ -2151,16 +2220,21 @@
                 if (data.success) {
                     authSystem.setUser(data);
                     msg.style.color = '#28a745';
-                    msg.textContent = 'Perfil actualizado!';
+                    msg.textContent = 'Perfil actualizado correctamente';
                     document.getElementById('profilePassword').value = '';
                     showUserProfile();
+                    const nombre = document.getElementById('profileName').value;
+                    if (nombre) {
+                        document.getElementById('avatarInicial').textContent = nombre.charAt(0).toUpperCase();
+                        document.getElementById('avatarNombre').textContent = nombre;
+                    }
                 } else {
-                    msg.style.color = '#e74c3c';
+                    msg.style.color = '#dc3545';
                     msg.textContent = data.error || 'Error al actualizar';
                 }
             } catch (err) {
-                msg.style.color = '#e74c3c';
-                msg.textContent = 'Error de conexion';
+                msg.style.color = '#dc3545';
+                msg.textContent = 'Error de conexión';
             }
         }
 
