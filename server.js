@@ -271,10 +271,13 @@ app.post('/enviar-reserva', async (req, res) => {
             totalFinal = precioBase * 1.25;
             detallePapel = 'Papel Lustre/Satinado Premium (+25%)';
         } else if (papelMinuscula.includes('mate')) {
-            detallePapel = 'Papel Mate Elegante - Sin reflejos';
+            totalFinal = precioBase + 30;
+            detallePapel = 'Papel Mate Profesional (+$30.00)';
         } else if (papelMinuscula.includes('fine') || papelMinuscula.includes('art') || papelMinuscula.includes('algodon')) {
             totalFinal = precioBase + 500;
             detallePapel = 'Papel Fine Art Calidad Museo (+$500.00)';
+        } else if (papelMinuscula.includes('brillante')) {
+            detallePapel = 'Papel Brillante (Glossy) - Incluido';
         }
 
         const totalFormateado = '$' + totalFinal.toFixed(2) + ' MXN';
@@ -324,15 +327,20 @@ app.post('/enviar-reserva', async (req, res) => {
                 </thead>
                 <tbody>
                     <tr style="border-bottom: 1px solid #eeeeee;">
-                        <td style="padding: 12px; font-weight: bold;">${tipoNombre} <span style="font-weight:normal;color:#888;font-size:0.85em;">(${detallePapel})</span></td>
+                        <td style="padding: 12px;">${tipoNombre}</td>
                         <td style="padding: 12px; text-align: center;">1</td>
-                        <td style="padding: 12px; text-align: right; font-weight: bold;">${totalFormateado}</td>
+                        <td style="padding: 12px; text-align: right;">$${precioBase.toFixed(2)} MXN</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #eeeeee;">
+                        <td style="padding: 12px; color: #7a42f4;">📄 ${detallePapel}</td>
+                        <td style="padding: 12px; text-align: center;">1</td>
+                        <td style="padding: 12px; text-align: right; color: #7a42f4; font-weight: bold;">$${(totalFinal - precioBase).toFixed(2)} MXN</td>
                     </tr>
                 </tbody>
             </table>
 
             <div style="text-align: right; margin-top: 15px; font-size: 18px; font-weight: bold; color: #5165ff;">
-                Total Final Cobrado: ${totalFormateado}
+                Total Final: ${totalFormateado}
             </div>
         </div>
 

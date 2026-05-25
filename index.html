@@ -2430,7 +2430,7 @@
                 const valorSesion = selectSesion.value;
                 let precioBase = tarifasSesiones[valorSesion] || 800;
                 let totalFinal = precioBase;
-                let textoPapelInformativo = 'Papel Brillante (Glossy) Base';
+                let textoPapelInformativo = 'Sin papel extra';
 
                 if (selectPapel && selectPapel.value) {
                     const valorPapel = selectPapel.value.toLowerCase();
@@ -2438,15 +2438,25 @@
 
                     if (valorPapel.includes('lustre') || textoPapel.includes('lustre') || valorPapel.includes('satinado') || textoPapel.includes('satinado')) {
                         totalFinal = precioBase * 1.25;
-                        textoPapelInformativo = 'Papel Lustre/Satinado Premium (+25%)';
+                        textoPapelInformativo = 'Papel Lustre/Satinado (+25%) = $' + totalFinal.toFixed(2) + ' MXN';
                     } else if (valorPapel.includes('fine') || textoPapel.includes('fine') || valorPapel.includes('art') || textoPapel.includes('algod')) {
                         totalFinal = precioBase + 500;
-                        textoPapelInformativo = 'Papel Fine Art Museo (+$500.00 MXN)';
-                    } else if (valorPapel.includes('mate') || textoPapel.includes('mate') || valorPapel.includes('matte')) {
-                        textoPapelInformativo = 'Papel Mate Profesional (Sin reflejos)';
+                        textoPapelInformativo = 'Papel Fine Art (+$500) = $' + totalFinal.toFixed(2) + ' MXN';
+                    } else if (valorPapel.includes('mate') || textoPapel.includes('mate') || textoPapel.includes('matte')) {
+                        totalFinal = precioBase + 30;
+                        textoPapelInformativo = 'Papel Mate (+$30) = $' + totalFinal.toFixed(2) + ' MXN';
                     } else if (valorPapel.includes('brillante') || textoPapel.includes('brillante')) {
-                        textoPapelInformativo = 'Papel Brillante (Glossy) Incluido';
+                        totalFinal = precioBase;
+                        textoPapelInformativo = 'Papel Brillante (Incluido) = $' + totalFinal.toFixed(2) + ' MXN';
                     }
+                }
+
+                const contenedor = document.getElementById('resumen-total-pantalla');
+                if (contenedor) {
+                    contenedor.style.display = 'block';
+                    contenedor.innerHTML = '<div style="font-size:1.1rem;font-weight:bold;color:#1a1a2e;margin-bottom:4px;">Total Estimado: $' + totalFinal.toFixed(2) + ' MXN</div><div style="font-size:0.8rem;color:#5165ff;font-weight:500;">📄 ' + textoPapelInformativo + '</div>';
+                }
+            }
                 }
 
                 const contenedor = document.getElementById('resumen-total-pantalla');
@@ -2497,20 +2507,21 @@
                         "evento": 2500
                     };
                     const papelConfirmMap = {
-                        "": "Sin impresión",
+                        "": "Sin papel extra",
                         "brillante": "Papel Brillante (Incluido)",
-                        "mate": "Papel Mate (+$30/u)",
-                        "lustre": "Papel Lustre (+25%)",
+                        "mate": "Papel Mate (+$30)",
+                        "lustre": "Papel Lustre/Satinado (+25%)",
                         "fineart": "Fine Art (+$500)"
                     };
                     let precioConfirm = preciosMap[data.tipo_sesion] || 0;
                     if (precioConfirm > 0) {
-                        const papel = data.tipo_papel || '';
-                        if (papel === 'lustre' || papel === 'satinado') precioConfirm = precioConfirm * 1.25;
-                        else if (papel === 'fineart' || papel === 'algodon') precioConfirm = precioConfirm + 500;
+                        const papel = (data.tipo_papel || '').toLowerCase();
+                        if (papel.includes('lustre') || papel.includes('satinado')) precioConfirm = precioConfirm * 1.25;
+                        else if (papel.includes('fine') || papel.includes('art') || papel.includes('algodon')) precioConfirm = precioConfirm + 500;
+                        else if (papel.includes('mate')) precioConfirm = precioConfirm + 30;
                     }
                     const papelTextoConfirm = papelConfirmMap[data.tipo_papel] || '';
-                    const precioTexto = precioConfirm > 0 ? '\n\n📸 Servicio: ' + (data.tipo_sesion || 'N/A') + (papelTextoConfirm ? '\n📄 Papel: ' + papelTextoConfirm : '') + '\n💰 Total: $' + precioConfirm.toFixed(2) + ' MXN' : '';
+                    const precioTexto = precioConfirm > 0 ? '\n\n📸 Servicio: ' + (data.tipo_sesion || 'N/A') + '\n💰 Sesión base: $' + (preciosMap[data.tipo_sesion] || 0).toFixed(2) + ' MXN' + (papelTextoConfirm ? '\n📄 ' + papelTextoConfirm : '') + '\n\n✅ Total a pagar: $' + precioConfirm.toFixed(2) + ' MXN' : '';
 
                     if (!confirm('¿Confirmas tu reservación?' + precioTexto + '\n\nUna vez confirmada, nuestro equipo se pondrá en contacto contigo.')) {
                         return;
