@@ -1903,31 +1903,10 @@
 
     <!-- Scripts de funcionalidad (ERP + SCM) -->
     <script src="database.js" onerror="console.error('database.js no cargo')"></script>
-    <script src="permissions.js" onerror="console.error('permissions.js no cargo')"></script>
-
     <script>
-        // ============ MENÚ HAMBURGUESA ============
-        function toggleMenu() {
-            const menuToggle = document.getElementById('menuToggle');
-            const navMenu = document.getElementById('navMenu');
-            
-            menuToggle.classList.toggle('active');
-            navMenu.classList.toggle('active');
-        }
-
-        // Cerrar menú al hacer clic en un enlace
-        document.addEventListener('DOMContentLoaded', function() {
-            const navLinks = document.querySelectorAll('#navMenu a');
-            navLinks.forEach(link => {
-                link.addEventListener('click', function() {
-                    document.getElementById('menuToggle').classList.remove('active');
-                    document.getElementById('navMenu').classList.remove('active');
-                });
-            });
-        });
-
-        // ============ SISTEMA DE AUTENTICACIÓN ============
-        const authSystem = {
+        // ============ AUTH SYSTEM (single source of truth) ============
+        window.authSystem = window.authSystem || {};
+        Object.assign(window.authSystem, {
             currentUser: JSON.parse(localStorage.getItem('fotovecCurrentUser')) || null,
             token: localStorage.getItem('fotovecToken') || null,
 
@@ -1987,8 +1966,7 @@
                     });
                     const data = await response.json();
                     if (response.ok && data.success) {
-                        this.currentUser = { ...data.user, userType: 'administrador' };
-                        localStorage.setItem('fotovecCurrentUser', JSON.stringify(this.currentUser));
+                        this.setUser({ user: { ...data.user, role: 'admin' }, token: data.token });
                         return { success: true };
                     } else {
                         return { success: false, message: data.error || 'Credenciales invalidas' };
@@ -2020,7 +1998,30 @@
                 localStorage.removeItem('fotovecCurrentUser');
                 localStorage.removeItem('fotovecToken');
             }
-        };
+        });
+        const authSystem = window.authSystem;
+    </script>
+    <script src="permissions.js" onerror="console.error('permissions.js no cargo')"></script>
+
+        // ============ MENÚ HAMBURGUESA ============
+        function toggleMenu() {
+            const menuToggle = document.getElementById('menuToggle');
+            const navMenu = document.getElementById('navMenu');
+            
+            menuToggle.classList.toggle('active');
+            navMenu.classList.toggle('active');
+        }
+
+        // Cerrar menú al hacer clic en un enlace
+        document.addEventListener('DOMContentLoaded', function() {
+            const navLinks = document.querySelectorAll('#navMenu a');
+            navLinks.forEach(link => {
+                link.addEventListener('click', function() {
+                    document.getElementById('menuToggle').classList.remove('active');
+                    document.getElementById('navMenu').classList.remove('active');
+                });
+            });
+        });
 
         function showAuthSection(section) {
             const loginSide = document.querySelector('.auth-login-side');
