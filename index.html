@@ -2311,9 +2311,9 @@
 
         // Verificar si hay usuario autenticado
         window.addEventListener('load', async function() {
-            if (authSystem.token && authSystem.currentUser) {
+            if (authSystem.token || authSystem.currentUser) {
                 await authSystem.restoreSession();
-                showUserProfile();
+                if (authSystem.currentUser) showUserProfile();
             }
         });
 
@@ -2344,6 +2344,13 @@
         function setupFormHandlers() {
             const reservasForm = document.getElementById('reservasForm');
             const contactForm = document.getElementById('contactForm');
+
+            if (authSystem.currentUser?.email) {
+                const emailInput = document.getElementById('email');
+                const nombreInput = document.getElementById('nombre');
+                if (emailInput && !emailInput.value) emailInput.value = authSystem.currentUser.email;
+                if (nombreInput && !nombreInput.value) nombreInput.value = authSystem.currentUser.name || '';
+            }
 
             if (reservasForm) {
                 reservasForm.addEventListener('submit', async function(e) {
