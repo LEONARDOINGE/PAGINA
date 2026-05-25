@@ -58,11 +58,12 @@ app.post("/api/register", (req, res) => {
 
         res.json({ message: "Usuario registrado exitosamente!", token, user: { id: newUser.id, name: newUser.name, username: newUser.username, email: newUser.email, role: newUser.role, userType: newUser.role === 'admin' ? 'administrador' : 'cliente' } });
     } catch (err) {
-        if (err.message && err.message.includes("UNIQUE")) {
+        const errStr = String(err);
+        if (errStr.includes("UNIQUE") || errStr.includes("unique")) {
             return res.status(400).json({ error: "El usuario o email ya existe" });
         }
         console.error('Error registro:', err);
-        return res.status(500).json({ error: "Error en el servidor" });
+        return res.status(500).json({ error: "Error: " + (err.message || err) });
     }
 });
 

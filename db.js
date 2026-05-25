@@ -4,15 +4,10 @@ const bcrypt = require("bcryptjs");
 const fs = require("fs");
 
 const dbPath = process.env.DATABASE_PATH || path.join(__dirname, "database.db");
-const dbDir = path.dirname(dbPath);
-try {
-    if (!fs.existsSync(dbDir)) {
-        fs.mkdirSync(dbDir, { recursive: true });
-    }
-} catch (e) { console.log('No se pudo crear directorio de BD'); }
 
 let db;
 let SQL;
+let dbReady = false;
 
 const dbWrapper = {
     prepare(sql) {
@@ -56,11 +51,12 @@ const dbWrapper = {
         db.run(sql);
     },
     save() {
+        if (!dbReady) return;
         try {
             const data = db.export();
             fs.writeFileSync(dbPath, Buffer.from(data));
         } catch (e) {
-            console.log('No se pudo guardar BD (puede que este en memoria)');
+            console.log('No se pudo guardar BD:', e.message);
         }
     }
 };
@@ -70,11 +66,16 @@ async function init() {
     SQL = await initSqlJs({ locateFile: () => wasmPath });
 
     let fileBuffer = null;
-    try {
-        if (fs.existsSync(dbPath)) {
+    if (fs.existsSync(dbPath)) {
+        try {
             fileBuffer = fs.readFileSync(dbPath);
+            console.log('BD cargada desde archivo');
+        } catch (e) {
+            console.log('No se pudo leer BD, creando nueva');
         }
-    } catch (e) { }
+    } else {
+        console.log('No existe BD, creando nueva');
+    }
 
     db = new SQL.Database(fileBuffer);
 
@@ -107,16 +108,14 @@ async function init() {
     )`);
 
     const defaultAdminPassword = bcrypt.hashSync("admin123", 10);
-    try {
-        db.run(
-            `INSERT OR IGNORE INTO users (name, username, email, password, role, is_verified) VALUES (?, ?, ?, ?, ?, 1)`,
-            ["Admin", "admin", "admin@fototec.com", defaultAdminPassword, "admin"]
-        );
-    } catch (e) { }
+    db.run(
+        `INSERT OR IGNORE INTO users (name, username, email, password, role, is_verified) VALUES (?, ?, ?, ?, ?, 1)`,
+        ["Admin", "admin", "admin@fototec.com", defaultAdminPassword, "admin"]
+    );
 
-    try {
-        dbWrapper.save();
-    } catch (e) { }
+    dbWrapper.save();
+    dbReady = true;
+    console.log('Base de datos lista');
 
     return dbWrapper;
 }
