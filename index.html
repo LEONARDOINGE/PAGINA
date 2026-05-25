@@ -1300,6 +1300,7 @@
                 <button class="admin-tab-btn active" onclick="mostrarTabAdmin('dashboard')">📊 Dashboard</button>
                 <button class="admin-tab-btn" onclick="mostrarTabAdmin('productos')">📦 Productos</button>
                 <button class="admin-tab-btn" onclick="mostrarTabAdmin('pedidos')">🛒 Pedidos</button>
+                <button class="admin-tab-btn" onclick="mostrarTabAdmin('reservas')">📅 Reservas</button>
                 <button class="admin-tab-btn" onclick="mostrarTabAdmin('proveedores')">🚚 Proveedores</button>
                 <button class="admin-tab-btn" onclick="mostrarTabAdmin('empleados')">👔 Recursos Humanos</button>
                 <button class="admin-tab-btn" onclick="mostrarTabAdmin('compras')">📥 Pedidos Compra</button>
@@ -1421,6 +1422,15 @@
                 <div class="admin-section">
                     <h3>📋 Gestión de Pedidos (CRM)</h3>
                     <div id="pedidosListaDiv" style="overflow-x: auto;"></div>
+                </div>
+            </div>
+
+            <!-- TAB: Reservas -->
+            <div id="adminReservas" class="admin-content">
+                <div class="admin-section">
+                    <h3>📅 Reservas de Clientes</h3>
+                    <button class="admin-form button" style="margin-bottom: 15px;" onclick="cargarReservas()">🔄 Actualizar</button>
+                    <div id="reservasListaDiv" style="overflow-x: auto;"></div>
                 </div>
             </div>
 
@@ -2183,6 +2193,8 @@
                 cargarProductosAdmin();
             } else if (tabName === 'pedidos') {
                 cargarPedidosAdmin();
+            } else if (tabName === 'reservas') {
+                cargarReservas();
             } else if (tabName === 'proveedores') {
                 cargarProveedoresAdmin();
             } else if (tabName === 'empleados') {
@@ -2390,6 +2402,41 @@
 
             html += '</tbody></table>';
             document.getElementById('pedidosListaDiv').innerHTML = html;
+        }
+
+        async function cargarReservas() {
+            try {
+                const res = await fetch('/api/reservas');
+                const data = await res.json();
+                if (!data.success) {
+                    document.getElementById('reservasListaDiv').innerHTML = '<p>Error al cargar reservas</p>';
+                    return;
+                }
+                const reservas = data.reservas;
+                if (reservas.length === 0) {
+                    document.getElementById('reservasListaDiv').innerHTML = '<p>No hay reservas todavia.</p>';
+                    return;
+                }
+                let html = '<table class="admin-table"><thead><tr><th>ID</th><th>Nombre</th><th>Email</th><th>Telefono</th><th>Tipo Sesion</th><th>Fecha</th><th>Hora</th><th>Estilo</th><th>Notas</th><th>Leida</th></tr></thead><tbody>';
+                reservas.forEach(r => {
+                    html += `<tr style="${r.leido ? 'opacity:0.6;' : 'font-weight:bold;'}">
+                        <td>#${r.id}</td>
+                        <td>${r.nombre}</td>
+                        <td><a href="mailto:${r.email}">${r.email}</a></td>
+                        <td>${r.telefono}</td>
+                        <td>${r.tipo_sesion}</td>
+                        <td>${r.fecha_sesion}</td>
+                        <td>${r.hora_sesion}</td>
+                        <td>${r.estilo || '-'}</td>
+                        <td>${r.notas || '-'}</td>
+                        <td>${r.leido ? 'Si' : '<span style="color:#ff6b6b;">No</span>'}</td>
+                    </tr>`;
+                });
+                html += '</tbody></table>';
+                document.getElementById('reservasListaDiv').innerHTML = html;
+            } catch (err) {
+                document.getElementById('reservasListaDiv').innerHTML = '<p>Error de conexion</p>';
+            }
         }
 
         function cambiarEstadoPedidoAdmin(pedidoId) {

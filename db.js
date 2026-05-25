@@ -71,6 +71,7 @@ async function init() {
     db = new SQL.Database(fileBuffer);
 
     db.run(`DROP TABLE IF EXISTS users`);
+    db.run(`DROP TABLE IF EXISTS reservas`);
 
     db.run(`
         CREATE TABLE users (
@@ -82,6 +83,24 @@ async function init() {
             role TEXT DEFAULT 'user',
             is_verified INTEGER DEFAULT 0,
             verification_token TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    `);
+
+    db.run(`
+        CREATE TABLE reservas (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nombre TEXT NOT NULL,
+            email TEXT NOT NULL,
+            telefono TEXT NOT NULL,
+            tipo_sesion TEXT NOT NULL,
+            estilo TEXT,
+            cantidad_personas INTEGER,
+            fecha_sesion TEXT NOT NULL,
+            hora_sesion TEXT NOT NULL,
+            notas TEXT,
+            tipo_papel TEXT,
+            leido INTEGER DEFAULT 0,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )
     `);

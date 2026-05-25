@@ -4,7 +4,6 @@ const dbWrapper = require('./db');
 const bcrypt = require('bcryptjs');
 const path = require('path');
 const crypto = require('crypto');
-const { Resend } = require('resend');
 require('dotenv').config();
 
 const app = express();
@@ -14,58 +13,6 @@ app.use(cors());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static(path.join(__dirname)));
-
-const resend = new Resend(process.env.RESEND_API_KEY);
-
-console.log('=== CONFIG EMAIL ===');
-console.log('RESEND_API_KEY:', process.env.RESEND_API_KEY ? 'OK' : 'NO CONFIGURADO');
-console.log('====================');
-
-app.get('/api/test-smtp', async (req, res) => {
-    console.log('Test SMTP via Resend...');
-    try {
-        const data = await resend.emails.send({
-            from: 'FotoTec <onboarding@resend.dev>',
-            to: [process.env.SMTP_USER || 'fototecventass@gmail.com'],
-            subject: 'Test SMTP - FotoTec',
-            html: `<h1>Test SMTP</h1><p>Hora: ${new Date().toISOString()}</p><p>Si llegaste aqui, el email funciona!</p>`
-        });
-        console.log('Test SMTP exitoso:', data);
-        res.json({ success: true, data });
-    } catch (error) {
-        console.error('Test SMTP error:', error);
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
-
-app.get('/api/test-smtp', (req, res) => {
-    console.log('=== DIAGNOSTICO SMTP ===');
-    console.log('SMTP_USER:', process.env.SMTP_USER);
-    console.log('SMTP_PASS:', process.env.SMTP_PASS ? '(configurado)' : '(VACIO)');
-    console.log('========================');
-
-    const testEmail = process.env.SMTP_USER || 'fototecventass@gmail.com';
-    const mailOptions = {
-        from: testEmail,
-        to: testEmail,
-        subject: 'Test SMTP - FotoTec',
-        html: `<h1>Test SMTP</h1><p>Hora: ${new Date().toISOString()}</p>`
-    };
-
-    transporter.sendMail(mailOptions, (error, info) => {
-        if (error) {
-            console.error('Test SMTP error:', error);
-            return res.status(500).json({
-                success: false,
-                error: error.message,
-                code: error.code,
-                command: error.command
-            });
-        }
-        console.log('Test SMTP exitoso');
-        res.json({ success: true, message: 'SMTP funciona!' });
-    });
-});
 
 app.post("/api/register", (req, res) => {
     const { name, username, email, password } = req.body;
@@ -219,7 +166,7 @@ app.get("/api/users", (req, res) => {
     }
 });
 
-app.post('/enviar-reserva', async (req, res) => {
+app.post('/enviar-reserva', (req, res) => {
     const {
         clientEmail, clientName, pedidoId, productos, total,
         telefono, tipoSesion, estilo, cantidadPersonas,
@@ -235,97 +182,58 @@ app.post('/enviar-reserva', async (req, res) => {
 
     const idPedido = pedidoId || 'RES-' + Date.now();
 
-    let productosHTML = '';
-    if (productos && Array.isArray(productos) && productos.length > 0) {
-        productosHTML = productos.map(p => `
-            <tr>
-                <td style="padding: 8px; border: 1px solid #ddd;">${p.nombre || 'Sesión fotográfica'}</td>
-                <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${p.cantidad || 1}</td>
-                <td style="padding: 8px; border: 1px solid #ddd; text-align: right;">$${p.precio || 0}</td>
-                <td style="padding: 8px; border: 1px solid #ddd; text-align: right;">$${((p.cantidad || 1) * (p.precio || 0)).toFixed(2)}</td>
-            </tr>
-        `).join('');
-    } else {
-        productosHTML = `<tr><td style="padding: 8px; border: 1px solid #ddd;">Sesión fotográfica</td><td style="padding: 8px; border: 1px solid #ddd; text-align: center;">1</td><td style="padding: 8px; border: 1px solid #ddd; text-align: right;">$0</td><td style="padding: 8px; border: 1px solid #ddd; text-align: right;">$0</td></tr>`;
-    }
-
-    const sesionInfo = `
-        <tr><td style="padding: 6px; border: 1px solid #ddd;"><strong>Tipo de Sesión</strong></td><td style="padding: 6px; border: 1px solid #ddd;">${tipoSesion || 'No especificado'}</td></tr>
-        <tr><td style="padding: 6px; border: 1px solid #ddd;"><strong>Estilo</strong></td><td style="padding: 6px; border: 1px solid #ddd;">${estilo || 'No especificado'}</td></tr>
-        <tr><td style="padding: 6px; border: 1px solid #ddd;"><strong>Personas</strong></td><td style="padding: 6px; border: 1px solid #ddd;">${cantidadPersonas || 'No especificado'}</td></tr>
-        <tr><td style="padding: 6px; border: 1px solid #ddd;"><strong>Fecha</strong></td><td style="padding: 6px; border: 1px solid #ddd;">${fechaSesion || 'No especificada'}</td></tr>
-        <tr><td style="padding: 6px; border: 1px solid #ddd;"><strong>Hora</strong></td><td style="padding: 6px; border: 1px solid #ddd;">${horaSesion || 'No especificada'}</td></tr>
-        <tr><td style="padding: 6px; border: 1px solid #ddd;"><strong>Teléfono</strong></td><td style="padding: 6px; border: 1px solid #ddd;">${telefono || 'No proporcionado'}</td></tr>
-        <tr><td style="padding: 6px; border: 1px solid #ddd;"><strong>Notas</strong></td><td style="padding: 6px; border: 1px solid #ddd;">${notas || 'Ninguna'}</td></tr>
-    `;
-
-    const emailHtml = `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 16px 16px 0 0; text-align: center;">
-                <h1 style="color: white; margin: 0; font-size: 2em;">FotoTec</h1>
-                <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0;">Solicitud de Reserva Recibida</p>
-            </div>
-            <div style="background: white; padding: 30px; border-radius: 0 0 16px 16px; border: 1px solid #eee;">
-                <h2 style="color: #667eea; margin-top: 0;">¡Hola <strong>${clientName}</strong>!</h2>
-                <p>Hemos recibido tu solicitud de reserva. Nuestro equipo se pondrá en contacto contigo pronto para confirmar la disponibilidad y los detalles.</p>
-
-                <h3 style="color: #333; border-bottom: 2px solid #667eea; padding-bottom: 10px;">Detalles de la Solicitud</h3>
-                <table style="width: 100%; border-collapse: collapse; margin: 15px 0;">
-                    <tbody>
-                        ${sesionInfo}
-                    </tbody>
-                </table>
-
-                <h3 style="color: #333; border-bottom: 2px solid #667eea; padding-bottom: 10px;">Resumen</h3>
-                <table style="width: 100%; border-collapse: collapse; margin: 15px 0;">
-                    <thead>
-                        <tr style="background-color: #667eea; color: white;">
-                            <th style="padding: 10px; text-align: left;">Producto/Servicio</th>
-                            <th style="padding: 10px; text-align: center;">Cantidad</th>
-                            <th style="padding: 10px; text-align: right;">Precio</th>
-                            <th style="padding: 10px; text-align: right;">Subtotal</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${productosHTML}
-                    </tbody>
-                </table>
-                <h3 style="text-align: right; color: #667eea;">Total: <span style="font-size: 1.5em;">$${total?.toFixed(2) || '0.00'}</span></h3>
-
-                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-top: 20px;">
-                    <p style="margin: 0;"><strong>Teléfono:</strong> +52 899 207 0611</p>
-                    <p style="margin: 5px 0 0 0;"><strong>Email:</strong> fototecventass@gmail.com</p>
-                    <p style="margin: 5px 0 0 0;"><strong>Dirección:</strong> Av. Tecnológico 318, Reynosa, Tamps.</p>
-                </div>
-                <p style="color: #999; font-size: 0.85em; margin-top: 20px; text-align: center;">
-                    Esta es una confirmación de que recibimos tu solicitud. El pago se realiza al confirmar la cita.
-                </p>
-            </div>
-        </div>
-    `;
-
     try {
-        const data = await resend.emails.send({
-            from: 'onboarding@resend.dev',
-            to: ['fototecventass@gmail.com'],
-            subject: `FotoTec - Nueva Reserva #${idPedido} de ${clientName}`,
-            html: emailHtml
-        });
+        dbWrapper.prepare(`
+            INSERT INTO reservas (nombre, email, telefono, tipo_sesion, estilo, cantidad_personas, fecha_sesion, hora_sesion, notas, tipo_papel)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `).run(clientName, clientEmail, telefono || '', tipoSesion || '', estilo || '', cantidadPersonas || 1, fechaSesion || '', horaSesion || '', notas || '', tipoPapel || '');
 
-        console.log('Email de reserva enviado:', data);
+        dbWrapper.save();
+
+        console.log('Reserva guardada:', idPedido, clientName, clientEmail);
         res.json({
             success: true,
             message: 'Reserva recibida. Te contactaremos pronto.',
             pedidoId: idPedido
         });
-    } catch (error) {
-        console.error('Error al enviar email de reserva:', error);
+    } catch (err) {
+        console.error('Error al guardar reserva:', err);
         res.status(500).json({
             success: false,
-            error: 'Error al enviar email',
-            details: error.message
+            error: 'Error al guardar la reserva'
         });
     }
+});
+
+app.get('/api/reservas', (req, res) => {
+    try {
+        const stmt = dbWrapper.prepare(`SELECT * FROM reservas ORDER BY created_at DESC`);
+        const rows = stmt.all();
+        res.json({ success: true, reservas: rows });
+    } catch (err) {
+        console.error('Error al obtener reservas:', err);
+        res.status(500).json({ success: false, error: 'Error al obtener reservas' });
+    }
+});
+
+app.put('/api/reservas/:id/leer', (req, res) => {
+    try {
+        dbWrapper.prepare(`UPDATE reservas SET leido = 1 WHERE id = ?`).run(req.params.id);
+        dbWrapper.save();
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ success: false, error: 'Error' });
+    }
+});
+
+app.get('/api/reservas/contador', (req, res) => {
+    try {
+        const result = dbWrapper.prepare(`SELECT COUNT(*) as total FROM reservas WHERE leido = 0`).get();
+        res.json({ total: result.total });
+    } catch (err) {
+        res.status(500).json({ total: 0 });
+    }
+});
 });
 
 app.post('/api/verificar-admin', (req, res) => {
