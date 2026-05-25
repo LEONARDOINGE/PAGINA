@@ -23,30 +23,20 @@ function initTransporter() {
         const smtpUser = process.env.SMTP_USER;
         const smtpPass = process.env.SMTP_PASS;
 
-        console.log('Configurando SMTP...');
-        console.log('Usuario SMTP:', smtpUser);
-        console.log('Pass SMTP:', smtpPass ? '[configurado]' : '[VACIO]');
+        console.log('=== CONFIG SMTP ===');
+        console.log('SMTP_USER:', smtpUser || 'NO CONFIGURADO');
+        console.log('SMTP_PASS:', smtpPass ? 'OK' : 'NO CONFIGURADO');
+        console.log('SMTP_HOST:', process.env.SMTP_HOST);
+        console.log('SMTP_PORT:', process.env.SMTP_PORT);
+        console.log('====================');
 
-        try {
-            const { address: smtpIp } = dns.lookupSync('smtp.gmail.com', { family: 4 });
-            console.log('SMTP IPv4:', smtpIp);
-            transporter = nodemailer.createTransport({
-                host: smtpIp,
-                port: parseInt(process.env.SMTP_PORT) || 587,
-                secure: false,
-                auth: { user: smtpUser, pass: smtpPass },
-                tls: { rejectUnauthorized: false }
-            });
-        } catch (dnsErr) {
-            console.error('DNS lookup failed, usando hostname:', dnsErr.message);
-            transporter = nodemailer.createTransport({
-                host: 'smtp.gmail.com',
-                port: parseInt(process.env.SMTP_PORT) || 587,
-                secure: false,
-                auth: { user: smtpUser, pass: smtpPass },
-                tls: { rejectUnauthorized: false }
-            });
-        }
+        transporter = nodemailer.createTransport({
+            host: 'smtp.gmail.com',
+            port: parseInt(process.env.SMTP_PORT) || 587,
+            secure: false,
+            auth: { user: smtpUser, pass: smtpPass },
+            tls: { rejectUnauthorized: false, servername: 'smtp.gmail.com' }
+        });
 
         transporter.verify((error, success) => {
             if (error) {
