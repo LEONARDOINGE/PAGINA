@@ -279,9 +279,17 @@ app.post('/enviar-reserva', (req, res) => {
     transporter.sendMail(mailOptions, (error, info) => {
         if (error) {
             console.error('Error al enviar email de reserva:', error);
+            let mensajeError = 'Error al enviar email';
+            if (error.message.includes('Invalid login')) {
+                mensajeError = 'Error de autenticacion SMTP. Verifica SMTP_PASS en Render.';
+            } else if (error.message.includes('ECONNREFUSED')) {
+                mensajeError = 'No se pudo conectar al servidor SMTP.';
+            } else if (error.message.includes('ETIMEDOUT')) {
+                mensajeError = 'Tiempo de espera agotado con el servidor SMTP.';
+            }
             return res.status(500).json({
                 success: false,
-                error: 'Error al enviar email',
+                error: mensajeError,
                 details: error.message
             });
         }

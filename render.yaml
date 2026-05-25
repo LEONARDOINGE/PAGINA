@@ -15,4 +15,7 @@ services:
       - key: SMTP_USER
         value: fototecventass@gmail.com
       - key: SMTP_PASS
-        value: "INSERT_YOUR_APP_PASSWORD_HERE"
+        sync: false
+        # IMPORTANTE: Configurar como Variable de Entorno en el Dashboard de Render
+        # Ir a: Render Dashboard > fototec > Environment > Environment Variables
+        # Agregar: SMTP_PASS = "drhw ebwc ruoi rhbs"
