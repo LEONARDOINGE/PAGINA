@@ -276,7 +276,7 @@ dbWrapper.ready.then(() => {
         console.log('   SERVIDOR FOTOTEC INICIADO');
         console.log('==================================');
         console.log(`   Puerto: ${PORT}`);
-        console.log(`   URL: http://localhost:${PORT}`);
+        console.log(`   URL: https://fototec.onrender.com`);
         console.log('==================================');
         console.log('');
     });
