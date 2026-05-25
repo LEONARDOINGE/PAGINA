@@ -571,27 +571,62 @@ section h2 span {
     background: var(--white);
 }
 
+.galeria-filters {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 35px;
+}
+
+.galeria-filter-btn {
+    padding: 8px 22px;
+    border-radius: 25px;
+    border: 2px solid #e0e4f0;
+    background: transparent;
+    color: #5165ff;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.galeria-filter-btn:hover,
+.galeria-filter-btn.active {
+    background: linear-gradient(135deg, #5165ff, #7a42f4);
+    color: #fff;
+    border-color: transparent;
+    box-shadow: 0 4px 15px rgba(81, 101, 255, 0.3);
+}
+
 .galeria-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 24px;
 }
 
 .galeria-item {
-    background: #fafafa;
-    border-radius: var(--radius-md);
+    background: #fff;
+    border-radius: 16px;
     overflow: hidden;
-    box-shadow: var(--shadow-sm);
-    transition: var(--transition);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    transition: all 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    border: 1px solid #f0f0f0;
+}
+
+.galeria-item.hidden {
+    display: none;
 }
 
 .galeria-item:hover {
-    transform: translateY(-6px);
-    box-shadow: var(--shadow-md);
+    transform: translateY(-8px);
+    box-shadow: 0 16px 40px rgba(81, 101, 255, 0.15);
+    border-color: #d0d5f0;
 }
 
 .galeria-placeholder {
-    height: 220px;
+    position: relative;
+    aspect-ratio: 4 / 3;
     overflow: hidden;
 }
 
@@ -603,23 +638,41 @@ section h2 span {
 }
 
 .galeria-item:hover .galeria-placeholder img {
-    transform: scale(1.08);
+    transform: scale(1.05);
 }
 
 .galeria-info {
-    padding: 18px;
+    padding: 18px 20px 16px;
 }
 
 .galeria-info h4 {
     font-size: 1.05rem;
-    color: var(--dark);
+    color: #1a1a2e;
     margin-bottom: 4px;
+    font-weight: 700;
 }
 
 .galeria-info p {
-    font-size: 0.88rem;
-    color: var(--gray);
-    font-style: italic;
+    font-size: 0.85rem;
+    color: #666;
+    margin-bottom: 12px;
+    line-height: 1.4;
+}
+
+.galeria-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #5165ff;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.galeria-cta:hover {
+    color: #7a42f4;
+    gap: 8px;
 }
 
 /* ===== RESERVAS ===== */

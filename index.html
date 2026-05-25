@@ -1024,88 +1024,104 @@
     <section id="galeria" class="galeria">
         <div class="section-decoration">  </div>
         <div class="container">
-            <h2>Nuestro Trabajo </h2>
+            <h2>Nuestro Trabajo</h2>
             <p class="galeria-tagline">Galería de sesiones anteriores de clientes satisfechos</p>
+            <div class="galeria-filters">
+                <button class="galeria-filter-btn active" onclick="filtrarGaleria('todos', this)">Todos</button>
+                <button class="galeria-filter-btn" onclick="filtrarGaleria('estudio', this)">Estudio</button>
+                <button class="galeria-filter-btn" onclick="filtrarGaleria('retratos', this)">Retratos</button>
+                <button class="galeria-filter-btn" onclick="filtrarGaleria('eventos', this)">Eventos</button>
+                <button class="galeria-filter-btn" onclick="filtrarGaleria('producto', this)">Producto</button>
+            </div>
             <div class="galeria-grid">
-                <div class="galeria-item">
+                <div class="galeria-item" data-category="retratos">
                     <div class="galeria-placeholder">
-                        <img src="https://images.unsplash.com/photo-1511895426328-dc8714191300?w=400&h=300&fit=crop" alt="Sesión Familia" loading="lazy">
+                        <img src="https://images.unsplash.com/photo-1511895426328-dc8714191300?w=600&h=450&fit=crop" alt="Retratos Familiares" loading="lazy">
                     </div>
                     <div class="galeria-info">
                         <h4>Retratos Familiares</h4>
                         <p>Capturamos momentos preciosos de tu familia</p>
+                        <a href="#reservas" onclick="document.getElementById('reservas').scrollIntoView({behavior:'smooth'})" class="galeria-cta">Cotizar servicio →</a>
                     </div>
                 </div>
-                <div class="galeria-item">
+                <div class="galeria-item" data-category="estudio">
                     <div class="galeria-placeholder">
-                        <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=300&fit=crop" alt="Retratos" loading="lazy">
+                        <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&h=450&fit=crop" alt="Retratos Profesionales" loading="lazy">
                     </div>
                     <div class="galeria-info">
                         <h4>Retratos Profesionales</h4>
                         <p>Imágenes que reflejan tu mejor versión</p>
+                        <a href="#reservas" onclick="document.getElementById('reservas').scrollIntoView({behavior:'smooth'})" class="galeria-cta">Cotizar servicio →</a>
                     </div>
                 </div>
-                <div class="galeria-item">
+                <div class="galeria-item" data-category="eventos">
                     <div class="galeria-placeholder">
-                        <img src="https://images.unsplash.com/photo-1519741497674-611481863552?w=400&h=300&fit=crop" alt="Bodas" loading="lazy">
+                        <img src="https://images.unsplash.com/photo-1519741497674-611481863552?w=600&h=450&fit=crop" alt="Bodas y Eventos" loading="lazy">
                     </div>
                     <div class="galeria-info">
                         <h4>Bodas y Eventos</h4>
                         <p>El día más especial, documentado con arte</p>
+                        <a href="#reservas" onclick="document.getElementById('reservas').scrollIntoView({behavior:'smooth'})" class="galeria-cta">Cotizar servicio →</a>
                     </div>
                 </div>
-                <div class="galeria-item">
+                <div class="galeria-item" data-category="retratos">
                     <div class="galeria-placeholder">
-                        <img src="https://images.unsplash.com/photo-1544033529-f0a3f56301ba?w=400&h=300&fit=crop" alt="Maternidad" loading="lazy">
+                        <img src="https://images.unsplash.com/photo-1544033529-f0a3f56301ba?w=600&h=450&fit=crop" alt="Maternidad" loading="lazy">
                     </div>
                     <div class="galeria-info">
                         <h4>Sesión de Maternidad</h4>
                         <p>Celebra la llegada de una nueva vida</p>
+                        <a href="#reservas" onclick="document.getElementById('reservas').scrollIntoView({behavior:'smooth'})" class="galeria-cta">Cotizar servicio →</a>
                     </div>
                 </div>
-                <div class="galeria-item">
+                <div class="galeria-item" data-category="estudio">
                     <div class="galeria-placeholder">
-                        <img src="https://images.unsplash.com/photo-1513151233558-d860c5398176?w=400&h=300&fit=crop" alt="Navidad" loading="lazy">
+                        <img src="https://images.unsplash.com/photo-1513151233558-d860c5398176?w=600&h=450&fit=crop" alt="Sesiones Temáticas" loading="lazy">
                     </div>
                     <div class="galeria-info">
-                        <h4>Sesiones Navideñas</h4>
-                        <p>Tradiciones familiares en fotos memorables</p>
+                        <h4>Sesiones Temáticas</h4>
+                        <p>Navidad, Madres y más celebraciones</p>
+                        <a href="#reservas" onclick="document.getElementById('reservas').scrollIntoView({behavior:'smooth'})" class="galeria-cta">Cotizar servicio →</a>
                     </div>
                 </div>
-                <div class="galeria-item">
+                <div class="galeria-item" data-category="retratos">
                     <div class="galeria-placeholder">
-                        <img src="https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?w=400&h=300&fit=crop" alt="Parejas" loading="lazy">
+                        <img src="https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?w=600&h=450&fit=crop" alt="Sesiones de Pareja" loading="lazy">
                     </div>
                     <div class="galeria-info">
                         <h4>Sesiones de Pareja</h4>
                         <p>Amor y romanticismo en cada imagen</p>
+                        <a href="#reservas" onclick="document.getElementById('reservas').scrollIntoView({behavior:'smooth'})" class="galeria-cta">Cotizar servicio →</a>
                     </div>
                 </div>
-                <div class="galeria-item">
+                <div class="galeria-item" data-category="retratos">
                     <div class="galeria-placeholder">
-                        <img src="https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?w=400&h=300&fit=crop" alt="Infantil" loading="lazy">
+                        <img src="https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?w=600&h=450&fit=crop" alt="Fotografía Infantil" loading="lazy">
                     </div>
                     <div class="galeria-info">
                         <h4>Fotografía Infantil</h4>
                         <p>La magia de la infancia en cada retrato</p>
+                        <a href="#reservas" onclick="document.getElementById('reservas').scrollIntoView({behavior:'smooth'})" class="galeria-cta">Cotizar servicio →</a>
                     </div>
                 </div>
-                <div class="galeria-item">
+                <div class="galeria-item" data-category="producto">
                     <div class="galeria-placeholder">
-                        <img src="https://images.unsplash.com/photo-1497366216548-37526070297c?w=400&h=300&fit=crop" alt="Producto" loading="lazy">
+                        <img src="https://images.unsplash.com/photo-1497366216548-37526070297c?w=600&h=450&fit=crop" alt="Fotos de Producto" loading="lazy">
                     </div>
                     <div class="galeria-info">
                         <h4>Fotos de Producto</h4>
                         <p>Tu negocio en su mejor ángulo</p>
+                        <a href="#reservas" onclick="document.getElementById('reservas').scrollIntoView({behavior:'smooth'})" class="galeria-cta">Cotizar servicio →</a>
                     </div>
                 </div>
-                <div class="galeria-item">
+                <div class="galeria-item" data-category="estudio">
                     <div class="galeria-placeholder">
-                        <img src="https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=400&h=300&fit=crop" alt="Credencial" loading="lazy">
+                        <img src="https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=600&h=450&fit=crop" alt="Credenciales y Títulos" loading="lazy">
                     </div>
                     <div class="galeria-info">
                         <h4>Credenciales y Títulos</h4>
                         <p>Fotos profesionales para documentos oficiales</p>
+                        <a href="#reservas" onclick="document.getElementById('reservas').scrollIntoView({behavior:'smooth'})" class="galeria-cta">Cotizar servicio →</a>
                     </div>
                 </div>
             </div>
@@ -2471,6 +2487,18 @@
                         target.scrollIntoView({ behavior: 'smooth' });
                     }
                 });
+            });
+        }
+
+        function filtrarGaleria(categoria, btn) {
+            document.querySelectorAll('.galeria-filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.querySelectorAll('.galeria-item').forEach(item => {
+                if (categoria === 'todos' || item.getAttribute('data-category') === categoria) {
+                    item.classList.remove('hidden');
+                } else {
+                    item.classList.add('hidden');
+                }
             });
         }
 
