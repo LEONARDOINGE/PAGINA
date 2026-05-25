@@ -2,6 +2,9 @@
 // Simula una base de datos SQLite almacenada en localStorage
 // CUMPLE CON: Tema 02 (SCM) y Tema 03 (ERP)
 
+(function() {
+    'use strict';
+
 const database = {
     // ============ DATOS DE PRODUCTOS ============
     productos: JSON.parse(localStorage.getItem('fotovecProductos')) || [
@@ -621,21 +624,36 @@ const database = {
         });
         return areas;
     }
-};
+}
 
-// ============ INICIALIZAR DATOS ============
-if (!localStorage.getItem('fotovecProductos')) {
-    database.guardarProductos();
+// ============ INICIALIZAR DATOS (solo si existe localStorage) ============
+function initDatabase() {
+    try {
+        if (!localStorage.getItem('fotovecProductos')) {
+            database.guardarProductos();
+        }
+        if (!localStorage.getItem('fotovecPedidos')) {
+            database.guardarPedidos();
+        }
+        if (!localStorage.getItem('fotovecProveedores')) {
+            database.guardarProveedores();
+        }
+        if (!localStorage.getItem('fotovecEmpleados')) {
+            database.guardarEmpleados();
+        }
+        if (!localStorage.getItem('fotovecPedidosCompra')) {
+            database.guardarPedidosCompra();
+        }
+    } catch (e) {
+        console.error('Error inicializando database:', e);
+    }
 }
-if (!localStorage.getItem('fotovecPedidos')) {
-    database.guardarPedidos();
+
+if (typeof localStorage !== 'undefined') {
+    initDatabase();
 }
-if (!localStorage.getItem('fotovecProveedores')) {
-    database.guardarProveedores();
-}
-if (!localStorage.getItem('fotovecEmpleados')) {
-    database.guardarEmpleados();
-}
-if (!localStorage.getItem('fotovecPedidosCompra')) {
-    database.guardarPedidosCompra();
-}
+
+window.database = database;
+
+})();
+
