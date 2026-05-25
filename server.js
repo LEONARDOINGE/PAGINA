@@ -98,6 +98,45 @@ app.get("/api/me", authMiddleware, (req, res) => {
     res.json({ user: req.user });
 });
 
+app.put('/api/profile/update', (req, res) => {
+    const { id, name, email, password } = req.body;
+
+    if (!id || !name || !email) {
+        return res.status(400).json({ success: false, error: 'Datos requeridos' });
+    }
+
+    try {
+        if (password) {
+            const hashedPassword = bcrypt.hashSync(password, 10);
+            dbWrapper.prepare(`UPDATE users SET name = ?, email = ?, password = ? WHERE id = ?`).run(name, email, hashedPassword, id);
+        } else {
+            dbWrapper.prepare(`UPDATE users SET name = ?, email = ? WHERE id = ?`).run(name, email, id);
+        }
+
+        const user = dbWrapper.prepare(`SELECT * FROM users WHERE id = ?`).get(id);
+        const { password: _, ...userData } = user;
+        res.json({ success: true, user: { id: user.id, name: user.name, username: user.username, email: user.email, role: user.role } });
+    } catch (err) {
+        console.error('Error updating profile:', err);
+        res.status(500).json({ success: false, error: 'Error al actualizar' });
+    }
+});
+
+app.get('/api/reservas/mis-reservas', (req, res) => {
+    const { email } = req.query;
+    if (!email) {
+        return res.status(400).json({ success: false, error: 'Email requerido' });
+    }
+
+    try {
+        const rows = dbWrapper.prepare(`SELECT * FROM reservas WHERE email = ? ORDER BY created_at DESC`).all(email);
+        res.json({ success: true, reservas: rows });
+    } catch (err) {
+        console.error('Error fetching reservas:', err);
+        res.status(500).json({ success: false, error: 'Error' });
+    }
+});
+
 app.get("/api/users", (req, res) => {
     try {
         const stmt = dbWrapper.prepare(`SELECT id, name, username, email, role, created_at FROM users`);

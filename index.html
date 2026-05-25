@@ -1807,6 +1807,52 @@
         </div>
     </div>
 
+    <!-- Modal de Perfil de Usuario -->
+    <div id="profileModal" class="auth-modal" style="display:none;z-index:10001;">
+        <div class="auth-modal-overlay" onclick="closeProfileModal()"></div>
+        <div class="auth-modal-content" style="max-width:600px;max-height:90vh;overflow-y:auto;">
+            <div class="auth-admin-header" style="background:linear-gradient(135deg,#667eea,#764ba2);">
+                <h2>👤 Mi Perfil</h2>
+                <button class="auth-admin-close" onclick="closeProfileModal()">✕</button>
+            </div>
+            <div style="padding:25px;">
+                <div style="display:flex;gap:10px;margin-bottom:20px;border-bottom:1px solid #ddd;padding-bottom:15px;">
+                    <button onclick="showProfileTab('datos')" id="tabBtnDatos" style="background:#667eea;color:white;border:none;padding:10px 20px;border-radius:8px;cursor:pointer;font-weight:600;">👤 Mis Datos</button>
+                    <button onclick="showProfileTab('reservas')" id="tabBtnReservas" style="background:#eee;color:#333;border:none;padding:10px 20px;border-radius:8px;cursor:pointer;font-weight:600;">📅 Mis Reservas</button>
+                </div>
+
+                <div id="profileTabDatos">
+                    <form onsubmit="saveProfile(event)">
+                        <div style="margin-bottom:15px;">
+                            <label style="display:block;font-weight:600;margin-bottom:5px;">Nombre completo</label>
+                            <input type="text" id="profileName" style="width:100%;padding:12px;border:1px solid #ddd;border-radius:8px;font-size:1em;" required>
+                        </div>
+                        <div style="margin-bottom:15px;">
+                            <label style="display:block;font-weight:600;margin-bottom:5px;">Correo electrónico</label>
+                            <input type="email" id="profileEmail" style="width:100%;padding:12px;border:1px solid #ddd;border-radius:8px;font-size:1em;" required>
+                        </div>
+                        <div style="margin-bottom:15px;">
+                            <label style="display:block;font-weight:600;margin-bottom:5px;">Usuario</label>
+                            <input type="text" id="profileUsername" style="width:100%;padding:12px;border:1px solid #ddd;border-radius:8px;font-size:1em;" readonly>
+                        </div>
+                        <div style="margin-bottom:20px;">
+                            <label style="display:block;font-weight:600;margin-bottom:5px;">Nueva contraseña (dejar vacío para no cambiar)</label>
+                            <input type="password" id="profilePassword" placeholder="Nueva contraseña" style="width:100%;padding:12px;border:1px solid #ddd;border-radius:8px;font-size:1em;">
+                        </div>
+                        <div id="profileMsg" style="margin-bottom:15px;font-weight:600;"></div>
+                        <button type="submit" style="width:100%;background:linear-gradient(135deg,#667eea,#764ba2);color:white;border:none;padding:14px;border-radius:8px;font-size:1em;cursor:pointer;font-weight:600;">
+                            Guardar Cambios
+                        </button>
+                    </form>
+                </div>
+
+                <div id="profileTabReservas" style="display:none;">
+                    <div id="misReservasLista" style="margin-top:10px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Scripts de funcionalidad (ERP + SCM) -->
     <script src="database.js" onerror="console.error('database.js no cargo')"></script>
     <script src="permissions.js" onerror="console.error('permissions.js no cargo')"></script>
@@ -2073,10 +2119,15 @@
         function showUserProfile() {
             const userInfo = document.getElementById('userInfo');
             if (userInfo && authSystem.currentUser) {
+                const u = authSystem.currentUser;
                 userInfo.innerHTML = `
-                    <div class="user-profile-info">
-                        <span class="user-name">👤 ${authSystem.currentUser.name}</span>
-                        <button class="logout-btn" onclick="logout()">Cerrar Sesión</button>
+                    <div style="display:flex;align-items:center;gap:10px;">
+                        <button onclick="openProfileModal()" style="background:linear-gradient(135deg,#667eea,#764ba2);color:white;border:none;padding:8px 16px;border-radius:20px;cursor:pointer;font-size:0.9em;font-weight:600;">
+                            👤 ${u.name}
+                        </button>
+                        <button onclick="logout()" style="background:rgba(255,255,255,0.2);color:white;border:none;padding:8px 12px;border-radius:20px;cursor:pointer;font-size:0.8em;">
+                            Salir
+                        </button>
                     </div>
                 `;
             }
@@ -2089,6 +2140,106 @@
                 <button class="login-btn-navbar" onclick="openLoginModal()">🔐 Iniciar Sesión</button>
             `;
             closeAuthModal();
+            closeProfileModal();
+        }
+
+        function openProfileModal() {
+            const u = authSystem.currentUser;
+            if (!u) return;
+            document.getElementById('profileName').value = u.name || '';
+            document.getElementById('profileEmail').value = u.email || '';
+            document.getElementById('profileUsername').value = u.username || '';
+            document.getElementById('profilePassword').value = '';
+            document.getElementById('profileMsg').textContent = '';
+            document.getElementById('profileModal').style.display = 'flex';
+            showProfileTab('datos');
+        }
+
+        function closeProfileModal() {
+            document.getElementById('profileModal').style.display = 'none';
+        }
+
+        function showProfileTab(tab) {
+            document.getElementById('profileTabDatos').style.display = tab === 'datos' ? 'block' : 'none';
+            document.getElementById('profileTabReservas').style.display = tab === 'reservas' ? 'block' : 'none';
+            document.getElementById('tabBtnDatos').style.background = tab === 'datos' ? '#667eea' : '#eee';
+            document.getElementById('tabBtnDatos').style.color = tab === 'datos' ? 'white' : '#333';
+            document.getElementById('tabBtnReservas').style.background = tab === 'reservas' ? '#667eea' : '#eee';
+            document.getElementById('tabBtnReservas').style.color = tab === 'reservas' ? 'white' : '#333';
+            if (tab === 'reservas') cargarMisReservas();
+        }
+
+        async function saveProfile(e) {
+            e.preventDefault();
+            const msg = document.getElementById('profileMsg');
+            const name = document.getElementById('profileName').value;
+            const email = document.getElementById('profileEmail').value;
+            const password = document.getElementById('profilePassword').value;
+
+            const body = { id: authSystem.currentUser.id, name, email };
+            if (password) body.password = password;
+
+            try {
+                const res = await fetch('/api/profile/update', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    authSystem.currentUser = data.user;
+                    authSystem.currentUser.userType = data.user.role === 'admin' ? 'administrador' : 'cliente';
+                    localStorage.setItem('fotovecCurrentUser', JSON.stringify(authSystem.currentUser));
+                    msg.style.color = '#28a745';
+                    msg.textContent = '¡Perfil actualizado!';
+                    document.getElementById('profilePassword').value = '';
+                    showUserProfile();
+                } else {
+                    msg.style.color = '#e74c3c';
+                    msg.textContent = data.error || 'Error al actualizar';
+                }
+            } catch (err) {
+                msg.style.color = '#e74c3c';
+                msg.textContent = 'Error de conexion';
+            }
+        }
+
+        async function cargarMisReservas() {
+            const div = document.getElementById('misReservasLista');
+            if (!authSystem.currentUser) {
+                div.innerHTML = '<p>Debes iniciar sesion para ver tus reservas.</p>';
+                return;
+            }
+            try {
+                const res = await fetch('/api/reservas/mis-reservas?email=' + encodeURIComponent(authSystem.currentUser.email));
+                const data = await res.json();
+                if (!data.success || data.reservas.length === 0) {
+                    div.innerHTML = '<p style="text-align:center;padding:30px;color:#888;">No tienes reservas todavia. <a href="#reservas" onclick="closeProfileModal()" style="color:#667eea;">Haz tu primera reserva</a></p>';
+                    return;
+                }
+                let html = '<div style="display:grid;gap:15px;">';
+                data.reservas.forEach(r => {
+                    const fecha = new Date(r.created_at).toLocaleDateString('es-ES');
+                    html += `
+                        <div style="background:#f8f9fa;border-radius:12px;padding:16px;border-left:4px solid #667eea;">
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                                <strong style="color:#667eea;">${r.tipo_sesion || 'Sesion'}</strong>
+                                <span style="font-size:0.8em;color:#888;">${fecha}</span>
+                            </div>
+                            <div style="font-size:0.9em;color:#555;">
+                                <p><strong>Fecha:</strong> ${r.fecha_sesion} a las ${r.hora_sesion}</p>
+                                <p><strong>Estilo:</strong> ${r.estilo || '-'}</p>
+                                <p><strong>Personas:</strong> ${r.cantidad_personas || 1}</p>
+                                ${r.notas ? '<p><strong>Notas:</strong> ' + r.notas + '</p>' : ''}
+                            </div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+                div.innerHTML = html;
+            } catch (err) {
+                div.innerHTML = '<p>Error al cargar reservas.</p>';
+            }
         }
 
         // Verificar si hay usuario autenticado
