@@ -4,7 +4,18 @@ const bcrypt = require('bcryptjs');
 const path = require('path');
 const jwt = require('jsonwebtoken');
 const fs = require('fs');
+const nodemailer = require('nodemailer');
 require('dotenv').config();
+
+const smtpTransport = nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: parseInt(process.env.SMTP_PORT) || 587,
+    secure: false,
+    auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS
+    }
+});
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -231,6 +242,65 @@ app.post('/enviar-reserva', (req, res) => {
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [clientName, clientEmail, telefono || '', tipoSesion || '', estilo || '', cantidadPersonas || 1, fechaSesion || '', horaSesion || '', notas || '', tipoPapel || '']);
         fs.writeFileSync(dbPath, Buffer.from(db.export()));
+
+        const tiposMap = {
+            estudio: 'Sesión de Estudio',
+            estudio_tematico: 'Sesión Temática',
+            tecnica: 'Fotografía Técnica',
+            boda: 'Sesión de Boda',
+            evento: 'Cobertura de Evento'
+        };
+        const tipoNombre = tiposMap[tipoSesion] || tipoSesion || 'No especificado';
+
+        const emailHtmlAdmin = `
+        <h2>Nueva Reserva Recibida</h2>
+        <table style="border-collapse: collapse; width: 100%; font-family: Arial, sans-serif;">
+          <tr><td style="padding: 10px; border: 1px solid #ddd; font-weight: bold; background: #f5f5f5;">Nombre</td><td style="padding: 10px; border: 1px solid #ddd;">${clientName}</td></tr>
+          <tr><td style="padding: 10px; border: 1px solid #ddd; font-weight: bold; background: #f5f5f5;">Email</td><td style="padding: 10px; border: 1px solid #ddd;">${clientEmail}</td></tr>
+          <tr><td style="padding: 10px; border: 1px solid #ddd; font-weight: bold; background: #f5f5f5;">Teléfono</td><td style="padding: 10px; border: 1px solid #ddd;">${telefono || 'No proporcionado'}</td></tr>
+          <tr><td style="padding: 10px; border: 1px solid #ddd; font-weight: bold; background: #f5f5f5;">Tipo de Sesión</td><td style="padding: 10px; border: 1px solid #ddd;">${tipoNombre}</td></tr>
+          <tr><td style="padding: 10px; border: 1px solid #ddd; font-weight: bold; background: #f5f5f5;">Fecha</td><td style="padding: 10px; border: 1px solid #ddd;">${fechaSesion || 'No especificada'}</td></tr>
+          <tr><td style="padding: 10px; border: 1px solid #ddd; font-weight: bold; background: #f5f5f5;">Hora</td><td style="padding: 10px; border: 1px solid #ddd;">${horaSesion || 'No especificada'}</td></tr>
+          <tr><td style="padding: 10px; border: 1px solid #ddd; font-weight: bold; background: #f5f5f5;">Personas</td><td style="padding: 10px; border: 1px solid #ddd;">${cantidadPersonas || '1'}</td></tr>
+          <tr><td style="padding: 10px; border: 1px solid #ddd; font-weight: bold; background: #f5f5f5;">Notas</td><td style="padding: 10px; border: 1px solid #ddd;">${notas || 'Ninguna'}</td></tr>
+        </table>`;
+
+        const emailHtmlCliente = `
+        <div style="font-family: Arial, sans-serif; text-align: center; max-width: 600px; margin: 0 auto;">
+          <h1 style="color: #667eea;">¡Gracias por tu reserva, ${clientName}!</h1>
+          <p>Hemos recibido tu solicitud de reserva. Nuestro equipo se pondrá en contacto contigo pronto para confirmar los detalles.</p>
+          <h3 style="color: #333;">Resumen de tu reserva:</h3>
+          <table style="border-collapse: collapse; width: 100%; margin: 15px 0;">
+            <tr><td style="padding: 10px; border: 1px solid #ddd; font-weight: bold;">Tipo de Sesión</td><td style="padding: 10px; border: 1px solid #ddd;">${tipoNombre}</td></tr>
+            <tr><td style="padding: 10px; border: 1px solid #ddd; font-weight: bold;">Fecha</td><td style="padding: 10px; border: 1px solid #ddd;">${fechaSesion || 'Por confirmar'}</td></tr>
+            <tr><td style="padding: 10px; border: 1px solid #ddd; font-weight: bold;">Hora</td><td style="padding: 10px; border: 1px solid #ddd;">${horaSesion || 'Por confirmar'}</td></tr>
+          </table>
+          <p style="color: #888; font-size: 0.85em;">FotoTec - Fotografía Profesional</p>
+        </div>`;
+
+        const mailOptionsAdmin = {
+            from: `"FotoTec" <${process.env.SMTP_USER}>`,
+            to: process.env.SMTP_USER,
+            subject: `Nueva Reserva de ${clientName} - ${tipoNombre}`,
+            html: emailHtmlAdmin
+        };
+
+        const mailOptionsCliente = {
+            from: `"FotoTec" <${process.env.SMTP_USER}>`,
+            to: clientEmail,
+            subject: `Confirmación de tu reserva - FotoTec`,
+            html: emailHtmlCliente
+        };
+
+        smtpTransport.sendMail(mailOptionsAdmin, (err, info) => {
+            if (err) console.error('Error enviando email admin:', err);
+            else console.log('Email admin enviado:', info.messageId);
+        });
+
+        smtpTransport.sendMail(mailOptionsCliente, (err, info) => {
+            if (err) console.error('Error enviando email cliente:', err);
+            else console.log('Email cliente enviado:', info.messageId);
+        });
 
         console.log('Reserva guardada:', clientName, clientEmail);
         res.json({ success: true, message: 'Reserva recibida. Te contactaremos pronto.' });
