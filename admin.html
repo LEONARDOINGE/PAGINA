@@ -402,7 +402,7 @@
             } catch(e) { console.error(e); }
         }
 
-        function crearNuevoProducto() {
+        async function crearNuevoProducto() {
             if (!verificarPermiso(authSystem.currentUser?.userType, 'crear_productos')) return;
             const nombre = document.getElementById('newProdNombre').value;
             const descripcion = document.getElementById('newProdDescripcion').value;
@@ -414,56 +414,76 @@
             const proveedorId = document.getElementById('newProdProveedor').value;
             if (!nombre || !precio || !stock) { alert('Completa los campos obligatorios'); return; }
             try {
-                database.crearProducto(nombre, descripcion, precio, stock, categoria, estrategia, stockMinimo, proveedorId);
-                alert('Producto creado');
-                document.getElementById('newProdNombre').value = '';
-                document.getElementById('newProdDescripcion').value = '';
-                document.getElementById('newProdPrecio').value = '';
-                document.getElementById('newProdStock').value = '';
-                document.getElementById('newProdStockMinimo').value = '10';
-                cargarProductosAdmin();
-            } catch(e) { alert('Error: ' + e.message); }
+                const res = await fetch('/api/products', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nombre, descripcion, precio, stock, categoria, estrategia, stock_minimo: stockMinimo, proveedor_id: proveedorId || null })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert('Producto creado en Turso');
+                    document.getElementById('newProdNombre').value = '';
+                    document.getElementById('newProdDescripcion').value = '';
+                    document.getElementById('newProdPrecio').value = '';
+                    document.getElementById('newProdStock').value = '';
+                    document.getElementById('newProdStockMinimo').value = '10';
+                    cargarProductosAdmin();
+                } else {
+                    alert('Error: ' + (data.error || 'No se guardo'));
+                }
+            } catch(e) { alert('Error de conexion: ' + e.message); }
         }
 
-        function cargarProductosAdmin() {
+        async function cargarProductosAdmin() {
             if (!verificarPermiso(authSystem.currentUser?.userType, 'ver_productos')) return;
-            if (typeof database === 'undefined') return;
+            document.getElementById('productosListaDiv').innerHTML = '<p style="text-align:center;opacity:0.7;">Cargando desde Turso...</p>';
             try {
-                const productos = database.obtenerProductos();
+                const res = await fetch('/api/products');
+                const data = await res.json();
+                if (!data.success || !data.productos.length) {
+                    document.getElementById('productosListaDiv').innerHTML = '<p style="opacity:0.7;text-align:center;">Sin productos registrados.</p>';
+                    return;
+                }
                 let html = '<table class="admin-table"><thead><tr><th>ID</th><th>Nombre</th><th>Precio</th><th>Stock</th><th>Estrategia</th><th>Proveedor</th><th>Acciones</th></tr></thead><tbody>';
-                productos.forEach(prod => {
-                    const proveedor = prod.proveedorId ? database.obtenerProveedor(prod.proveedorId) : null;
+                data.productos.forEach(prod => {
                     const estrategiaBadge = prod.estrategia === 'push' ? '<span style="background:#ffb366;color:#333;padding:2px 6px;border-radius:4px;font-size:0.75em;">📦 PUSH</span>' : '<span style="background:#87ceeb;color:#333;padding:2px 6px;border-radius:4px;font-size:0.75em;">🔄 PULL</span>';
-                    const stockClass = prod.stock <= prod.stockMinimo ? 'style="color:#ff6b6b;font-weight:bold;"' : '';
-                    html += '<tr><td>' + prod.id + '</td><td>' + prod.nombre + '</td><td>$' + parseFloat(prod.precio).toFixed(2) + '</td><td ' + stockClass + '>' + prod.stock + '</td><td>' + estrategiaBadge + '</td><td>' + (proveedor ? proveedor.nombre : '-') + '</td><td><button onclick="eliminarProducto(' + prod.id + ')" class="btn-danger" style="padding:4px 8px;font-size:0.75em;">🗑️</button></td></tr>';
+                    const stockClass = prod.stock <= prod.stock_minimo ? 'style="color:#ff6b6b;font-weight:bold;"' : '';
+                    html += '<tr><td>' + prod.id + '</td><td>' + (prod.nombre || '-') + '</td><td>$' + parseFloat(prod.precio || 0).toFixed(2) + '</td><td ' + stockClass + '>' + prod.stock + '</td><td>' + estrategiaBadge + '</td><td>' + (prod.proveedor_id || '-') + '</td><td><button onclick="eliminarProducto(' + prod.id + ')" class="btn-danger" style="padding:4px 8px;font-size:0.75em;">🗑️</button></td></tr>';
                 });
                 html += '</tbody></table>';
-                document.getElementById('productosListaDiv').innerHTML = html || '<p style="opacity:0.7;text-align:center;">Sin productos registrados.</p>';
-            } catch(e) { document.getElementById('productosListaDiv').innerHTML = '<p style="color:#ff6b6b;">Error: ' + e.message + '</p>'; }
+                document.getElementById('productosListaDiv').innerHTML = '<div style="margin-bottom:10px;padding:10px;background:rgba(102,126,234,0.1);border:1px solid rgba(102,126,234,0.3);border-radius:6px;font-size:0.8rem;"><strong>Fuente:</strong> Turso SQLite | Total: ' + data.productos.length + ' productos</div>' + html;
+            } catch(e) { document.getElementById('productosListaDiv').innerHTML = '<p style="color:#ff6b6b;">Error de conexion: ' + e.message + '</p>'; }
         }
 
-        function eliminarProducto(productoId) {
+        async function eliminarProducto(productoId) {
             if (!verificarPermiso(authSystem.currentUser?.userType, 'eliminar_productos')) return;
             if (!confirm('¿Eliminar este producto?')) return;
             try {
-                database.eliminarProducto(productoId);
-                cargarProductosAdmin();
+                const res = await fetch('/api/products/' + productoId, { method: 'DELETE' });
+                const data = await res.json();
+                if (data.success) cargarProductosAdmin();
+                else alert('Error: ' + (data.error || 'No se elimino'));
             } catch(e) { alert('Error: ' + e.message); }
         }
 
-        function cargarPedidosAdmin() {
+        async function cargarPedidosAdmin() {
             if (!verificarPermiso(authSystem.currentUser?.userType, 'ver_todos_pedidos')) return;
-            if (typeof database === 'undefined') return;
+            document.getElementById('pedidosListaDiv').innerHTML = '<p style="text-align:center;opacity:0.7;">Cargando desde Turso...</p>';
             try {
-                const pedidos = database.obtenerPedidos();
-                let html = '<table class="admin-table"><thead><tr><th>ID</th><th>Cliente</th><th>Fecha</th><th>Total</th><th>Estado</th></tr></thead><tbody>';
-                pedidos.forEach(p => {
+                const res = await fetch('/api/pedidos');
+                const data = await res.json();
+                if (!data.success || !data.pedidos.length) {
+                    document.getElementById('pedidosListaDiv').innerHTML = '<p style="opacity:0.7;text-align:center;">Sin pedidos.</p>';
+                    return;
+                }
+                let html = '<table class="admin-table"><thead><tr><th>ID</th><th>Cliente</th><th>Email</th><th>Total</th><th>Estado</th></tr></thead><tbody>';
+                data.pedidos.forEach(p => {
                     const estadoColor = p.estado === 'completado' ? '#90ee90' : p.estado === 'pendiente' ? '#ffd700' : '#ff6b6b';
-                    html += '<tr><td>' + p.id + '</td><td>' + (p.clienteNombre || '-') + '</td><td>' + (p.fecha || '-') + '</td><td>$' + parseFloat(p.total || 0).toFixed(2) + '</td><td><span style="color:' + estadoColor + ';font-weight:bold;">' + p.estado + '</span></td></tr>';
+                    html += '<tr><td>' + p.id + '</td><td>' + (p.cliente_nombre || '-') + '</td><td>' + (p.cliente_email || '-') + '</td><td>$' + parseFloat(p.total || 0).toFixed(2) + '</td><td><span style="color:' + estadoColor + ';font-weight:bold;">' + p.estado + '</span></td></tr>';
                 });
                 html += '</tbody></table>';
-                document.getElementById('pedidosListaDiv').innerHTML = html || '<p style="opacity:0.7;text-align:center;">Sin pedidos.</p>';
-            } catch(e) { document.getElementById('pedidosListaDiv').innerHTML = '<p style="color:#ff6b6b;">Error: ' + e.message + '</p>'; }
+                document.getElementById('pedidosListaDiv').innerHTML = '<div style="margin-bottom:10px;padding:10px;background:rgba(102,126,234,0.1);border:1px solid rgba(102,126,234,0.3);border-radius:6px;font-size:0.8rem;"><strong>Fuente:</strong> Turso SQLite | Total: ' + data.pedidos.length + ' pedidos</div>' + html;
+            } catch(e) { document.getElementById('pedidosListaDiv').innerHTML = '<p style="color:#ff6b6b;">Error de conexion: ' + e.message + '</p>'; }
         }
 
         function cargarReservas() {

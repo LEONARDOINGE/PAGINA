@@ -111,6 +111,47 @@ async function initDB() {
         console.log('Datos semilla de empleados insertados');
     }
 
+    // ============ TABLAS CRM: PRODUCTOS ============
+    await db.execute(`
+        CREATE TABLE IF NOT EXISTS products (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nombre TEXT,
+            descripcion TEXT,
+            precio REAL DEFAULT 0,
+            stock INTEGER DEFAULT 0,
+            categoria TEXT,
+            estrategia TEXT DEFAULT 'pull',
+            stock_minimo INTEGER DEFAULT 10,
+            proveedor_id INTEGER,
+            activo INTEGER DEFAULT 1
+        )
+    `);
+
+    const prodCount = await dbGet('SELECT COUNT(*) as c FROM products');
+    if (prodCount.c === 0) {
+        await dbRun(`INSERT INTO products (nombre, descripcion, precio, stock, categoria, estrategia, stock_minimo, proveedor_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            ['Sesion de Estudio - Fondo Blanco', 'Fotografia profesional en fondo blanco', 50, 100, 'estudio', 'pull', 20, null]);
+        await dbRun(`INSERT INTO products (nombre, descripcion, precio, stock, categoria, estrategia, stock_minimo, proveedor_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            ['Sesion de Boda (5 horas)', 'Cobertura completa de matrimonio', 300, 50, 'boda', 'pull', 10, null]);
+        await dbRun(`INSERT INTO products (nombre, descripcion, precio, stock, categoria, estrategia, stock_minimo, proveedor_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            ['Impresion Fine Art (24x36)', 'Impresion de calidad ultraalta', 80, 200, 'impresion', 'push', 50, 1]);
+    }
+
+    // ============ TABLAS CRM: PEDIDOS ============
+    await db.execute(`
+        CREATE TABLE IF NOT EXISTS pedidos (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            cliente_id INTEGER,
+            cliente_nombre TEXT,
+            cliente_email TEXT,
+            estado TEXT DEFAULT 'pendiente',
+            total REAL DEFAULT 0,
+            productos TEXT,
+            notas TEXT,
+            telefono TEXT
+        )
+    `);
+
     // ============ TABLAS SCM: PEDIDOS DE COMPRA ============
     await db.execute(`
         CREATE TABLE IF NOT EXISTS pedidos_compra_scm (
@@ -611,6 +652,97 @@ app.post('/api/scm/pedidos-compra', async (req, res) => {
         res.status(201).json({ success: true, message: "Pedido de compra guardado en Turso" });
     } catch (err) {
         console.error(err);
+        res.status(500).json({ error: "No se pudo conectar con Turso: " + err.message });
+    }
+});
+
+// ============ ENDPOINTS CRM: PRODUCTOS ============
+app.get('/api/products', async (req, res) => {
+    try {
+        const rows = await dbAll(`SELECT * FROM products ORDER BY id DESC`);
+        res.json({ success: true, productos: rows });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+app.post('/api/products', async (req, res) => {
+    const { nombre, descripcion, precio, stock, categoria, estrategia, stock_minimo, proveedor_id } = req.body;
+    try {
+        await db.execute({
+            sql: "INSERT INTO products (nombre, descripcion, precio, stock, categoria, estrategia, stock_minimo, proveedor_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            args: [nombre || '', descripcion || '', parseFloat(precio) || 0, parseInt(stock) || 0, categoria || 'estudio', estrategia || 'pull', parseInt(stock_minimo) || 10, proveedor_id || null]
+        });
+        res.status(201).json({ success: true, message: "Producto guardado en la nube" });
+    } catch (err) {
+        res.status(500).json({ error: "No se pudo conectar con Turso: " + err.message });
+    }
+});
+
+app.put('/api/products/:id', async (req, res) => {
+    const { id } = req.params;
+    const { nombre, descripcion, precio, stock, categoria, estrategia, stock_minimo, proveedor_id } = req.body;
+    try {
+        await db.execute({
+            sql: "UPDATE products SET nombre=?, descripcion=?, precio=?, stock=?, categoria=?, estrategia=?, stock_minimo=?, proveedor_id=? WHERE id=?",
+            args: [nombre || '', descripcion || '', parseFloat(precio) || 0, parseInt(stock) || 0, categoria || 'estudio', estrategia || 'pull', parseInt(stock_minimo) || 10, proveedor_id || null, parseInt(id)]
+        });
+        res.json({ success: true, message: "Producto actualizado en la nube" });
+    } catch (err) {
+        res.status(500).json({ error: "No se pudo conectar con Turso: " + err.message });
+    }
+});
+
+app.delete('/api/products/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        await db.execute({ sql: "DELETE FROM products WHERE id = ?", args: [parseInt(id)] });
+        res.json({ success: true, message: "Producto eliminado" });
+    } catch (err) {
+        res.status(500).json({ error: "No se pudo conectar con Turso: " + err.message });
+    }
+});
+
+// ============ ENDPOINTS CRM: PEDIDOS ============
+app.get('/api/pedidos', async (req, res) => {
+    try {
+        const rows = await dbAll(`SELECT * FROM pedidos ORDER BY id DESC`);
+        res.json({ success: true, pedidos: rows });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+app.post('/api/pedidos', async (req, res) => {
+    const { cliente_id, cliente_nombre, cliente_email, productos, notas, telefono, total } = req.body;
+    try {
+        await db.execute({
+            sql: "INSERT INTO pedidos (cliente_id, cliente_nombre, cliente_email, productos, notas, telefono, total, estado) VALUES (?, ?, ?, ?, ?, ?, ?, 'pendiente')",
+            args: [cliente_id || null, cliente_nombre || '', cliente_email || '', JSON.stringify(productos || []), notas || '', telefono || '', parseFloat(total) || 0]
+        });
+        res.status(201).json({ success: true, message: "Pedido guardado en la nube" });
+    } catch (err) {
+        res.status(500).json({ error: "No se pudo conectar con Turso: " + err.message });
+    }
+});
+
+app.put('/api/pedidos/:id', async (req, res) => {
+    const { id } = req.params;
+    const { estado } = req.body;
+    try {
+        await db.execute({ sql: "UPDATE pedidos SET estado = ? WHERE id = ?", args: [estado || 'pendiente', parseInt(id)] });
+        res.json({ success: true, message: "Estado actualizado" });
+    } catch (err) {
+        res.status(500).json({ error: "No se pudo conectar con Turso: " + err.message });
+    }
+});
+
+app.delete('/api/pedidos/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        await db.execute({ sql: "DELETE FROM pedidos WHERE id = ?", args: [parseInt(id)] });
+        res.json({ success: true, message: "Pedido eliminado" });
+    } catch (err) {
         res.status(500).json({ error: "No se pudo conectar con Turso: " + err.message });
     }
 });
