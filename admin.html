@@ -371,9 +371,9 @@
             if (tabName === 'productos') { cargarSelectProveedores(); cargarProductosAdmin(); }
             else if (tabName === 'pedidos') cargarPedidosAdmin();
             else if (tabName === 'reservas') cargarReservas();
-            else if (tabName === 'proveedores') cargarProveedoresAdmin();
-            else if (tabName === 'empleados') cargarEmpleadosAdmin();
-            else if (tabName === 'compras') cargarPedidosCompraAdmin();
+            else if (tabName === 'proveedores') { cargarProveedoresAdmin(); }
+            else if (tabName === 'empleados') { cargarEmpleadosAdmin(); }
+            else if (tabName === 'compras') { cargarPedidosCompraAdmin(); }
             else if (tabName === 'usuarios') cargarUsuariosAdmin();
             else if (tabName === 'dashboard') actualizarDashboard();
         }
@@ -477,7 +477,7 @@
             }).catch(e => { document.getElementById('reservasListaDiv').innerHTML = '<p style="color:#ff6b6b;">Error de conexion</p>'; });
         }
 
-        function crearNuevoProveedor() {
+        async function crearNuevoProveedor() {
             const nombre = document.getElementById('newProvNombre').value;
             const contacto = document.getElementById('newProvContacto').value;
             const telefono = document.getElementById('newProvTelefono').value;
@@ -486,27 +486,46 @@
             const insumoDetalle = document.getElementById('newProvInsumoDetalle').value;
             if (!nombre) { alert('El nombre es obligatorio'); return; }
             try {
-                database.crearProveedor(nombre, contacto, telefono, email, tipoInsumo, insumoDetalle);
-                alert('Proveedor registrado');
-                cargarProveedoresAdmin();
-            } catch(e) { alert('Error: ' + e.message); }
+                const res = await fetch('/api/scm/proveedores', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nombre, contacto, telefono, email, tipo_insumo: tipoInsumo, insumo_detalle: insumoDetalle })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert('Proveedor registrado en Turso');
+                    document.getElementById('newProvNombre').value = '';
+                    document.getElementById('newProvContacto').value = '';
+                    document.getElementById('newProvTelefono').value = '';
+                    document.getElementById('newProvEmail').value = '';
+                    document.getElementById('newProvInsumoDetalle').value = '';
+                    cargarProveedoresAdmin();
+                } else {
+                    alert('Error: ' + (data.error || 'No se guardo'));
+                }
+            } catch(e) { alert('Error de conexion: ' + e.message); }
         }
 
-        function cargarProveedoresAdmin() {
-            if (typeof database === 'undefined') return;
+        async function cargarProveedoresAdmin() {
+            document.getElementById('proveedoresListaDiv').innerHTML = '<p style="text-align:center;opacity:0.7;">Cargando desde Turso...</p>';
             try {
-                const proveedores = database.obtenerProveedores();
+                const res = await fetch('/api/scm/proveedores');
+                const data = await res.json();
+                if (!data.success || !data.proveedores.length) {
+                    document.getElementById('proveedoresListaDiv').innerHTML = '<p style="opacity:0.7;text-align:center;">Sin proveedores.</p>';
+                    return;
+                }
                 let html = '<table class="admin-table"><thead><tr><th>ID</th><th>Nombre</th><th>Contacto</th><th>Telefono</th><th>Email</th><th>Insumo</th><th>Estado</th></tr></thead><tbody>';
-                proveedores.forEach(p => {
-                    const activo = p.activo ? '<span style="color:#90ee90;font-weight:bold;">● Activo</span>' : '<span style="color:#ff6b6b;">○ Inactivo</span>';
-                    html += '<tr><td>' + p.id + '</td><td>' + p.nombre + '</td><td>' + (p.contacto || '-') + '</td><td>' + (p.telefono || '-') + '</td><td>' + (p.email || '-') + '</td><td>' + (p.tipoInsumo || '-') + '</td><td>' + activo + '</td></tr>';
+                data.proveedores.forEach(p => {
+                    const activo = p.activo == 1 ? '<span style="color:#90ee90;font-weight:bold;">● Activo</span>' : '<span style="color:#ff6b6b;">○ Inactivo</span>';
+                    html += '<tr><td>' + p.id + '</td><td>' + p.nombre + '</td><td>' + (p.contacto || '-') + '</td><td>' + (p.telefono || '-') + '</td><td>' + (p.email || '-') + '</td><td>' + (p.tipo_insumo || '-') + '</td><td>' + activo + '</td></tr>';
                 });
                 html += '</tbody></table>';
-                document.getElementById('proveedoresListaDiv').innerHTML = html || '<p style="opacity:0.7;text-align:center;">Sin proveedores.</p>';
-            } catch(e) { document.getElementById('proveedoresListaDiv').innerHTML = '<p style="color:#ff6b6b;">Error: ' + e.message + '</p>'; }
+                document.getElementById('proveedoresListaDiv').innerHTML = '<div style="margin-bottom:10px;padding:10px;background:rgba(102,126,234,0.1);border:1px solid rgba(102,126,234,0.3);border-radius:6px;font-size:0.8rem;"><strong>Fuente:</strong> Turso SQLite | Total: ' + data.total + '</div>' + html;
+            } catch(e) { document.getElementById('proveedoresListaDiv').innerHTML = '<p style="color:#ff6b6b;">Error de conexion: ' + e.message + '</p>'; }
         }
 
-        function crearNuevoEmpleado() {
+        async function crearNuevoEmpleado() {
             const nombre = document.getElementById('newEmpNombre').value;
             const puesto = document.getElementById('newEmpPuesto').value;
             const area = document.getElementById('newEmpArea').value;
@@ -516,51 +535,89 @@
             const fechaIngreso = document.getElementById('newEmpFechaIngreso').value;
             if (!nombre || !puesto || !salario) { alert('Completa los campos obligatorios'); return; }
             try {
-                database.crearEmpleado(nombre, puesto, area, telefono, email, salario, fechaIngreso);
-                alert('Empleado registrado');
-                cargarEmpleadosAdmin();
-            } catch(e) { alert('Error: ' + e.message); }
+                const res = await fetch('/api/erp/empleados', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nombre, puesto, area, telefono, email, salario, fecha_ingreso: fechaIngreso })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert('Empleado registrado en Turso');
+                    document.getElementById('newEmpNombre').value = '';
+                    document.getElementById('newEmpPuesto').value = '';
+                    document.getElementById('newEmpTelefono').value = '';
+                    document.getElementById('newEmpEmail').value = '';
+                    document.getElementById('newEmpSalario').value = '';
+                    document.getElementById('newEmpFechaIngreso').value = '';
+                    cargarEmpleadosAdmin();
+                } else {
+                    alert('Error: ' + (data.error || 'No se guardo'));
+                }
+            } catch(e) { alert('Error de conexion: ' + e.message); }
         }
 
-        function cargarEmpleadosAdmin() {
-            if (typeof database === 'undefined') return;
+        async function cargarEmpleadosAdmin() {
+            document.getElementById('empleadosListaDiv').innerHTML = '<p style="text-align:center;opacity:0.7;">Cargando desde Turso...</p>';
             try {
-                const empleados = database.obtenerEmpleados();
+                const res = await fetch('/api/erp/empleados');
+                const data = await res.json();
+                if (!data.success || !data.empleados.length) {
+                    document.getElementById('empleadosListaDiv').innerHTML = '<p style="opacity:0.7;text-align:center;">Sin empleados.</p>';
+                    return;
+                }
                 let html = '<table class="admin-table"><thead><tr><th>ID</th><th>Nombre</th><th>Puesto</th><th>Area</th><th>Telefono</th><th>Salario</th><th>Estado</th></tr></thead><tbody>';
-                empleados.forEach(e => {
-                    const activo = e.activo ? '<span style="color:#90ee90;font-weight:bold;">● Activo</span>' : '<span style="color:#ff6b6b;">○ Inactivo</span>';
+                data.empleados.forEach(e => {
+                    const activo = e.activo == 1 ? '<span style="color:#90ee90;font-weight:bold;">● Activo</span>' : '<span style="color:#ff6b6b;">○ Inactivo</span>';
                     html += '<tr><td>' + e.id + '</td><td>' + e.nombre + '</td><td>' + (e.puesto || '-') + '</td><td>' + (e.area || '-') + '</td><td>' + (e.telefono || '-') + '</td><td>$' + parseFloat(e.salario || 0).toFixed(2) + '</td><td>' + activo + '</td></tr>';
                 });
                 html += '</tbody></table>';
-                document.getElementById('empleadosListaDiv').innerHTML = html || '<p style="opacity:0.7;text-align:center;">Sin empleados.</p>';
-            } catch(e) { document.getElementById('empleadosListaDiv').innerHTML = '<p style="color:#ff6b6b;">Error: ' + e.message + '</p>'; }
+                document.getElementById('empleadosListaDiv').innerHTML = '<div style="margin-bottom:10px;padding:10px;background:rgba(102,126,234,0.1);border:1px solid rgba(102,126,234,0.3);border-radius:6px;font-size:0.8rem;"><strong>Fuente:</strong> Turso SQLite | Empleados: ' + data.total + ' | Activos: ' + data.activos + ' | Nomina: $' + (data.nominaTotal || 0).toFixed(2) + ' MXN</div>' + html;
+            } catch(e) { document.getElementById('empleadosListaDiv').innerHTML = '<p style="color:#ff6b6b;">Error de conexion: ' + e.message + '</p>'; }
         }
 
-        function verificarStockYPush() {
-            if (typeof database === 'undefined') return;
+        async function verificarStockYPush() {
+            if (typeof database === 'undefined') { alert('database.js no cargo'); return; }
             const productos = database.obtenerProductos();
             let generados = 0;
-            productos.forEach(prod => {
+            for (const prod of productos) {
                 if (prod.estrategia === 'push' && prod.stock <= prod.stockMinimo && prod.proveedorId) {
-                    try { database.generarPedidoCompra(prod.id, Math.max(10, prod.stockMinimo * 2), 'Generado automaticamente por estrategia PUSH'); generados++; } catch(e) {}
+                    const proveedor = database.obtenerProveedor(prod.proveedorId);
+                    try {
+                        await fetch('/api/scm/pedidos-compra', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                proveedor_id: prod.proveedorId,
+                                proveedor_nombre: proveedor ? proveedor.nombre : 'Sin proveedor',
+                                productos: [{ nombre: prod.nombre, cantidad: Math.max(10, prod.stockMinimo * 2), precio: prod.precio }],
+                                notas: 'Generado automaticamente por estrategia PUSH'
+                            })
+                        });
+                        generados++;
+                    } catch(e) { console.error(e); }
                 }
-            });
-            document.getElementById('comprasMensajeDiv').innerHTML = '<div class="admin-alert alert-info">' + (generados > 0 ? 'Se generaron ' + generados + ' pedido(s) de compra PUSH.' : 'No se requieren pedidos de compra en este momento.') + '</div>';
+            }
+            document.getElementById('comprasMensajeDiv').innerHTML = '<div class="admin-alert alert-info">' + (generados > 0 ? 'Se generaron ' + generados + ' pedido(s) de compra PUSH en Turso.' : 'No se requieren pedidos de compra en este momento.') + '</div>';
             cargarPedidosCompraAdmin();
         }
 
-        function cargarPedidosCompraAdmin() {
-            if (typeof database === 'undefined') return;
+        async function cargarPedidosCompraAdmin() {
+            document.getElementById('comprasListaDiv').innerHTML = '<p style="text-align:center;opacity:0.7;">Cargando desde Turso...</p>';
             try {
-                const pedidos = database.obtenerPedidosCompra();
+                const res = await fetch('/api/scm/pedidos-compra');
+                const data = await res.json();
+                if (!data.success || !data.pedidos_compra.length) {
+                    document.getElementById('comprasListaDiv').innerHTML = '<p style="opacity:0.7;text-align:center;">Sin pedidos de compra.</p>';
+                    return;
+                }
                 let html = '<table class="admin-table"><thead><tr><th>ID</th><th>Proveedor</th><th>Estado</th><th>Total</th><th>Fecha</th></tr></thead><tbody>';
-                pedidos.forEach(p => {
+                data.pedidos_compra.forEach(p => {
                     const estadoColor = p.estado === 'recibido' ? '#90ee90' : p.estado === 'pendiente' ? '#ffd700' : '#ff6b6b';
-                    html += '<tr><td>' + p.id + '</td><td>' + (p.proveedorNombre || '-') + '</td><td><span style="color:' + estadoColor + ';font-weight:bold;">' + p.estado + '</span></td><td>$' + parseFloat(p.total || 0).toFixed(2) + '</td><td>' + (p.fechaCreacion || '-') + '</td></tr>';
+                    html += '<tr><td>' + p.id + '</td><td>' + (p.proveedor_nombre || '-') + '</td><td><span style="color:' + estadoColor + ';font-weight:bold;">' + p.estado + '</span></td><td>$' + parseFloat(p.total || 0).toFixed(2) + '</td><td>' + (p.fecha_creacion || '-') + '</td></tr>';
                 });
                 html += '</tbody></table>';
-                document.getElementById('comprasListaDiv').innerHTML = html || '<p style="opacity:0.7;text-align:center;">Sin pedidos de compra.</p>';
-            } catch(e) { document.getElementById('comprasListaDiv').innerHTML = '<p style="color:#ff6b6b;">Error: ' + e.message + '</p>'; }
+                document.getElementById('comprasListaDiv').innerHTML = '<div style="margin-bottom:10px;padding:10px;background:rgba(102,126,234,0.1);border:1px solid rgba(102,126,234,0.3);border-radius:6px;font-size:0.8rem;"><strong>Fuente:</strong> Turso SQLite | Total: ' + data.total + ' | Pendientes: ' + (data.pendientes || 0) + '</div>' + html;
+            } catch(e) { document.getElementById('comprasListaDiv').innerHTML = '<p style="color:#ff6b6b;">Error de conexion: ' + e.message + '</p>'; }
         }
 
         function cargarUsuariosAdmin() {

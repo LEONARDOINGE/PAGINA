@@ -561,14 +561,57 @@ app.get('/api/erp/empleados', async (req, res) => {
     }
 });
 
+app.post('/api/erp/empleados', async (req, res) => {
+    const { nombre, puesto, area, telefono, email, salario, fecha_ingreso } = req.body;
+    try {
+        await db.execute({
+            sql: "INSERT INTO empleados (nombre, puesto, area, telefono, email, salario, fecha_ingreso, activo) VALUES (?, ?, ?, ?, ?, ?, ?, 1)",
+            args: [nombre, puesto || '', area || '', telefono || '', email || '', parseFloat(salario) || 0, fecha_ingreso || '']
+        });
+        res.status(201).json({ success: true, message: "Guardado en la nube" });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "No se pudo conectar con Turso: " + err.message });
+    }
+});
+
 // ============ ENDPOINTS SCM: PEDIDOS DE COMPRA ============
 app.get('/api/scm/pedidos-compra', async (req, res) => {
     try {
         const rows = await dbAll(`SELECT * FROM pedidos_compra_scm ORDER BY fecha_creacion DESC`);
-        const pendientes = rows.filter(r => r.estado === 'Pendiente').length;
+        const pendientes = rows.filter(r => r.estado === 'pendiente').length;
         res.json({ success: true, pedidos_compra: rows, total: rows.length, pendientes });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+app.post('/api/scm/proveedores', async (req, res) => {
+    const { nombre, contacto, telefono, email, tipo_insumo, insumo_detalle } = req.body;
+    try {
+        await db.execute({
+            sql: "INSERT INTO proveedores (nombre, contacto, telefono, email, tipo_insumo, insumo_detalle, activo) VALUES (?, ?, ?, ?, ?, ?, 1)",
+            args: [nombre, contacto || '', telefono || '', email || '', tipo_insumo || '', insumo_detalle || '']
+        });
+        res.status(201).json({ success: true, message: "Proveedor guardado en la nube" });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "No se pudo conectar con Turso: " + err.message });
+    }
+});
+
+app.post('/api/scm/pedidos-compra', async (req, res) => {
+    const { proveedor_id, proveedor_nombre, productos, notas } = req.body;
+    try {
+        const total = Array.isArray(productos) ? productos.reduce((sum, p) => sum + (parseFloat(p.precio) || 0) * (parseInt(p.cantidad) || 1), 0) : 0;
+        await db.execute({
+            sql: "INSERT INTO pedidos_compra_scm (proveedor_id, proveedor_nombre, estado, productos, total, notas, creado_automatico) VALUES (?, ?, 'pendiente', ?, ?, ?, 0)",
+            args: [proveedor_id || null, proveedor_nombre || '', JSON.stringify(productos || []), total, notas || '']
+        });
+        res.status(201).json({ success: true, message: "Pedido de compra guardado en Turso" });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "No se pudo conectar con Turso: " + err.message });
     }
 });
 
