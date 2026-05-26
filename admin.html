@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FotoTec | Panel de Auditoría SCM y ERP</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f4f5f7; color: #333; }
+        .sidebar { width: 260px; height: 100vh; background: #1a1a2e; color: #fff; position: fixed; padding: 20px; box-sizing: border-box; }
+        .sidebar h2 { color: #ff6b6b; font-size: 1.5rem; margin-bottom: 30px; }
+        .menu-btn { width: 100%; padding: 12px; background: none; border: none; color: #fff; text-align: left; font-size: 0.95rem; cursor: pointer; border-radius: 6px; margin-bottom: 10px; transition: 0.3s; }
+        .menu-btn:hover, .menu-btn.active { background: #5165ff; font-weight: bold; }
+        .main-content { margin-left: 260px; padding: 40px; box-sizing: border-box; }
+        .card { background: #fff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 25px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; background: #fff; }
+        th { background: #5165ff; color: #fff; padding: 12px; text-align: left; }
+        td { padding: 12px; border-bottom: 1px solid #eee; font-size: 0.9rem; }
+        tr:nth-child(even) { background: #f9f9f9; }
+        .badge { padding: 4px 8px; border-radius: 4px; color: #fff; font-size: 0.75rem; font-weight: bold; }
+        .badge.push { background: #ffb366; }
+        .badge.pull { background: #ff6b6b; }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <h2>📊 ERP & SCM Panel</h2>
+        <button class="menu-btn active" onclick="verSeccion('proveedores', this)">📦 Proveedores (SCM)</button>
+        <button class="menu-btn" onclick="verSeccion('rh', this)">👥 Recursos Humanos (ERP)</button>
+        <button class="menu-btn" onclick="verSeccion('logistica', this)">⚙️ Estrategia Push/Pull</button>
+    </div>
+
+    <div class="main-content">
+        <div id="sec-proveedores" class="card">
+            <h2>📦 Catálogo Oficial de Proveedores (Módulo SCM)</h2>
+            <p>Gestión de cadena de suministro para compras de insumos del estudio fotográfico.</p>
+            <table>
+                <tr><th>Empresa</th><th>Contacto</th><th>Teléfono</th><th>Insumo Clave</th><th>Detalle</th></tr>
+                <tr><td>Distribuidora de Insumos Fotográficos</td><td>Juan Pérez</td><td>8991234567</td><td>Papel Fotográfico</td><td>Papel Glossy, Mate y Fine Art</td></tr>
+                <tr><td>Tech Photo Equipment</td><td>María López</td><td>8999876543</td><td>Hardware y Ópticas</td><td>Cámaras, lentes y accesorios de iluminación</td></tr>
+            </table>
+        </div>
+
+        <div id="sec-rh" class="card" style="display:none;">
+            <h2>👥 Estructura de Recursos Humanos (Módulo ERP - RH)</h2>
+            <p>Registro organizacional de los empleados activos y nómina de FotoTec.</p>
+            <table>
+                <tr><th>Nombre del Empleado</th><th>Puesto</th><th>Área</th><th>Teléfono</th><th>Salario Base</th><th>Estado</th></tr>
+                <tr><td>Carlos Rodríguez</td><td>Fotógrafo Principal</td><td>Producción</td><td>8991112233</td><td>$15,000 MXN</td><td><span style="color:green; font-weight:bold;">🟢 Activo</span></td></tr>
+                <tr><td>Ana Martínez</td><td>Editor Fotográfico</td><td>Post-producción</td><td>8992223344</td><td>$12,000 MXN</td><td><span style="color:green; font-weight:bold;">🟢 Activo</span></td></tr>
+            </table>
+        </div>
+
+        <div id="sec-logistica" class="card" style="display:none;">
+            <h2>⚙️ Logística de Reabastecimiento Automatizado</h2>
+            <p>Diferenciación de órdenes de compra según el comportamiento de la demanda real del mercado.</p>
+            <table>
+                <tr><th>ID Pedido</th><th>Proveedor</th><th>Insumo Requerido</th><th>Cantidad</th><th>Estrategia SCM</th><th>Criterio Técnico</th></tr>
+                <tr><td>#SCM-101</td><td>Distribuidora de Insumos</td><td>Lote Papel Fine Art (24x36)</td><td>50 unidades</td><td><span class="badge push">PUSH</span></td><td>Basado en Pronóstico (Pre-compra para sets estacionales navideños)</td></tr>
+                <tr><td>#SCM-102</td><td>Tech Photo Equipment</td><td>Kit Iluminación Softbox</td><td>2 unidades</td><td><span class="badge pull">PULL</span></td><td>Basado en Demanda (Disparado por exceso de reservas de bodas activas)</td></tr>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        function verSeccion(id, btn) {
+            document.getElementById('sec-proveedores').style.display = 'none';
+            document.getElementById('sec-rh').style.display = 'none';
+            document.getElementById('sec-logistica').style.display = 'none';
+
+            document.getElementById('sec-' + id).style.display = 'block';
+
+            const botones = document.querySelectorAll('.menu-btn');
+            botones.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+    </script>
+</body>
+</html>
