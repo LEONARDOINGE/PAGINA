@@ -152,6 +152,75 @@ async function initDB() {
         )
     `);
 
+    // ============ TABLAS CRM: PIPELINE (EMBUDO DE VENTAS) ============
+    await db.execute(`
+        CREATE TABLE IF NOT EXISTS pipeline (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            cliente_nombre TEXT,
+            cliente_email TEXT,
+            cliente_telefono TEXT,
+            etapa TEXT DEFAULT 'interesado',
+            notas TEXT,
+            origen TEXT,
+            valor REAL DEFAULT 0,
+            creado_en TEXT
+        )
+    `);
+
+    const pipeCount = await dbGet('SELECT COUNT(*) as c FROM pipeline');
+    if (pipeCount.c === 0) {
+        await dbRun(`INSERT INTO pipeline (cliente_nombre, cliente_email, cliente_telefono, etapa, notas, origen, valor) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            ['Maria Gonzalez', 'maria@email.com', '8991112233', 'entregado', 'Sesion de boda completada', 'Reserva web', 4500]);
+        await dbRun(`INSERT INTO pipeline (cliente_nombre, cliente_email, cliente_telefono, etapa, notas, origen, valor) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            ['Carlos Perez', 'carlos@email.com', '8992223344', 'apartado', 'Apartado con 50% para sesion estudio', 'WhatsApp', 800]);
+        await dbRun(`INSERT INTO pipeline (cliente_nombre, cliente_email, cliente_telefono, etapa, notas, origen, valor) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            ['Laura Martinez', 'laura@email.com', '8993334455', 'cotizado', 'Cotizado para evento empresarial - pendiente respuesta', 'Instagram', 2500]);
+        await dbRun(`INSERT INTO pipeline (cliente_nombre, cliente_email, cliente_telefono, etapa, notas, origen, valor) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            ['Roberto Hernandez', 'roberto@email.com', '8994445566', 'interesado', 'Solicito informacion para sesion de pasaporte', 'Referencia', 250]);
+    }
+
+    // ============ TABLAS CRM: NOTAS POR CLIENTE ============
+    await db.execute(`
+        CREATE TABLE IF NOT EXISTS customer_notes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            cliente_email TEXT,
+            cliente_nombre TEXT,
+            nota TEXT,
+            creado_en TEXT
+        )
+    `);
+
+    const noteCount = await dbGet('SELECT COUNT(*) as c FROM customer_notes');
+    if (noteCount.c === 0) {
+        await dbRun(`INSERT INTO customer_notes (cliente_email, cliente_nombre, nota) VALUES (?, ?, ?)`,
+            ['maria@email.com', 'Maria Gonzalez', 'Prefiere fotos en exteriores. Le gustan los tonos calidos. Solicito album digital']);
+        await dbRun(`INSERT INTO customer_notes (cliente_email, cliente_nombre, nota) VALUES (?, ?, ?)`,
+            ['carlos@email.com', 'Carlos Perez', 'Pidio fondo negro para retrato profesional. Entrega rapida - cliente VIP']);
+    }
+
+    // ============ TABLAS ERP: FACTURAS ============
+    await db.execute(`
+        CREATE TABLE IF NOT EXISTS invoices (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            folio TEXT,
+            cliente_nombre TEXT,
+            cliente_email TEXT,
+            cliente_direccion TEXT,
+            productos TEXT,
+            subtotal REAL DEFAULT 0,
+            iva REAL DEFAULT 0,
+            total REAL DEFAULT 0,
+            fecha TEXT,
+            estado TEXT DEFAULT 'pendiente'
+        )
+    `);
+
+    const invCount = await dbGet('SELECT COUNT(*) as c FROM invoices');
+    if (invCount.c === 0) {
+        await dbRun(`INSERT INTO invoices (folio, cliente_nombre, cliente_email, productos, subtotal, iva, total, fecha, estado) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            ['FOT-001', 'Maria Gonzalez', 'maria@email.com', 'Sesion Boda Completa', 3879.31, 620.69, 4500, '2025-05-10', 'pagado']);
+    }
+
     // ============ TABLAS SCM: PEDIDOS DE COMPRA ============
     await db.execute(`
         CREATE TABLE IF NOT EXISTS pedidos_compra_scm (
@@ -744,6 +813,162 @@ app.delete('/api/pedidos/:id', async (req, res) => {
         res.json({ success: true, message: "Pedido eliminado" });
     } catch (err) {
         res.status(500).json({ error: "No se pudo conectar con Turso: " + err.message });
+    }
+});
+
+// ============ ENDPOINTS CRM: PIPELINE (EMBUDO DE VENTAS) ============
+app.get('/api/crm/pipeline', async (req, res) => {
+    try {
+        const rows = await dbAll(`SELECT * FROM pipeline ORDER BY creado_en DESC`);
+        const etapas = ['interesado', 'cotizado', 'apartado', 'entregado'];
+        const resumen = {};
+        etapas.forEach(e => {
+            const items = rows.filter(r => r.etapa === e);
+            resumen[e] = { count: items.length, valor: items.reduce((s, r) => s + (r.valor || 0), 0) };
+        });
+        res.json({ success: true, pipeline: rows, resumen });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+app.post('/api/crm/pipeline', async (req, res) => {
+    const { cliente_nombre, cliente_email, cliente_telefono, etapa, notas, origen, valor } = req.body;
+    try {
+        await db.execute({
+            sql: "INSERT INTO pipeline (cliente_nombre, cliente_email, cliente_telefono, etapa, notas, origen, valor, creado_en) VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))",
+            args: [cliente_nombre || '', cliente_email || '', cliente_telefono || '', etapa || 'interesado', notas || '', origen || '', parseFloat(valor) || 0]
+        });
+        res.status(201).json({ success: true, message: "Lead agregado al pipeline" });
+    } catch (err) {
+        res.status(500).json({ error: "No se pudo conectar con Turso: " + err.message });
+    }
+});
+
+app.put('/api/crm/pipeline/:id', async (req, res) => {
+    const { id } = req.params;
+    const { etapa, notas, valor } = req.body;
+    try {
+        await db.execute({
+            sql: "UPDATE pipeline SET etapa=?, notas=?, valor=? WHERE id=?",
+            args: [etapa || 'interesado', notas || '', parseFloat(valor) || 0, parseInt(id)]
+        });
+        res.json({ success: true, message: "Pipeline actualizado" });
+    } catch (err) {
+        res.status(500).json({ error: "No se pudo conectar con Turso: " + err.message });
+    }
+});
+
+app.delete('/api/crm/pipeline/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        await db.execute({ sql: "DELETE FROM pipeline WHERE id = ?", args: [parseInt(id)] });
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// ============ ENDPOINTS CRM: NOTAS POR CLIENTE ============
+app.get('/api/crm/notas', async (req, res) => {
+    const { email } = req.query;
+    try {
+        let rows;
+        if (email) {
+            rows = await dbAll(`SELECT * FROM customer_notes WHERE cliente_email = ? ORDER BY creado_en DESC`, [email]);
+        } else {
+            rows = await dbAll(`SELECT * FROM customer_notes ORDER BY creado_en DESC`);
+        }
+        res.json({ success: true, notas: rows });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+app.post('/api/crm/notas', async (req, res) => {
+    const { cliente_email, cliente_nombre, nota } = req.body;
+    try {
+        await db.execute({
+            sql: "INSERT INTO customer_notes (cliente_email, cliente_nombre, nota, creado_en) VALUES (?, ?, ?, datetime('now'))",
+            args: [cliente_email || '', cliente_nombre || '', nota || '']
+        });
+        res.status(201).json({ success: true, message: "Nota guardada" });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.delete('/api/crm/notas/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        await db.execute({ sql: "DELETE FROM customer_notes WHERE id = ?", args: [parseInt(id)] });
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// ============ ENDPOINTS ERP: FACTURAS ============
+app.get('/api/erp/facturas', async (req, res) => {
+    try {
+        const rows = await dbAll(`SELECT * FROM invoices ORDER BY fecha DESC`);
+        res.json({ success: true, facturas: rows, total: rows.length });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+app.post('/api/erp/facturas', async (req, res) => {
+    const { cliente_nombre, cliente_email, cliente_direccion, productos, subtotal, iva, total } = req.body;
+    const folio = 'FOT-' + String(Date.now()).slice(-6);
+    try {
+        await db.execute({
+            sql: "INSERT INTO invoices (folio, cliente_nombre, cliente_email, cliente_direccion, productos, subtotal, iva, total, fecha, estado) VALUES (?, ?, ?, ?, ?, ?, ?, ?, date('now'), 'pendiente')",
+            args: [folio, cliente_nombre || '', cliente_email || '', cliente_direccion || '', JSON.stringify(productos || []), parseFloat(subtotal) || 0, parseFloat(iva) || 0, parseFloat(total) || 0]
+        });
+        res.status(201).json({ success: true, folio, message: "Factura generada" });
+    } catch (err) {
+        res.status(500).json({ error: "No se pudo generar factura: " + err.message });
+    }
+});
+
+app.put('/api/erp/facturas/:id', async (req, res) => {
+    const { id } = req.params;
+    const { estado } = req.body;
+    try {
+        await db.execute({ sql: "UPDATE invoices SET estado = ? WHERE id = ?", args: [estado || 'pendiente', parseInt(id)] });
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// ============ ENDPOINT: DATOS PARA GRAFICAS ============
+app.get('/api/erp/dashboard-data', async (req, res) => {
+    try {
+        const productos = await dbAll(`SELECT COUNT(*) as total, SUM(stock) as stock_total FROM products`);
+        const pedidos = await dbAll(`SELECT estado, COUNT(*) as total, SUM(total) as ingreso FROM pedidos GROUP BY estado`);
+        const pipeline = await dbAll(`SELECT etapa, COUNT(*) as total, SUM(valor) as valor FROM pipeline GROUP BY etapa`);
+        const proveedores = await dbAll(`SELECT COUNT(*) as total FROM proveedores WHERE activo = 1`);
+        const empleados = await dbAll(`SELECT COUNT(*) as total, SUM(salario) as nomina FROM empleados WHERE activo = 1`);
+        const pedidosCompra = await dbAll(`SELECT estado, COUNT(*) as total FROM pedidos_compra_scm GROUP BY estado`);
+        const facturas = await dbAll(`SELECT estado, COUNT(*) as total, SUM(total) as monto FROM invoices GROUP BY estado`);
+        const reservas = await dbAll(`SELECT COUNT(*) as total FROM reservas`);
+        const ingresos = pedidos.reduce((s, p) => s + (p.ingreso || 0), 0);
+        res.json({
+            success: true,
+            productos: productos[0] || {},
+            pedidos,
+            pipeline,
+            proveedores: proveedores[0] || {},
+            empleados: empleados[0] || {},
+            pedidosCompra,
+            facturas,
+            reservas: reservas[0] || {},
+            ingresosTotales: ingresos
+        });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
     }
 });
 

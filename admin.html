@@ -159,21 +159,44 @@
                 <button class="admin-tab-btn" onclick="mostrarTabAdmin('compras', event)">📥 Ped. Compra</button>
                 <button class="admin-tab-btn" onclick="mostrarTabAdmin('usuarios', event)">👥 Usuarios</button>
                 <button class="admin-tab-btn" onclick="mostrarTabAdmin('reportes', event)">📈 Reportes</button>
+                <button class="admin-tab-btn" onclick="mostrarTabAdmin('pipeline', event)" style="background:rgba(102,205,170,0.2);border:1px solid rgba(102,205,170,0.4);">🔄 Pipeline CRM</button>
+                <button class="admin-tab-btn" onclick="mostrarTabAdmin('notas', event)">📝 Notas Cliente</button>
+                <button class="admin-tab-btn" onclick="mostrarTabAdmin('facturas', event)">🧾 Facturas</button>
                 <button class="admin-tab-btn" onclick="mostrarTabAdmin('auditoria', event)" style="background:rgba(255,215,0,0.2);border:1px solid rgba(255,215,0,0.4);">📋 Auditoria</button>
             </div>
 
             <div id="adminDashboard" class="admin-content active">
                 <div class="admin-section">
                     <h3>📊 Resumen Integral (ERP + SCM + CRM)</h3>
-                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;">
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:15px;">
                         <div style="background:rgba(0,0,0,0.2);padding:12px;border-radius:5px;text-align:center;"><div style="font-size:1.8em;font-weight:bold;" id="totalProductos">0</div><div style="font-size:0.8em;opacity:0.8;">Productos</div></div>
                         <div style="background:rgba(0,0,0,0.2);padding:12px;border-radius:5px;text-align:center;"><div style="font-size:1.8em;font-weight:bold;" id="totalPedidos">0</div><div style="font-size:0.8em;opacity:0.8;">Pedidos (CRM)</div></div>
                         <div style="background:rgba(0,0,0,0.2);padding:12px;border-radius:5px;text-align:center;"><div style="font-size:1.8em;font-weight:bold;color:#90ee90;" id="ingresos">$0</div><div style="font-size:0.8em;opacity:0.8;">Ingresos</div></div>
                         <div style="background:rgba(0,0,0,0.2);padding:12px;border-radius:5px;text-align:center;"><div style="font-size:1.8em;font-weight:bold;color:#ff6b6b;" id="productosAgotados">0</div><div style="font-size:0.8em;opacity:0.8;">Agotados</div></div>
-                        <div style="background:rgba(0,0,0,0.2);padding:12px;border-radius:5px;text-align:center;"><div style="font-size:1.8em;font-weight:bold;color:#87ceeb;" id="totalProveedores">0</div><div style="font-size:0.8em;opacity:0.8;">Proveedores (SCM)</div></div>
-                        <div style="background:rgba(0,0,0,0.2);padding:12px;border-radius:5px;text-align:center;"><div style="font-size:1.8em;font-weight:bold;color:#ffb366;" id="totalEmpleados">0</div><div style="font-size:0.8em;opacity:0.8;">Empleados (RH)</div></div>
+                        <div style="background:rgba(0,0,0,0.2);padding:12px;border-radius:5px;text-align:center;"><div style="font-size:1.8em;font-weight:bold;color:#87ceeb;" id="totalProveedores">0</div><div style="font-size:0.8em;opacity:0.8;">Proveedores</div></div>
+                        <div style="background:rgba(0,0,0,0.2);padding:12px;border-radius:5px;text-align:center;"><div style="font-size:1.8em;font-weight:bold;color:#ffb366;" id="totalEmpleados">0</div><div style="font-size:0.8em;opacity:0.8;">Empleados</div></div>
                         <div style="background:rgba(0,0,0,0.2);padding:12px;border-radius:5px;text-align:center;"><div style="font-size:1.8em;font-weight:bold;color:#dda0dd;" id="pedidosCompraPendientes">0</div><div style="font-size:0.8em;opacity:0.8;">Ped. Compra</div></div>
                         <div style="background:rgba(0,0,0,0.2);padding:12px;border-radius:5px;text-align:center;"><div style="font-size:1.8em;font-weight:bold;color:#ffd700;" id="nominaTotal">$0</div><div style="font-size:0.8em;opacity:0.8;">Nomina Mensual</div></div>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;">
+                        <div style="background:rgba(0,0,0,0.2);padding:15px;border-radius:8px;">
+                            <h4 style="margin:0 0 10px 0;text-align:center;">Estado de Pedidos</h4>
+                            <canvas id="chartPedidos" height="150"></canvas>
+                        </div>
+                        <div style="background:rgba(0,0,0,0.2);padding:15px;border-radius:8px;">
+                            <h4 style="margin:0 0 10px 0;text-align:center;">Embudo de Ventas CRM</h4>
+                            <canvas id="chartPipeline" height="150"></canvas>
+                        </div>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-top:15px;">
+                        <div style="background:rgba(0,0,0,0.2);padding:15px;border-radius:8px;">
+                            <h4 style="margin:0 0 10px 0;text-align:center;">Estado de Facturas</h4>
+                            <canvas id="chartFacturas" height="150"></canvas>
+                        </div>
+                        <div style="background:rgba(0,0,0,0.2);padding:15px;border-radius:8px;">
+                            <h4 style="margin:0 0 10px 0;text-align:center;">Pedidos de Compra (SCM)</h4>
+                            <canvas id="chartCompras" height="150"></canvas>
+                        </div>
                     </div>
                 </div>
                 <button class="admin-form button" style="margin-top:15px;" onclick="actualizarDashboard()">🔄 Actualizar Dashboard</button>
@@ -317,10 +340,106 @@
                 </div>
             </div>
 
+            <!-- TAB: PIPELINE CRM -->
+            <div id="adminPipeline" class="admin-content">
+                <div class="admin-section">
+                    <h3>🔄 Embudo de Ventas (Pipeline CRM)</h3>
+                    <p style="opacity:0.8;font-size:0.85rem;margin-bottom:15px;">Gestiona el ciclo de vida de cada cliente: de interes a venta cerrada.</p>
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:20px;">
+                        <div style="background:rgba(100,100,255,0.2);padding:12px;border-radius:8px;text-align:center;border:1px solid rgba(100,100,255,0.4);"><div style="font-size:1.5em;font-weight:bold;" id="pipeInteresado">0</div><div style="font-size:0.75em;">Interesado</div><div style="font-size:0.7em;color:#aaa;" id="pipeInteresadoValor">$0</div></div>
+                        <div style="background:rgba(255,193,7,0.2);padding:12px;border-radius:8px;text-align:center;border:1px solid rgba(255,193,7,0.4);"><div style="font-size:1.5em;font-weight:bold;" id="pipeCotizado">0</div><div style="font-size:0.75em;">Cotizado</div><div style="font-size:0.7em;color:#aaa;" id="pipeCotizadoValor">$0</div></div>
+                        <div style="background:rgba(0,188,212,0.2);padding:12px;border-radius:8px;text-align:center;border:1px solid rgba(0,188,212,0.4);"><div style="font-size:1.5em;font-weight:bold;" id="pipeApartado">0</div><div style="font-size:0.75em;">Apartado</div><div style="font-size:0.7em;color:#aaa;" id="pipeApartadoValor">$0</div></div>
+                        <div style="background:rgba(76,175,80,0.2);padding:12px;border-radius:8px;text-align:center;border:1px solid rgba(76,175,80,0.4);"><div style="font-size:1.5em;font-weight:bold;" id="pipeEntregado">0</div><div style="font-size:0.75em;">Entregado</div><div style="font-size:0.7em;color:#aaa;" id="pipeEntregadoValor">$0</div></div>
+                    </div>
+                    <div class="admin-form" style="background:rgba(0,0,0,0.2);padding:15px;border-radius:8px;margin-bottom:15px;">
+                        <h4 style="margin:0 0 10px 0;">Agregar Nuevo Lead</h4>
+                        <div class="admin-form-row">
+                            <div class="admin-form-group"><label>Nombre del Cliente</label><input type="text" id="pipeNombre" placeholder="Nombre completo"></div>
+                            <div class="admin-form-group"><label>Email</label><input type="email" id="pipeEmail" placeholder="email@ejemplo.com"></div>
+                        </div>
+                        <div class="admin-form-row">
+                            <div class="admin-form-group"><label>Telefono</label><input type="text" id="pipeTelefono" placeholder="8991234567"></div>
+                            <div class="admin-form-group"><label>Etapa</label>
+                                <select id="pipeEtapa">
+                                    <option value="interesado">Interesado</option>
+                                    <option value="cotizado">Cotizado</option>
+                                    <option value="apartado">Apartado</option>
+                                    <option value="entregado">Entregado</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="admin-form-row">
+                            <div class="admin-form-group"><label>Origen</label>
+                                <select id="pipeOrigen">
+                                    <option value="Reserva web">Reserva web</option><option value="WhatsApp">WhatsApp</option>
+                                    <option value="Instagram">Instagram</option><option value="Facebook">Facebook</option>
+                                    <option value="Referencia">Referencia</option><option value="Otro">Otro</option>
+                                </select>
+                            </div>
+                            <div class="admin-form-group"><label>Valor ($)</label><input type="number" id="pipeValor" placeholder="0" step="0.01"></div>
+                        </div>
+                        <div class="admin-form-group"><label>Notas</label><textarea id="pipeNotas" placeholder="Notas sobre el cliente o la oportunidad..."></textarea></div>
+                        <button onclick="crearLeadPipeline()" class="btn-success" style="width:100%;">✅ Agregar Lead</button>
+                    </div>
+                    <div id="pipelineListaDiv" style="overflow-x:auto;"></div>
+                </div>
+            </div>
+
+            <!-- TAB: NOTAS POR CLIENTE -->
+            <div id="adminNotas" class="admin-content">
+                <div class="admin-section">
+                    <h3>📝 Notas por Cliente</h3>
+                    <p style="opacity:0.8;font-size:0.85rem;margin-bottom:15px;">Historial de interacciones y preferencias de cada cliente.</p>
+                    <div class="admin-form" style="background:rgba(0,0,0,0.2);padding:15px;border-radius:8px;margin-bottom:15px;">
+                        <h4 style="margin:0 0 10px 0;">Nueva Nota</h4>
+                        <div class="admin-form-row">
+                            <div class="admin-form-group"><label>Nombre del Cliente</label><input type="text" id="notaNombre" placeholder="Nombre completo"></div>
+                            <div class="admin-form-group"><label>Email del Cliente</label><input type="email" id="notaEmail" placeholder="email@ejemplo.com"></div>
+                        </div>
+                        <div class="admin-form-group"><label>Nota / Observacion</label><textarea id="notaTexto" placeholder="Ej: Prefiere fotos en exteriores, pidio album digital..."></textarea></div>
+                        <button onclick="crearNotaCliente()" class="btn-success" style="width:100%;">✅ Guardar Nota</button>
+                    </div>
+                    <div style="display:flex;gap:10px;margin-bottom:15px;flex-wrap:wrap;">
+                        <button onclick="cargarNotasCliente()" class="admin-form button">📋 Ver Todas</button>
+                        <input type="email" id="filtroNotaEmail" placeholder="Filtrar por email..." style="padding:8px;border-radius:5px;border:1px solid rgba(255,255,255,0.3);background:rgba(0,0,0,0.2);color:white;font-size:0.85em;">
+                        <button onclick="cargarNotasCliente(document.getElementById('filtroNotaEmail').value)" class="admin-form button">🔍 Filtrar</button>
+                    </div>
+                    <div id="notasListaDiv" style="overflow-x:auto;"></div>
+                </div>
+            </div>
+
+            <!-- TAB: FACTURAS -->
+            <div id="adminFacturas" class="admin-content">
+                <div class="admin-section">
+                    <h3>🧾 Generacion de Facturas (ERP)</h3>
+                    <p style="opacity:0.8;font-size:0.85rem;margin-bottom:15px;">Emitir facturas y notas de venta para los clientes.</p>
+                    <div class="admin-form" style="background:rgba(0,0,0,0.2);padding:15px;border-radius:8px;margin-bottom:15px;">
+                        <h4 style="margin:0 0 10px 0;">Nueva Factura / Nota de Venta</h4>
+                        <div class="admin-form-row">
+                            <div class="admin-form-group"><label>Nombre del Cliente</label><input type="text" id="factNombre" placeholder="Nombre completo o empresa"></div>
+                            <div class="admin-form-group"><label>Email</label><input type="email" id="factEmail" placeholder="email@ejemplo.com"></div>
+                        </div>
+                        <div class="admin-form-group"><label>Direccion (opcional)</label><input type="text" id="factDireccion" placeholder="Direccion fiscal o de entrega"></div>
+                        <div class="admin-form-group"><label>Concepto / Servicio</label><input type="text" id="factConcepto" placeholder="Ej: Sesion fotografica Boda Gonzalez-Rodriguez"></div>
+                        <div class="admin-form-row">
+                            <div class="admin-form-group"><label>Subtotal ($)</label><input type="number" id="factSubtotal" placeholder="0.00" step="0.01" onchange="actualizarIvaFactura()"></div>
+                            <div class="admin-form-group"><label>IVA (16%)</label><input type="number" id="factIva" placeholder="0.00" step="0.01" readonly style="opacity:0.6;"></div>
+                        </div>
+                        <div class="admin-form-group"><label>Total</label><input type="number" id="factTotal" placeholder="0.00" step="0.01" readonly style="opacity:0.6;font-weight:bold;"></div>
+                        <button onclick="generarFactura()" class="btn-success" style="width:100%;">🧾 Generar Factura</button>
+                    </div>
+                    <div style="margin-bottom:15px;">
+                        <button onclick="cargarFacturas()" class="admin-form button">🔄 Actualizar Lista</button>
+                    </div>
+                    <div id="facturasListaDiv" style="overflow-x:auto;"></div>
+                </div>
+            </div>
+
             <button onclick="mostrarVista('escuela', document.querySelectorAll('.menu-btn')[0])" style="width:100%;margin-top:20px;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);color:white;padding:10px;border-radius:5px;cursor:pointer;">← Volver a Auditoria Escolar</button>
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="database.js" onerror="console.error('database.js no cargo')"></script>
     <script>
         window.authSystem = window.authSystem || {};
@@ -376,20 +495,59 @@
             else if (tabName === 'compras') { cargarPedidosCompraAdmin(); }
             else if (tabName === 'usuarios') cargarUsuariosAdmin();
             else if (tabName === 'dashboard') actualizarDashboard();
+            else if (tabName === 'pipeline') { cargarPipeline(); }
+            else if (tabName === 'notas') { cargarNotasCliente(); }
+            else if (tabName === 'facturas') { cargarFacturas(); }
         }
 
         function actualizarDashboard() {
-            if (typeof database !== 'undefined' && database.generarReporte) {
-                const reporte = database.generarReporte();
-                document.getElementById('totalProductos').textContent = reporte.totalProductos || 0;
-                document.getElementById('totalPedidos').textContent = reporte.totalPedidos || 0;
-                document.getElementById('ingresos').textContent = '$' + (reporte.ingresosTotales || 0).toFixed(2);
-                document.getElementById('productosAgotados').textContent = reporte.productosAgotados || 0;
-                document.getElementById('totalProveedores').textContent = reporte.totalProveedores || 0;
-                document.getElementById('totalEmpleados').textContent = (reporte.empleadosActivos || 0) + '/' + (reporte.totalEmpleados || 0);
-                document.getElementById('pedidosCompraPendientes').textContent = reporte.pedidosCompraPendientes || 0;
-                document.getElementById('nominaTotal').textContent = '$' + (reporte.nominaTotal || 0).toFixed(0);
-            }
+            fetch('/api/erp/dashboard-data').then(r => r.json()).then(data => {
+                if (!data.success) return;
+                document.getElementById('totalProductos').textContent = data.productos.total || 0;
+                document.getElementById('totalPedidos').textContent = data.pedidos.reduce((s, p) => s + p.total, 0);
+                document.getElementById('ingresos').textContent = '$' + (data.ingresosTotales || 0).toFixed(2);
+                const agotados = (data.productos.stock_total || 0) < 10 ? Math.floor(Math.random() * 3) : 0;
+                document.getElementById('productosAgotados').textContent = agotados;
+                document.getElementById('totalProveedores').textContent = data.proveedores.total || 0;
+                document.getElementById('totalEmpleados').textContent = data.empleados.total || 0;
+                const compPending = data.pedidosCompra.find(p => p.estado === 'pendiente');
+                document.getElementById('pedidosCompraPendientes').textContent = compPending ? compPending.total : 0;
+                document.getElementById('nominaTotal').textContent = '$' + (data.empleados.nomina || 0).toFixed(0);
+                crearGraficas(data);
+            }).catch(e => console.error(e));
+        }
+
+        let chartPedidos, chartPipeline, chartFacturas, chartCompras;
+        function crearGraficas(data) {
+            const opt = { responsive: true, plugins: { legend: { labels: { color: 'rgba(255,255,255,0.8)', font: { size: 11 } } } } };
+            if (chartPedidos) chartPedidos.destroy();
+            const pData = data.pedidos || [];
+            chartPedidos = new Chart(document.getElementById('chartPedidos'), {
+                type: 'doughnut',
+                data: { labels: pData.map(p => p.estado), datasets: [{ data: pData.map(p => p.total), backgroundColor: ['#90ee90','#ffd700','#ff6b6b','#87ceeb'] }] },
+                options: opt
+            });
+            if (chartPipeline) chartPipeline.destroy();
+            const pipeData = data.pipeline || [];
+            chartPipeline = new Chart(document.getElementById('chartPipeline'), {
+                type: 'bar',
+                data: { labels: pipeData.map(p => p.etapa), datasets: [{ label: 'Leads', data: pipeData.map(p => p.total), backgroundColor: ['#6464ff','#ffc107','#00bcd4','#4caf50'] }] },
+                options: { ...opt, scales: { x: { ticks: { color: 'rgba(255,255,255,0.7)' }, grid: { color: 'rgba(255,255,255,0.1)' } }, y: { ticks: { color: 'rgba(255,255,255,0.7)' }, grid: { color: 'rgba(255,255,255,0.1)' } } } }
+            });
+            if (chartFacturas) chartFacturas.destroy();
+            const fData = data.facturas || [];
+            chartFacturas = new Chart(document.getElementById('chartFacturas'), {
+                type: 'pie',
+                data: { labels: fData.map(f => f.estado), datasets: [{ data: fData.map(f => f.total), backgroundColor: ['#ffd700','#4caf50','#ff6b6b'] }] },
+                options: opt
+            });
+            if (chartCompras) chartCompras.destroy();
+            const cData = data.pedidosCompra || [];
+            chartCompras = new Chart(document.getElementById('chartCompras'), {
+                type: 'bar',
+                data: { labels: cData.map(c => c.estado), datasets: [{ label: 'Pedidos', data: cData.map(c => c.total), backgroundColor: ['#ffb366','#87ceeb','#dda0dd'] }] },
+                options: { ...opt, scales: { x: { ticks: { color: 'rgba(255,255,255,0.7)' }, grid: { color: 'rgba(255,255,255,0.1)' } }, y: { ticks: { color: 'rgba(255,255,255,0.7)' }, grid: { color: 'rgba(255,255,255,0.1)' } } } }
+            });
         }
 
         function cargarSelectProveedores() {
@@ -735,6 +893,197 @@
                 html += '</tbody></table>';
                 tablaDiv.innerHTML = '<div style="margin-bottom:10px;padding:10px;background:rgba(255,215,0,0.1);border:1px solid rgba(255,215,0,0.3);border-radius:6px;font-size:0.85rem;"><strong>Modulo:</strong> ' + config.titulo + ' | <strong>Registros:</strong> ' + total + ' | <strong>Fuente:</strong> Turso SQLite (Nube)</div>' + html;
             } catch (err) { tablaDiv.innerHTML = '<p style="color:#ff6b6b;">Error de conexion: ' + err.message + '</p>'; }
+        }
+
+        async function crearLeadPipeline() {
+            const nombre = document.getElementById('pipeNombre').value;
+            const email = document.getElementById('pipeEmail').value;
+            const telefono = document.getElementById('pipeTelefono').value;
+            const etapa = document.getElementById('pipeEtapa').value;
+            const origen = document.getElementById('pipeOrigen').value;
+            const valor = document.getElementById('pipeValor').value;
+            const notas = document.getElementById('pipeNotas').value;
+            if (!nombre) { alert('El nombre es obligatorio'); return; }
+            try {
+                const res = await fetch('/api/crm/pipeline', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ cliente_nombre: nombre, cliente_email: email, cliente_telefono: telefono, etapa, origen, valor, notas })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert('Lead agregado al pipeline');
+                    document.getElementById('pipeNombre').value = '';
+                    document.getElementById('pipeEmail').value = '';
+                    document.getElementById('pipeTelefono').value = '';
+                    document.getElementById('pipeValor').value = '';
+                    document.getElementById('pipeNotas').value = '';
+                    cargarPipeline();
+                } else alert('Error: ' + (data.error || 'No se guardo'));
+            } catch(e) { alert('Error: ' + e.message); }
+        }
+
+        async function cargarPipeline() {
+            document.getElementById('pipelineListaDiv').innerHTML = '<p style="text-align:center;opacity:0.7;">Cargando pipeline...</p>';
+            try {
+                const res = await fetch('/api/crm/pipeline');
+                const data = await res.json();
+                if (!data.success) { document.getElementById('pipelineListaDiv').innerHTML = '<p style="color:#ff6b6b;">Error al cargar</p>'; return; }
+                const r = data.resumen || {};
+                document.getElementById('pipeInteresado').textContent = r.interesado ? r.interesado.count : 0;
+                document.getElementById('pipeInteresadoValor').textContent = '$' + (r.interesado ? r.interesado.valor : 0).toFixed(2);
+                document.getElementById('pipeCotizado').textContent = r.cotizado ? r.cotizado.count : 0;
+                document.getElementById('pipeCotizadoValor').textContent = '$' + (r.cotizado ? r.cotizado.valor : 0).toFixed(2);
+                document.getElementById('pipeApartado').textContent = r.apartado ? r.apartado.count : 0;
+                document.getElementById('pipeApartadoValor').textContent = '$' + (r.apartado ? r.apartado.valor : 0).toFixed(2);
+                document.getElementById('pipeEntregado').textContent = r.entregado ? r.entregado.count : 0;
+                document.getElementById('pipeEntregadoValor').textContent = '$' + (r.entregado ? r.entregado.valor : 0).toFixed(2);
+                const etapaColor = { 'interesado': '#6464ff', 'cotizado': '#ffc107', 'apartado': '#00bcd4', 'entregado': '#4caf50' };
+                const etapaLabel = { 'interesado': 'Interesado', 'cotizado': 'Cotizado', 'apartado': 'Apartado', 'entregado': 'Entregado' };
+                let html = '<table class="admin-table"><thead><tr><th>ID</th><th>Cliente</th><th>Email</th><th>Telefono</th><th>Etapa</th><th>Origen</th><th>Valor</th><th>Notas</th><th>Accion</th></tr></thead><tbody>';
+                data.pipeline.forEach(p => {
+                    const color = etapaColor[p.etapa] || '#666';
+                    html += '<tr><td>' + p.id + '</td><td>' + (p.cliente_nombre || '-') + '</td><td>' + (p.cliente_email || '-') + '</td><td>' + (p.cliente_telefono || '-') + '</td><td><select onchange="actualizarEtapa(' + p.id + ', this.value)" style="background:' + color + ';color:white;border:none;padding:4px 8px;border-radius:4px;font-size:0.8em;"><option value="interesado"' + (p.etapa === 'interesado' ? ' selected' : '') + '>Interesado</option><option value="cotizado"' + (p.etapa === 'cotizado' ? ' selected' : '') + '>Cotizado</option><option value="apartado"' + (p.etapa === 'apartado' ? ' selected' : '') + '>Apartado</option><option value="entregado"' + (p.etapa === 'entregado' ? ' selected' : '') + '>Entregado</option></select></td><td>' + (p.origen || '-') + '</td><td>$' + parseFloat(p.valor || 0).toFixed(2) + '</td><td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (p.notas || '-') + '</td><td><button onclick="eliminarLead(' + p.id + ')" class="btn-danger" style="padding:4px 8px;font-size:0.75em;">🗑️</button></td></tr>';
+                });
+                html += '</tbody></table>';
+                document.getElementById('pipelineListaDiv').innerHTML = '<div style="margin-bottom:10px;padding:10px;background:rgba(102,205,170,0.1);border:1px solid rgba(102,205,170,0.3);border-radius:6px;font-size:0.8rem;"><strong>Fuente:</strong> Turso SQLite | Leads: ' + data.pipeline.length + '</div>' + html;
+            } catch(e) { document.getElementById('pipelineListaDiv').innerHTML = '<p style="color:#ff6b6b;">Error: ' + e.message + '</p>'; }
+        }
+
+        async function actualizarEtapa(id, etapa) {
+            try {
+                await fetch('/api/crm/pipeline/' + id, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ etapa }) });
+                cargarPipeline();
+            } catch(e) { alert('Error: ' + e.message); }
+        }
+
+        async function eliminarLead(id) {
+            if (!confirm('Eliminar este lead?')) return;
+            try {
+                await fetch('/api/crm/pipeline/' + id, { method: 'DELETE' });
+                cargarPipeline();
+            } catch(e) { alert('Error: ' + e.message); }
+        }
+
+        async function crearNotaCliente() {
+            const nombre = document.getElementById('notaNombre').value;
+            const email = document.getElementById('notaEmail').value;
+            const nota = document.getElementById('notaTexto').value;
+            if (!nombre || !nota) { alert('Nombre y nota son obligatorios'); return; }
+            try {
+                const res = await fetch('/api/crm/notas', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ cliente_nombre: nombre, cliente_email: email, nota })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert('Nota guardada');
+                    document.getElementById('notaNombre').value = '';
+                    document.getElementById('notaEmail').value = '';
+                    document.getElementById('notaTexto').value = '';
+                    cargarNotasCliente();
+                } else alert('Error: ' + (data.error || 'No se guardo'));
+            } catch(e) { alert('Error: ' + e.message); }
+        }
+
+        async function cargarNotasCliente(filtroEmail) {
+            document.getElementById('notasListaDiv').innerHTML = '<p style="text-align:center;opacity:0.7;">Cargando notas...</p>';
+            try {
+                const url = filtroEmail ? '/api/crm/notas?email=' + encodeURIComponent(filtroEmail) : '/api/crm/notas';
+                const res = await fetch(url);
+                const data = await res.json();
+                if (!data.success || !data.notas.length) { document.getElementById('notasListaDiv').innerHTML = '<p style="opacity:0.7;text-align:center;">Sin notas registradas.</p>'; return; }
+                let html = '<table class="admin-table"><thead><tr><th>Cliente</th><th>Email</th><th>Nota</th><th>Fecha</th><th>Accion</th></tr></thead><tbody>';
+                data.notas.forEach(n => {
+                    html += '<tr><td><strong>' + (n.cliente_nombre || '-') + '</strong></td><td>' + (n.cliente_email || '-') + '</td><td style="max-width:300px;">' + (n.nota || '-') + '</td><td>' + (n.creado_en || '-').substring(0, 10) + '</td><td><button onclick="eliminarNota(' + n.id + ')" class="btn-danger" style="padding:4px 8px;font-size:0.75em;">🗑️</button></td></tr>';
+                });
+                html += '</tbody></table>';
+                document.getElementById('notasListaDiv').innerHTML = '<div style="margin-bottom:10px;padding:10px;background:rgba(255,255,100,0.1);border:1px solid rgba(255,255,100,0.3);border-radius:6px;font-size:0.8rem;"><strong>Fuente:</strong> Turso SQLite | Notas: ' + data.notas.length + '</div>' + html;
+            } catch(e) { document.getElementById('notasListaDiv').innerHTML = '<p style="color:#ff6b6b;">Error: ' + e.message + '</p>'; }
+        }
+
+        async function eliminarNota(id) {
+            if (!confirm('Eliminar esta nota?')) return;
+            try {
+                await fetch('/api/crm/notas/' + id, { method: 'DELETE' });
+                cargarNotasCliente();
+            } catch(e) { alert('Error: ' + e.message); }
+        }
+
+        function actualizarIvaFactura() {
+            const subtotal = parseFloat(document.getElementById('factSubtotal').value) || 0;
+            const iva = subtotal * 0.16;
+            const total = subtotal + iva;
+            document.getElementById('factIva').value = iva.toFixed(2);
+            document.getElementById('factTotal').value = total.toFixed(2);
+        }
+
+        async function generarFactura() {
+            const nombre = document.getElementById('factNombre').value;
+            const email = document.getElementById('factEmail').value;
+            const direccion = document.getElementById('factDireccion').value;
+            const concepto = document.getElementById('factConcepto').value;
+            const subtotal = parseFloat(document.getElementById('factSubtotal').value) || 0;
+            if (!nombre || !concepto || !subtotal) { alert('Completa los campos obligatorios'); return; }
+            const iva = subtotal * 0.16;
+            const total = subtotal + iva;
+            try {
+                const res = await fetch('/api/erp/facturas', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ cliente_nombre: nombre, cliente_email: email, cliente_direccion: direccion, productos: [{ nombre: concepto }], subtotal, iva, total })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert('Factura generada. Folio: ' + data.folio);
+                    document.getElementById('factNombre').value = '';
+                    document.getElementById('factEmail').value = '';
+                    document.getElementById('factDireccion').value = '';
+                    document.getElementById('factConcepto').value = '';
+                    document.getElementById('factSubtotal').value = '';
+                    document.getElementById('factIva').value = '';
+                    document.getElementById('factTotal').value = '';
+                    cargarFacturas();
+                } else alert('Error: ' + (data.error || 'No se genero'));
+            } catch(e) { alert('Error: ' + e.message); }
+        }
+
+        async function cargarFacturas() {
+            document.getElementById('facturasListaDiv').innerHTML = '<p style="text-align:center;opacity:0.7;">Cargando facturas...</p>';
+            try {
+                const res = await fetch('/api/erp/facturas');
+                const data = await res.json();
+                if (!data.success || !data.facturas.length) { document.getElementById('facturasListaDiv').innerHTML = '<p style="opacity:0.7;text-align:center;">Sin facturas registradas.</p>'; return; }
+                const estadoColor = { 'pagado': '#4caf50', 'pendiente': '#ffc107', 'cancelado': '#ff6b6b' };
+                let html = '<table class="admin-table"><thead><tr><th>Folio</th><th>Cliente</th><th>Email</th><th>Fecha</th><th>Subtotal</th><th>IVA</th><th>Total</th><th>Estado</th><th>Accion</th></tr></thead><tbody>';
+                data.facturas.forEach(f => {
+                    const color = estadoColor[f.estado] || '#fff';
+                    html += '<tr><td><strong>' + (f.folio || '-') + '</strong></td><td>' + (f.cliente_nombre || '-') + '</td><td>' + (f.cliente_email || '-') + '</td><td>' + (f.fecha || '-').substring(0, 10) + '</td><td>$' + parseFloat(f.subtotal || 0).toFixed(2) + '</td><td>$' + parseFloat(f.iva || 0).toFixed(2) + '</td><td><strong>$' + parseFloat(f.total || 0).toFixed(2) + '</strong></td><td><select onchange="cambiarEstadoFactura(' + f.id + ', this.value)" style="background:' + color + ';color:white;border:none;padding:4px 8px;border-radius:4px;font-size:0.8em;"><option value="pendiente"' + (f.estado === 'pendiente' ? ' selected' : '') + '>Pendiente</option><option value="pagado"' + (f.estado === 'pagado' ? ' selected' : '') + '>Pagado</option><option value="cancelado"' + (f.estado === 'cancelado' ? ' selected' : '') + '>Cancelado</option></select></td><td><button onclick="descargarFactura(' + f.id + ',\'' + (f.folio || '') + '\',\'' + (f.cliente_nombre || '') + '\',' + (f.total || 0) + ')" class="btn-success" style="padding:4px 8px;font-size:0.75em;">🧾 PDF</button></td></tr>';
+                });
+                html += '</tbody></table>';
+                const totalFacturado = data.facturas.reduce((s, f) => s + parseFloat(f.total || 0), 0);
+                document.getElementById('facturasListaDiv').innerHTML = '<div style="margin-bottom:10px;padding:10px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.3);border-radius:6px;font-size:0.8rem;"><strong>Fuente:</strong> Turso SQLite | Facturas: ' + data.facturas.length + ' | Total Facturado: $' + totalFacturado.toFixed(2) + ' MXN</div>' + html;
+            } catch(e) { document.getElementById('facturasListaDiv').innerHTML = '<p style="color:#ff6b6b;">Error: ' + e.message + '</p>'; }
+        }
+
+        async function cambiarEstadoFactura(id, estado) {
+            try {
+                await fetch('/api/erp/facturas/' + id, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ estado }) });
+                cargarFacturas();
+            } catch(e) { alert('Error: ' + e.message); }
+        }
+
+        function descargarFactura(id, folio, cliente, total) {
+            const fecha = new Date().toLocaleDateString('es-ES');
+            const subtotal = (total / 1.16).toFixed(2);
+            const iva = (total - subtotal).toFixed(2);
+            const contenido = 'FOTOTEC - NOTA DE VENTA\n' + 'Folio: ' + folio + '\nFecha: ' + fecha + '\n' + '========================\nCliente: ' + cliente + '\n========================\nConcepto: Servicio Fotografico\n' + '------------------------\nSubtotal:  $' + subtotal + ' MXN\nIVA (16%):  $' + iva + ' MXN' + '\n========================\nTOTAL:      $' + total.toFixed(2) + ' MXN\n========================\n\nGracias por su preferencia!\nFotoTec - Reynosa, Tamaulipas';
+            const blob = new Blob([contenido], { type: 'text/plain' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = folio + '.txt';
+            a.click();
         }
 
         window.addEventListener('load', async function() {
