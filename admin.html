@@ -3,77 +3,653 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FotoTec | Panel de Auditoría SCM y ERP</title>
+    <title>FotoTec | Panel de Administracion</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f4f5f7; color: #333; }
-        .sidebar { width: 260px; height: 100vh; background: #1a1a2e; color: #fff; position: fixed; padding: 20px; box-sizing: border-box; }
-        .sidebar h2 { color: #ff6b6b; font-size: 1.5rem; margin-bottom: 30px; }
-        .menu-btn { width: 100%; padding: 12px; background: none; border: none; color: #fff; text-align: left; font-size: 0.95rem; cursor: pointer; border-radius: 6px; margin-bottom: 10px; transition: 0.3s; }
-        .menu-btn:hover, .menu-btn.active { background: #5165ff; font-weight: bold; }
-        .main-content { margin-left: 260px; padding: 40px; box-sizing: border-box; }
-        .card { background: #fff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 25px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; background: #fff; }
-        th { background: #5165ff; color: #fff; padding: 12px; text-align: left; }
-        td { padding: 12px; border-bottom: 1px solid #eee; font-size: 0.9rem; }
-        tr:nth-child(even) { background: #f9f9f9; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #1a1a2e; color: #fff; min-height: 100vh; }
+
+        .sidebar {
+            width: 260px;
+            height: 100vh;
+            background: #1a1a2e;
+            color: #fff;
+            position: fixed;
+            padding: 20px 10px;
+            box-sizing: border-box;
+            overflow-y: auto;
+            border-right: 1px solid rgba(255,255,255,0.1);
+        }
+        .sidebar h2 { color: #ff6b6b; font-size: 1.3rem; margin-bottom: 20px; padding: 0 10px; }
+        .sidebar-section { margin-bottom: 20px; }
+        .sidebar-section-title { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; color: rgba(255,255,255,0.4); padding: 0 10px; margin-bottom: 8px; }
+        .menu-btn { width: 100%; padding: 10px 12px; background: rgba(255,255,255,0.05); border: none; color: rgba(255,255,255,0.8); text-align: left; font-size: 0.85rem; cursor: pointer; border-radius: 6px; margin-bottom: 4px; transition: 0.3s; }
+        .menu-btn:hover, .menu-btn.active { background: #5165ff; color: white; font-weight: bold; }
+        .menu-btn.admin-btn { background: rgba(102,126,234,0.3); border: 1px solid rgba(102,126,234,0.5); }
+
+        .main-content { margin-left: 260px; padding: 30px; box-sizing: border-box; }
+
+        .school-card { background: #fff; color: #333; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 25px; }
+        .school-card h2 { margin-bottom: 10px; }
+        .school-card table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .school-card th { background: #5165ff; color: #fff; padding: 12px; text-align: left; }
+        .school-card td { padding: 12px; border-bottom: 1px solid #eee; font-size: 0.9rem; }
+        .school-card tr:nth-child(even) { background: #f9f9f9; }
         .badge { padding: 4px 8px; border-radius: 4px; color: #fff; font-size: 0.75rem; font-weight: bold; }
         .badge.push { background: #ffb366; }
         .badge.pull { background: #ff6b6b; }
+
+        .admin-panel {
+            display: none;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        .admin-panel.active { display: block; }
+        .admin-tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid rgba(255,255,255,0.3); flex-wrap: wrap; }
+        .admin-tab-btn { background: rgba(255,255,255,0.2); border: none; color: white; padding: 10px 16px; cursor: pointer; border-radius: 5px; transition: 0.3s; font-weight: bold; font-size: 0.85rem; }
+        .admin-tab-btn:hover, .admin-tab-btn.active { background: rgba(255,255,255,0.4); }
+        .admin-content { display: none; }
+        .admin-content.active { display: block; }
+        .admin-section { background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px; margin-bottom: 15px; }
+        .admin-section h3 { margin-top: 0; border-bottom: 1px solid rgba(255,255,255,0.3); padding-bottom: 10px; }
+        .admin-table { width: 100%; border-collapse: collapse; background: rgba(0,0,0,0.2); border-radius: 5px; overflow: hidden; font-size: 0.85rem; }
+        .admin-table th, .admin-table td { padding: 10px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.2); }
+        .admin-table th { background: rgba(0,0,0,0.3); font-weight: bold; }
+        .admin-table tr:hover { background: rgba(255,255,255,0.05); }
+        .admin-form { display: grid; gap: 10px; margin-top: 15px; }
+        .admin-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .admin-form-group { display: flex; flex-direction: column; }
+        .admin-form label { font-size: 0.85em; margin-bottom: 5px; font-weight: bold; }
+        .admin-form input, .admin-form select, .admin-form textarea { padding: 8px; border: 1px solid rgba(255,255,255,0.3); border-radius: 5px; background: rgba(255,255,255,0.1); color: white; font-size: 0.85em; }
+        .admin-form input::placeholder, .admin-form textarea::placeholder { color: rgba(255,255,255,0.6); }
+        .admin-form button { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .admin-form button:hover { background: rgba(255,255,255,0.3); }
+        .btn-danger { background: rgba(220,53,69,0.3) !important; border-color: rgba(220,53,69,0.5) !important; }
+        .btn-danger:hover { background: rgba(220,53,69,0.5) !important; }
+        .btn-success { background: rgba(40,167,69,0.3) !important; border-color: rgba(40,167,69,0.5) !important; }
+        .btn-success:hover { background: rgba(40,167,69,0.5) !important; }
+        .admin-alert { padding: 12px; border-radius: 5px; margin-bottom: 15px; font-weight: bold; }
+        .alert-info { background: rgba(23,162,184,0.3); border: 1px solid rgba(23,162,184,0.5); color: #87ceeb; }
+        .oculto-por-permisos { display: none !important; }
+
+        .back-link { display: inline-block; margin-bottom: 20px; color: rgba(255,255,255,0.6); text-decoration: none; font-size: 0.85rem; }
+        .back-link:hover { color: white; }
+
+        @media (max-width: 768px) {
+            .sidebar { width: 200px; }
+            .main-content { margin-left: 200px; }
+            .admin-form-row { grid-template-columns: 1fr; }
+            .admin-table { font-size: 0.75rem; }
+        }
     </style>
 </head>
 <body>
 
     <div class="sidebar">
-        <h2>📊 ERP & SCM Panel</h2>
-        <button class="menu-btn active" onclick="verSeccion('proveedores', this)">📦 Proveedores (SCM)</button>
-        <button class="menu-btn" onclick="verSeccion('rh', this)">👥 Recursos Humanos (ERP)</button>
-        <button class="menu-btn" onclick="verSeccion('logistica', this)">⚙️ Estrategia Push/Pull</button>
+        <h2>FotoTec Admin</h2>
+
+        <div class="sidebar-section">
+            <div class="sidebar-section-title">Auditoria Escolar</div>
+            <button class="menu-btn active" onclick="mostrarVista('escuela', this)">📦 Proveedores (SCM)</button>
+            <button class="menu-btn" onclick="mostrarVista('escuela-rh', this)">👥 Recursos Humanos</button>
+            <button class="menu-btn" onclick="mostrarVista('escuela-log', this)">⚙️ Estrategia Push/Pull</button>
+        </div>
+
+        <div class="sidebar-section">
+            <div class="sidebar-section-title">Panel de Administracion</div>
+            <button class="menu-btn admin-btn" onclick="mostrarVista('admin', this)">🔧 Abrir Panel Admin</button>
+        </div>
+
+        <div style="margin-top: 30px; padding: 15px 10px; border-top: 1px solid rgba(255,255,255,0.1);">
+            <div id="userStatus" style="font-size: 0.75rem; color: rgba(255,255,255,0.5); text-align: center;">
+                Sesion: No iniciada
+            </div>
+            <button class="menu-btn" onclick="window.close()" style="margin-top: 10px; font-size: 0.75rem; text-align: center;">❌ Cerrar Ventana</button>
+        </div>
     </div>
 
     <div class="main-content">
-        <div id="sec-proveedores" class="card">
+        <a href="index.html" class="back-link">← Volver al sitio principal</a>
+
+        <!-- VISTA ESCUELA: PROVEEDORES -->
+        <div id="vista-escuela" class="school-card">
             <h2>📦 Catálogo Oficial de Proveedores (Módulo SCM)</h2>
-            <p>Gestión de cadena de suministro para compras de insumos del estudio fotográfico.</p>
+            <p>Gestion de cadena de suministro para compras de insumos del estudio fotografico.</p>
             <table>
-                <tr><th>Empresa</th><th>Contacto</th><th>Teléfono</th><th>Insumo Clave</th><th>Detalle</th></tr>
-                <tr><td>Distribuidora de Insumos Fotográficos</td><td>Juan Pérez</td><td>8991234567</td><td>Papel Fotográfico</td><td>Papel Glossy, Mate y Fine Art</td></tr>
-                <tr><td>Tech Photo Equipment</td><td>María López</td><td>8999876543</td><td>Hardware y Ópticas</td><td>Cámaras, lentes y accesorios de iluminación</td></tr>
+                <tr><th>Empresa</th><th>Contacto</th><th>Telefono</th><th>Insumo Clave</th><th>Detalle</th></tr>
+                <tr><td>Distribuidora de Insumos Fotograficos</td><td>Juan Perez</td><td>8991234567</td><td>Papel Fotografico</td><td>Papel Glossy, Mate y Fine Art</td></tr>
+                <tr><td>Tech Photo Equipment</td><td>Maria Lopez</td><td>8999876543</td><td>Hardware y Opticas</td><td>Camaras, lentes y accesorios de iluminacion</td></tr>
             </table>
         </div>
 
-        <div id="sec-rh" class="card" style="display:none;">
-            <h2>👥 Estructura de Recursos Humanos (Módulo ERP - RH)</h2>
-            <p>Registro organizacional de los empleados activos y nómina de FotoTec.</p>
+        <div id="vista-escuela-rh" class="school-card" style="display:none;">
+            <h2>👥 Estructura de Recursos Humanos (Modulo ERP - RH)</h2>
+            <p>Registro organizacional de los empleados activos y nomina de FotoTec.</p>
             <table>
-                <tr><th>Nombre del Empleado</th><th>Puesto</th><th>Área</th><th>Teléfono</th><th>Salario Base</th><th>Estado</th></tr>
-                <tr><td>Carlos Rodríguez</td><td>Fotógrafo Principal</td><td>Producción</td><td>8991112233</td><td>$15,000 MXN</td><td><span style="color:green; font-weight:bold;">🟢 Activo</span></td></tr>
-                <tr><td>Ana Martínez</td><td>Editor Fotográfico</td><td>Post-producción</td><td>8992223344</td><td>$12,000 MXN</td><td><span style="color:green; font-weight:bold;">🟢 Activo</span></td></tr>
+                <tr><th>Nombre del Empleado</th><th>Puesto</th><th>Area</th><th>Telefono</th><th>Salario Base</th><th>Estado</th></tr>
+                <tr><td>Carlos Rodriguez</td><td>Fotografo Principal</td><td>Produccion</td><td>8991112233</td><td>$15,000 MXN</td><td><span style="color:green;font-weight:bold;">🟢 Activo</span></td></tr>
+                <tr><td>Ana Martinez</td><td>Editor Fotografico</td><td>Post-produccion</td><td>8992223344</td><td>$12,000 MXN</td><td><span style="color:green;font-weight:bold;">🟢 Activo</span></td></tr>
             </table>
         </div>
 
-        <div id="sec-logistica" class="card" style="display:none;">
-            <h2>⚙️ Logística de Reabastecimiento Automatizado</h2>
-            <p>Diferenciación de órdenes de compra según el comportamiento de la demanda real del mercado.</p>
+        <div id="vista-escuela-log" class="school-card" style="display:none;">
+            <h2>⚙️ Logistica de Reabastecimiento Automatizado</h2>
+            <p>Diferenciacion de ordenes de compra segun el comportamiento de la demanda real del mercado.</p>
             <table>
-                <tr><th>ID Pedido</th><th>Proveedor</th><th>Insumo Requerido</th><th>Cantidad</th><th>Estrategia SCM</th><th>Criterio Técnico</th></tr>
-                <tr><td>#SCM-101</td><td>Distribuidora de Insumos</td><td>Lote Papel Fine Art (24x36)</td><td>50 unidades</td><td><span class="badge push">PUSH</span></td><td>Basado en Pronóstico (Pre-compra para sets estacionales navideños)</td></tr>
-                <tr><td>#SCM-102</td><td>Tech Photo Equipment</td><td>Kit Iluminación Softbox</td><td>2 unidades</td><td><span class="badge pull">PULL</span></td><td>Basado en Demanda (Disparado por exceso de reservas de bodas activas)</td></tr>
+                <tr><th>ID Pedido</th><th>Proveedor</th><th>Insumo Requerido</th><th>Cantidad</th><th>Estrategia SCM</th><th>Criterio Tecnico</th></tr>
+                <tr><td>#SCM-101</td><td>Distribuidora de Insumos</td><td>Lote Papel Fine Art (24x36)</td><td>50 unidades</td><td><span class="badge push">PUSH</span></td><td>Basado en Pronostico (Pre-compra para sets estacionales navideños)</td></tr>
+                <tr><td>#SCM-102</td><td>Tech Photo Equipment</td><td>Kit Iluminacion Softbox</td><td>2 unidades</td><td><span class="badge pull">PULL</span></td><td>Basado en Demanda (Disparado por exceso de reservas de bodas activas)</td></tr>
             </table>
+        </div>
+
+        <!-- PANEL ADMIN MORADO -->
+        <div id="adminPanel" class="admin-panel">
+            <h2>🔧 Panel de Administrador</h2>
+            <p>Gestiona productos, pedidos, usuarios y configuracion del sistema</p>
+
+            <div class="admin-tabs">
+                <button class="admin-tab-btn active" onclick="mostrarTabAdmin('dashboard', event)">📊 Dashboard</button>
+                <button class="admin-tab-btn" onclick="mostrarTabAdmin('productos', event)">📦 Productos</button>
+                <button class="admin-tab-btn" onclick="mostrarTabAdmin('pedidos', event)">🛒 Pedidos</button>
+                <button class="admin-tab-btn" onclick="mostrarTabAdmin('reservas', event)">📅 Reservas</button>
+                <button class="admin-tab-btn" onclick="mostrarTabAdmin('proveedores', event)">🚚 Proveedores</button>
+                <button class="admin-tab-btn" onclick="mostrarTabAdmin('empleados', event)">👔 RRHH</button>
+                <button class="admin-tab-btn" onclick="mostrarTabAdmin('compras', event)">📥 Ped. Compra</button>
+                <button class="admin-tab-btn" onclick="mostrarTabAdmin('usuarios', event)">👥 Usuarios</button>
+                <button class="admin-tab-btn" onclick="mostrarTabAdmin('reportes', event)">📈 Reportes</button>
+                <button class="admin-tab-btn" onclick="mostrarTabAdmin('auditoria', event)" style="background:rgba(255,215,0,0.2);border:1px solid rgba(255,215,0,0.4);">📋 Auditoria</button>
+            </div>
+
+            <div id="adminDashboard" class="admin-content active">
+                <div class="admin-section">
+                    <h3>📊 Resumen Integral (ERP + SCM + CRM)</h3>
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;">
+                        <div style="background:rgba(0,0,0,0.2);padding:12px;border-radius:5px;text-align:center;"><div style="font-size:1.8em;font-weight:bold;" id="totalProductos">0</div><div style="font-size:0.8em;opacity:0.8;">Productos</div></div>
+                        <div style="background:rgba(0,0,0,0.2);padding:12px;border-radius:5px;text-align:center;"><div style="font-size:1.8em;font-weight:bold;" id="totalPedidos">0</div><div style="font-size:0.8em;opacity:0.8;">Pedidos (CRM)</div></div>
+                        <div style="background:rgba(0,0,0,0.2);padding:12px;border-radius:5px;text-align:center;"><div style="font-size:1.8em;font-weight:bold;color:#90ee90;" id="ingresos">$0</div><div style="font-size:0.8em;opacity:0.8;">Ingresos</div></div>
+                        <div style="background:rgba(0,0,0,0.2);padding:12px;border-radius:5px;text-align:center;"><div style="font-size:1.8em;font-weight:bold;color:#ff6b6b;" id="productosAgotados">0</div><div style="font-size:0.8em;opacity:0.8;">Agotados</div></div>
+                        <div style="background:rgba(0,0,0,0.2);padding:12px;border-radius:5px;text-align:center;"><div style="font-size:1.8em;font-weight:bold;color:#87ceeb;" id="totalProveedores">0</div><div style="font-size:0.8em;opacity:0.8;">Proveedores (SCM)</div></div>
+                        <div style="background:rgba(0,0,0,0.2);padding:12px;border-radius:5px;text-align:center;"><div style="font-size:1.8em;font-weight:bold;color:#ffb366;" id="totalEmpleados">0</div><div style="font-size:0.8em;opacity:0.8;">Empleados (RH)</div></div>
+                        <div style="background:rgba(0,0,0,0.2);padding:12px;border-radius:5px;text-align:center;"><div style="font-size:1.8em;font-weight:bold;color:#dda0dd;" id="pedidosCompraPendientes">0</div><div style="font-size:0.8em;opacity:0.8;">Ped. Compra</div></div>
+                        <div style="background:rgba(0,0,0,0.2);padding:12px;border-radius:5px;text-align:center;"><div style="font-size:1.8em;font-weight:bold;color:#ffd700;" id="nominaTotal">$0</div><div style="font-size:0.8em;opacity:0.8;">Nomina Mensual</div></div>
+                    </div>
+                </div>
+                <button class="admin-form button" style="margin-top:15px;" onclick="actualizarDashboard()">🔄 Actualizar Dashboard</button>
+            </div>
+
+            <div id="adminProductos" class="admin-content">
+                <div class="admin-section">
+                    <h3>➕ Crear / Editar Producto (con Estrategia SCM)</h3>
+                    <div class="admin-form">
+                        <div class="admin-form-row">
+                            <div class="admin-form-group"><label>Nombre del Producto</label><input type="text" id="newProdNombre" placeholder="Ej: Sesion de Estudio"></div>
+                            <div class="admin-form-group"><label>Categoria</label>
+                                <select id="newProdCategoria">
+                                    <option value="estudio">Sesion Estudio</option><option value="boda">Boda</option>
+                                    <option value="impresion">Impresion</option><option value="otro">Otro</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="admin-form-group"><label>Descripcion</label><textarea id="newProdDescripcion" placeholder="Describe el producto..."></textarea></div>
+                        <div class="admin-form-row">
+                            <div class="admin-form-group"><label>Precio ($)</label><input type="number" id="newProdPrecio" placeholder="50" step="0.01"></div>
+                            <div class="admin-form-group"><label>Stock Inicial</label><input type="number" id="newProdStock" placeholder="100"></div>
+                        </div>
+                        <div class="admin-form-row">
+                            <div class="admin-form-group"><label>Estrategia SCM</label>
+                                <select id="newProdEstrategia">
+                                    <option value="pull">🔄 PULL - Bajo demanda del cliente</option>
+                                    <option value="push">📦 PUSH - Basado en pronostico</option>
+                                </select>
+                            </div>
+                            <div class="admin-form-group"><label>Stock Minimo</label><input type="number" id="newProdStockMinimo" placeholder="20" value="10"></div>
+                        </div>
+                        <div class="admin-form-group"><label>Proveedor Asociado (SCM)</label><select id="newProdProveedor"><option value="">-- Sin proveedor --</option></select></div>
+                        <button onclick="crearNuevoProducto()" class="btn-success" style="width:100%;">✅ Crear Producto</button>
+                    </div>
+                </div>
+                <div class="admin-section">
+                    <h3>📋 Lista de Productos</h3>
+                    <div style="margin-bottom:10px;display:flex;gap:10px;flex-wrap:wrap;">
+                        <span style="background:rgba(135,206,235,0.2);padding:4px 8px;border-radius:4px;font-size:0.8em;">🔄 PULL = Bajo demanda</span>
+                        <span style="background:rgba(255,179,102,0.2);padding:4px 8px;border-radius:4px;font-size:0.8em;">📦 PUSH = Reabastecimiento automatico</span>
+                    </div>
+                    <div id="productosListaDiv" style="overflow-x:auto;"></div>
+                </div>
+            </div>
+
+            <div id="adminPedidos" class="admin-content">
+                <div class="admin-section"><h3>📋 Gestion de Pedidos (CRM)</h3><div id="pedidosListaDiv" style="overflow-x:auto;"></div></div>
+            </div>
+
+            <div id="adminReservas" class="admin-content">
+                <div class="admin-section"><h3>📅 Reservas de Clientes</h3><button class="admin-form button" style="margin-bottom:15px;" onclick="cargarReservas()">🔄 Actualizar</button><div id="reservasListaDiv" style="overflow-x:auto;"></div></div>
+            </div>
+
+            <div id="adminProveedores" class="admin-content">
+                <div class="admin-section">
+                    <h3>🚚 Gestion de Proveedores (SCM)</h3>
+                    <div class="admin-form">
+                        <div class="admin-form-row">
+                            <div class="admin-form-group"><label>Nombre / Razon Social</label><input type="text" id="newProvNombre" placeholder="Ej: Distribuidora ABC"></div>
+                            <div class="admin-form-group"><label>Persona de Contacto</label><input type="text" id="newProvContacto" placeholder="Nombre del contacto"></div>
+                        </div>
+                        <div class="admin-form-row">
+                            <div class="admin-form-group"><label>Telefono</label><input type="text" id="newProvTelefono" placeholder="8991234567"></div>
+                            <div class="admin-form-group"><label>Email</label><input type="email" id="newProvEmail" placeholder="proveedor@email.com"></div>
+                        </div>
+                        <div class="admin-form-row">
+                            <div class="admin-form-group"><label>Tipo de Insumo</label>
+                                <select id="newProvTipoInsumo">
+                                    <option value="papel_fotografico">Papel Fotografico</option><option value="equipo">Equipo Fotografico</option>
+                                    <option value="tintas">Tintas y Cartuchos</option><option value="marcos">Marcos y Acabados</option>
+                                    <option value="iluminacion">Iluminacion y Estudio</option><option value="otro">Otro</option>
+                                </select>
+                            </div>
+                            <div class="admin-form-group"><label>Detalle de Insumos</label><input type="text" id="newProvInsumoDetalle" placeholder="Ej: Papel Glossy 4x6..."></div>
+                        </div>
+                        <button onclick="crearNuevoProveedor()" class="btn-success" style="width:100%;">✅ Registrar Proveedor</button>
+                    </div>
+                </div>
+                <div class="admin-section"><h3>📋 Catalogo de Proveedores</h3><div id="proveedoresListaDiv" style="overflow-x:auto;"></div></div>
+            </div>
+
+            <div id="adminEmpleados" class="admin-content">
+                <div class="admin-section">
+                    <h3>👔 Gestion de Recursos Humanos (ERP)</h3>
+                    <div class="admin-form">
+                        <div class="admin-form-row">
+                            <div class="admin-form-group"><label>Nombre Completo</label><input type="text" id="newEmpNombre" placeholder="Nombre del empleado"></div>
+                            <div class="admin-form-group"><label>Puesto</label><input type="text" id="newEmpPuesto" placeholder="Ej: Fotografo"></div>
+                        </div>
+                        <div class="admin-form-row">
+                            <div class="admin-form-group"><label>Area / Departamento</label>
+                                <select id="newEmpArea">
+                                    <option value="Produccion">Produccion</option><option value="Post-produccion">Post-produccion</option>
+                                    <option value="Administracion">Administracion</option><option value="Ventas">Ventas</option>
+                                    <option value="Marketing">Marketing</option><option value="Otro">Otro</option>
+                                </select>
+                            </div>
+                            <div class="admin-form-group"><label>Fecha de Ingreso</label><input type="date" id="newEmpFechaIngreso"></div>
+                        </div>
+                        <div class="admin-form-row">
+                            <div class="admin-form-group"><label>Telefono</label><input type="text" id="newEmpTelefono" placeholder="8991234567"></div>
+                            <div class="admin-form-group"><label>Email</label><input type="email" id="newEmpEmail" placeholder="email@fototec.com"></div>
+                        </div>
+                        <div class="admin-form-group"><label>Salario Mensual ($)</label><input type="number" id="newEmpSalario" placeholder="10000" step="0.01"></div>
+                        <button onclick="crearNuevoEmpleado()" class="btn-success" style="width:100%;">✅ Registrar Empleado</button>
+                    </div>
+                </div>
+                <div class="admin-section"><h3>📋 Nomina de Personal</h3><div id="empleadosListaDiv" style="overflow-x:auto;"></div></div>
+            </div>
+
+            <div id="adminCompras" class="admin-content">
+                <div class="admin-section">
+                    <h3>📥 Pedidos de Compra a Proveedores (SCM)</h3>
+                    <div class="admin-alert alert-info" style="margin-bottom:15px;"><strong>📌 Estrategia PUSH:</strong> Cuando el stock baja del minimo, se genera automaticamente un borrador de pedido.</div>
+                    <button onclick="verificarStockYPush()" class="btn-success" style="width:100%;margin-bottom:15px;">🔍 Verificar Stock y Generar Pedidos PUSH</button>
+                    <div id="comprasMensajeDiv" style="margin-bottom:15px;"></div>
+                    <div id="comprasListaDiv" style="overflow-x:auto;"></div>
+                </div>
+            </div>
+
+            <div id="adminUsuarios" class="admin-content">
+                <div class="admin-section"><h3>👥 Usuarios Registrados</h3><div id="usuariosListaDiv" style="overflow-x:auto;"></div></div>
+            </div>
+
+            <div id="adminReportes" class="admin-content">
+                <div class="admin-section"><h3>📊 Reportes Consolidados (ERP + SCM + CRM)</h3><button onclick="generarReporte()" class="btn-success" style="width:100%;margin-bottom:15px;">📄 Generar Reporte Completo</button><div id="reporteDiv"></div></div>
+            </div>
+
+            <div id="adminAuditoria" class="admin-content">
+                <div class="admin-section">
+                    <h3>📋 Auditoria Escolar - Modulos SCM y ERP</h3>
+                    <p style="opacity:0.8;font-size:0.85rem;margin-bottom:15px;">Consulta en tiempo real las tablas de Proveedores, Recursos Humanos y Pedidos de Compra desde Turso.</p>
+                    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;">
+                        <button onclick="activarAuditoria('proveedores')" class="btn-success" style="flex:1;min-width:180px;">🚚 Proveedores (SCM)</button>
+                        <button onclick="activarAuditoria('empleados')" class="btn-success" style="flex:1;min-width:180px;">👔 Recursos Humanos (ERP)</button>
+                        <button onclick="activarAuditoria('pedidos-compra')" class="btn-success" style="flex:1;min-width:180px;">📥 Pedidos de Compra (SCM)</button>
+                    </div>
+                    <div id="auditoriaResumen" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:15px;"></div>
+                    <div id="auditoriaTabla" style="overflow-x:auto;"></div>
+                </div>
+            </div>
+
+            <button onclick="mostrarVista('escuela', document.querySelectorAll('.menu-btn')[0])" style="width:100%;margin-top:20px;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);color:white;padding:10px;border-radius:5px;cursor:pointer;">← Volver a Auditoria Escolar</button>
         </div>
     </div>
 
+    <script src="database.js" onerror="console.error('database.js no cargo')"></script>
     <script>
-        function verSeccion(id, btn) {
-            document.getElementById('sec-proveedores').style.display = 'none';
-            document.getElementById('sec-rh').style.display = 'none';
-            document.getElementById('sec-logistica').style.display = 'none';
-
-            document.getElementById('sec-' + id).style.display = 'block';
-
-            const botones = document.querySelectorAll('.menu-btn');
-            botones.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
+        window.authSystem = window.authSystem || {};
+        Object.assign(window.authSystem, {
+            currentUser: JSON.parse(localStorage.getItem('fotovecCurrentUser')) || null,
+            token: localStorage.getItem('fotovecToken') || null,
+            setUser(data) {
+                const userData = data.user || data;
+                const userType = userData.role === 'admin' ? 'administrador' : 'cliente';
+                this.currentUser = { ...userData, userType };
+                this.token = data.token || this.token;
+                localStorage.setItem('fotovecToken', this.token);
+                localStorage.setItem('fotovecCurrentUser', JSON.stringify(this.currentUser));
+            },
+            logout() {
+                this.currentUser = null;
+                this.token = null;
+                localStorage.removeItem('fotovecCurrentUser');
+                localStorage.removeItem('fotovecToken');
+            }
+        });
+        const authSystem = window.authSystem;
+    </script>
+    <script src="permissions.js" onerror="console.error('permissions.js no cargo')"></script>
+    <script>
+        function verificarPermiso(userType, permiso) {
+            if (userType === 'administrador') return true;
+            return false;
         }
+
+        function mostrarVista(vista, btn) {
+            document.querySelectorAll('#vista-escuela, #vista-escuela-rh, #vista-escuela-log, #adminPanel').forEach(el => el.style.display = 'none');
+            const vistas = { 'escuela': 'vista-escuela', 'escuela-rh': 'vista-escuela-rh', 'escuela-log': 'vista-escuela-log', 'admin': 'adminPanel' };
+            if (vistas[vista]) document.getElementById(vistas[vista]).style.display = 'block';
+            if (vista === 'admin') document.getElementById('adminPanel').classList.add('active');
+            document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+            if (vista === 'admin') actualizarDashboard();
+        }
+
+        function mostrarTabAdmin(tabName, event) {
+            document.querySelectorAll('.admin-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.admin-tab-btn').forEach(btn => btn.classList.remove('active'));
+            const selectedTab = document.getElementById('admin' + tabName.charAt(0).toUpperCase() + tabName.slice(1));
+            if (selectedTab) selectedTab.classList.add('active');
+            if (event && event.target) event.target.classList.add('active');
+            if (tabName === 'productos') { cargarSelectProveedores(); cargarProductosAdmin(); }
+            else if (tabName === 'pedidos') cargarPedidosAdmin();
+            else if (tabName === 'reservas') cargarReservas();
+            else if (tabName === 'proveedores') cargarProveedoresAdmin();
+            else if (tabName === 'empleados') cargarEmpleadosAdmin();
+            else if (tabName === 'compras') cargarPedidosCompraAdmin();
+            else if (tabName === 'usuarios') cargarUsuariosAdmin();
+            else if (tabName === 'dashboard') actualizarDashboard();
+        }
+
+        function actualizarDashboard() {
+            if (typeof database !== 'undefined' && database.generarReporte) {
+                const reporte = database.generarReporte();
+                document.getElementById('totalProductos').textContent = reporte.totalProductos || 0;
+                document.getElementById('totalPedidos').textContent = reporte.totalPedidos || 0;
+                document.getElementById('ingresos').textContent = '$' + (reporte.ingresosTotales || 0).toFixed(2);
+                document.getElementById('productosAgotados').textContent = reporte.productosAgotados || 0;
+                document.getElementById('totalProveedores').textContent = reporte.totalProveedores || 0;
+                document.getElementById('totalEmpleados').textContent = (reporte.empleadosActivos || 0) + '/' + (reporte.totalEmpleados || 0);
+                document.getElementById('pedidosCompraPendientes').textContent = reporte.pedidosCompraPendientes || 0;
+                document.getElementById('nominaTotal').textContent = '$' + (reporte.nominaTotal || 0).toFixed(0);
+            }
+        }
+
+        function cargarSelectProveedores() {
+            const select = document.getElementById('newProdProveedor');
+            if (!select || typeof database === 'undefined') return;
+            try {
+                const proveedores = database.obtenerProveedores(true);
+                select.innerHTML = '<option value="">-- Sin proveedor --</option>';
+                proveedores.forEach(p => { select.innerHTML += '<option value="' + p.id + '">' + p.nombre + ' (' + p.tipoInsumo + ')</option>'; });
+            } catch(e) { console.error(e); }
+        }
+
+        function crearNuevoProducto() {
+            if (!verificarPermiso(authSystem.currentUser?.userType, 'crear_productos')) return;
+            const nombre = document.getElementById('newProdNombre').value;
+            const descripcion = document.getElementById('newProdDescripcion').value;
+            const precio = document.getElementById('newProdPrecio').value;
+            const stock = document.getElementById('newProdStock').value;
+            const categoria = document.getElementById('newProdCategoria').value;
+            const estrategia = document.getElementById('newProdEstrategia').value;
+            const stockMinimo = document.getElementById('newProdStockMinimo').value;
+            const proveedorId = document.getElementById('newProdProveedor').value;
+            if (!nombre || !precio || !stock) { alert('Completa los campos obligatorios'); return; }
+            try {
+                database.crearProducto(nombre, descripcion, precio, stock, categoria, estrategia, stockMinimo, proveedorId);
+                alert('Producto creado');
+                document.getElementById('newProdNombre').value = '';
+                document.getElementById('newProdDescripcion').value = '';
+                document.getElementById('newProdPrecio').value = '';
+                document.getElementById('newProdStock').value = '';
+                document.getElementById('newProdStockMinimo').value = '10';
+                cargarProductosAdmin();
+            } catch(e) { alert('Error: ' + e.message); }
+        }
+
+        function cargarProductosAdmin() {
+            if (!verificarPermiso(authSystem.currentUser?.userType, 'ver_productos')) return;
+            if (typeof database === 'undefined') return;
+            try {
+                const productos = database.obtenerProductos();
+                let html = '<table class="admin-table"><thead><tr><th>ID</th><th>Nombre</th><th>Precio</th><th>Stock</th><th>Estrategia</th><th>Proveedor</th><th>Acciones</th></tr></thead><tbody>';
+                productos.forEach(prod => {
+                    const proveedor = prod.proveedorId ? database.obtenerProveedor(prod.proveedorId) : null;
+                    const estrategiaBadge = prod.estrategia === 'push' ? '<span style="background:#ffb366;color:#333;padding:2px 6px;border-radius:4px;font-size:0.75em;">📦 PUSH</span>' : '<span style="background:#87ceeb;color:#333;padding:2px 6px;border-radius:4px;font-size:0.75em;">🔄 PULL</span>';
+                    const stockClass = prod.stock <= prod.stockMinimo ? 'style="color:#ff6b6b;font-weight:bold;"' : '';
+                    html += '<tr><td>' + prod.id + '</td><td>' + prod.nombre + '</td><td>$' + parseFloat(prod.precio).toFixed(2) + '</td><td ' + stockClass + '>' + prod.stock + '</td><td>' + estrategiaBadge + '</td><td>' + (proveedor ? proveedor.nombre : '-') + '</td><td><button onclick="eliminarProducto(' + prod.id + ')" class="btn-danger" style="padding:4px 8px;font-size:0.75em;">🗑️</button></td></tr>';
+                });
+                html += '</tbody></table>';
+                document.getElementById('productosListaDiv').innerHTML = html || '<p style="opacity:0.7;text-align:center;">Sin productos registrados.</p>';
+            } catch(e) { document.getElementById('productosListaDiv').innerHTML = '<p style="color:#ff6b6b;">Error: ' + e.message + '</p>'; }
+        }
+
+        function eliminarProducto(productoId) {
+            if (!verificarPermiso(authSystem.currentUser?.userType, 'eliminar_productos')) return;
+            if (!confirm('¿Eliminar este producto?')) return;
+            try {
+                database.eliminarProducto(productoId);
+                cargarProductosAdmin();
+            } catch(e) { alert('Error: ' + e.message); }
+        }
+
+        function cargarPedidosAdmin() {
+            if (!verificarPermiso(authSystem.currentUser?.userType, 'ver_todos_pedidos')) return;
+            if (typeof database === 'undefined') return;
+            try {
+                const pedidos = database.obtenerPedidos();
+                let html = '<table class="admin-table"><thead><tr><th>ID</th><th>Cliente</th><th>Fecha</th><th>Total</th><th>Estado</th></tr></thead><tbody>';
+                pedidos.forEach(p => {
+                    const estadoColor = p.estado === 'completado' ? '#90ee90' : p.estado === 'pendiente' ? '#ffd700' : '#ff6b6b';
+                    html += '<tr><td>' + p.id + '</td><td>' + (p.clienteNombre || '-') + '</td><td>' + (p.fecha || '-') + '</td><td>$' + parseFloat(p.total || 0).toFixed(2) + '</td><td><span style="color:' + estadoColor + ';font-weight:bold;">' + p.estado + '</span></td></tr>';
+                });
+                html += '</tbody></table>';
+                document.getElementById('pedidosListaDiv').innerHTML = html || '<p style="opacity:0.7;text-align:center;">Sin pedidos.</p>';
+            } catch(e) { document.getElementById('pedidosListaDiv').innerHTML = '<p style="color:#ff6b6b;">Error: ' + e.message + '</p>'; }
+        }
+
+        function cargarReservas() {
+            document.getElementById('reservasListaDiv').innerHTML = '<p style="opacity:0.7;text-align:center;">Cargando reservas...</p>';
+            fetch('/api/reservas').then(r => r.json()).then(data => {
+                if (!data.success || !data.reservas.length) { document.getElementById('reservasListaDiv').innerHTML = '<p style="opacity:0.7;text-align:center;">Sin reservas.</p>'; return; }
+                let html = '<table class="admin-table"><thead><tr><th>ID</th><th>Cliente</th><th>Tipo</th><th>Fecha</th><th>Hora</th><th>Estado</th></tr></thead><tbody>';
+                data.reservas.forEach(r => { html += '<tr><td>' + r.id + '</td><td>' + (r.cliente_nombre || '-') + '</td><td>' + (r.tipo_sesion || '-') + '</td><td>' + (r.fecha_sesion || '-') + '</td><td>' + (r.hora_sesion || '-') + '</td><td>' + (r.estado || 'pendiente') + '</td></tr>'; });
+                html += '</tbody></table>';
+                document.getElementById('reservasListaDiv').innerHTML = html;
+            }).catch(e => { document.getElementById('reservasListaDiv').innerHTML = '<p style="color:#ff6b6b;">Error de conexion</p>'; });
+        }
+
+        function crearNuevoProveedor() {
+            const nombre = document.getElementById('newProvNombre').value;
+            const contacto = document.getElementById('newProvContacto').value;
+            const telefono = document.getElementById('newProvTelefono').value;
+            const email = document.getElementById('newProvEmail').value;
+            const tipoInsumo = document.getElementById('newProvTipoInsumo').value;
+            const insumoDetalle = document.getElementById('newProvInsumoDetalle').value;
+            if (!nombre) { alert('El nombre es obligatorio'); return; }
+            try {
+                database.crearProveedor(nombre, contacto, telefono, email, tipoInsumo, insumoDetalle);
+                alert('Proveedor registrado');
+                cargarProveedoresAdmin();
+            } catch(e) { alert('Error: ' + e.message); }
+        }
+
+        function cargarProveedoresAdmin() {
+            if (typeof database === 'undefined') return;
+            try {
+                const proveedores = database.obtenerProveedores();
+                let html = '<table class="admin-table"><thead><tr><th>ID</th><th>Nombre</th><th>Contacto</th><th>Telefono</th><th>Email</th><th>Insumo</th><th>Estado</th></tr></thead><tbody>';
+                proveedores.forEach(p => {
+                    const activo = p.activo ? '<span style="color:#90ee90;font-weight:bold;">● Activo</span>' : '<span style="color:#ff6b6b;">○ Inactivo</span>';
+                    html += '<tr><td>' + p.id + '</td><td>' + p.nombre + '</td><td>' + (p.contacto || '-') + '</td><td>' + (p.telefono || '-') + '</td><td>' + (p.email || '-') + '</td><td>' + (p.tipoInsumo || '-') + '</td><td>' + activo + '</td></tr>';
+                });
+                html += '</tbody></table>';
+                document.getElementById('proveedoresListaDiv').innerHTML = html || '<p style="opacity:0.7;text-align:center;">Sin proveedores.</p>';
+            } catch(e) { document.getElementById('proveedoresListaDiv').innerHTML = '<p style="color:#ff6b6b;">Error: ' + e.message + '</p>'; }
+        }
+
+        function crearNuevoEmpleado() {
+            const nombre = document.getElementById('newEmpNombre').value;
+            const puesto = document.getElementById('newEmpPuesto').value;
+            const area = document.getElementById('newEmpArea').value;
+            const telefono = document.getElementById('newEmpTelefono').value;
+            const email = document.getElementById('newEmpEmail').value;
+            const salario = document.getElementById('newEmpSalario').value;
+            const fechaIngreso = document.getElementById('newEmpFechaIngreso').value;
+            if (!nombre || !puesto || !salario) { alert('Completa los campos obligatorios'); return; }
+            try {
+                database.crearEmpleado(nombre, puesto, area, telefono, email, salario, fechaIngreso);
+                alert('Empleado registrado');
+                cargarEmpleadosAdmin();
+            } catch(e) { alert('Error: ' + e.message); }
+        }
+
+        function cargarEmpleadosAdmin() {
+            if (typeof database === 'undefined') return;
+            try {
+                const empleados = database.obtenerEmpleados();
+                let html = '<table class="admin-table"><thead><tr><th>ID</th><th>Nombre</th><th>Puesto</th><th>Area</th><th>Telefono</th><th>Salario</th><th>Estado</th></tr></thead><tbody>';
+                empleados.forEach(e => {
+                    const activo = e.activo ? '<span style="color:#90ee90;font-weight:bold;">● Activo</span>' : '<span style="color:#ff6b6b;">○ Inactivo</span>';
+                    html += '<tr><td>' + e.id + '</td><td>' + e.nombre + '</td><td>' + (e.puesto || '-') + '</td><td>' + (e.area || '-') + '</td><td>' + (e.telefono || '-') + '</td><td>$' + parseFloat(e.salario || 0).toFixed(2) + '</td><td>' + activo + '</td></tr>';
+                });
+                html += '</tbody></table>';
+                document.getElementById('empleadosListaDiv').innerHTML = html || '<p style="opacity:0.7;text-align:center;">Sin empleados.</p>';
+            } catch(e) { document.getElementById('empleadosListaDiv').innerHTML = '<p style="color:#ff6b6b;">Error: ' + e.message + '</p>'; }
+        }
+
+        function verificarStockYPush() {
+            if (typeof database === 'undefined') return;
+            const productos = database.obtenerProductos();
+            let generados = 0;
+            productos.forEach(prod => {
+                if (prod.estrategia === 'push' && prod.stock <= prod.stockMinimo && prod.proveedorId) {
+                    try { database.generarPedidoCompra(prod.id, Math.max(10, prod.stockMinimo * 2), 'Generado automaticamente por estrategia PUSH'); generados++; } catch(e) {}
+                }
+            });
+            document.getElementById('comprasMensajeDiv').innerHTML = '<div class="admin-alert alert-info">' + (generados > 0 ? 'Se generaron ' + generados + ' pedido(s) de compra PUSH.' : 'No se requieren pedidos de compra en este momento.') + '</div>';
+            cargarPedidosCompraAdmin();
+        }
+
+        function cargarPedidosCompraAdmin() {
+            if (typeof database === 'undefined') return;
+            try {
+                const pedidos = database.obtenerPedidosCompra();
+                let html = '<table class="admin-table"><thead><tr><th>ID</th><th>Proveedor</th><th>Estado</th><th>Total</th><th>Fecha</th></tr></thead><tbody>';
+                pedidos.forEach(p => {
+                    const estadoColor = p.estado === 'recibido' ? '#90ee90' : p.estado === 'pendiente' ? '#ffd700' : '#ff6b6b';
+                    html += '<tr><td>' + p.id + '</td><td>' + (p.proveedorNombre || '-') + '</td><td><span style="color:' + estadoColor + ';font-weight:bold;">' + p.estado + '</span></td><td>$' + parseFloat(p.total || 0).toFixed(2) + '</td><td>' + (p.fechaCreacion || '-') + '</td></tr>';
+                });
+                html += '</tbody></table>';
+                document.getElementById('comprasListaDiv').innerHTML = html || '<p style="opacity:0.7;text-align:center;">Sin pedidos de compra.</p>';
+            } catch(e) { document.getElementById('comprasListaDiv').innerHTML = '<p style="color:#ff6b6b;">Error: ' + e.message + '</p>'; }
+        }
+
+        function cargarUsuariosAdmin() {
+            if (!verificarPermiso(authSystem.currentUser?.userType, 'ver_usuarios')) return;
+            fetch('/api/users', { headers: { 'Authorization': 'Bearer ' + (authSystem.token || '') } })
+                .then(r => r.json())
+                .then(data => {
+                    if (!data.success || !data.users.length) { document.getElementById('usuariosListaDiv').innerHTML = '<p style="opacity:0.7;text-align:center;">Sin usuarios.</p>'; return; }
+                    let html = '<table class="admin-table"><thead><tr><th>ID</th><th>Nombre</th><th>Username</th><th>Email</th><th>Rol</th></tr></thead><tbody>';
+                    data.users.forEach(u => { html += '<tr><td>' + u.id + '</td><td>' + u.name + '</td><td>' + u.username + '</td><td>' + u.email + '</td><td>' + (u.role || 'cliente') + '</td></tr>'; });
+                    html += '</tbody></table>';
+                    document.getElementById('usuariosListaDiv').innerHTML = html;
+                }).catch(e => { document.getElementById('usuariosListaDiv').innerHTML = '<p style="color:#ff6b6b;">Error de conexion</p>'; });
+        }
+
+        function generarReporte() {
+            if (typeof database === 'undefined') return;
+            try {
+                const reporte = database.generarReporte();
+                document.getElementById('reporteDiv').innerHTML = '<div class="admin-alert alert-info"><strong>📊 Resumen General</strong><br>Productos: ' + reporte.totalProductos + ' | Pedidos: ' + reporte.totalPedidos + ' | Ingresos: $' + reporte.ingresosTotales.toFixed(2) + ' MXN<br>Proveedores: ' + reporte.totalProveedores + ' | Empleados: ' + reporte.totalEmpleados + ' | Nomina: $' + reporte.nominaTotal.toFixed(2) + ' MXN</div>';
+            } catch(e) { document.getElementById('reporteDiv').innerHTML = '<p style="color:#ff6b6b;">Error: ' + e.message + '</p>'; }
+        }
+
+        async function activarAuditoria(modulo) {
+            const tablaDiv = document.getElementById('auditoriaTabla');
+            const resumenDiv = document.getElementById('auditoriaResumen');
+            tablaDiv.innerHTML = '<p style="text-align:center;opacity:0.7;">Cargando datos desde Turso...</p>';
+            const rutas = {
+                'proveedores': { url: '/api/scm/proveedores', titulo: 'Proveedores (SCM)', cols: ['id','nombre','contacto','telefono','email','tipo_insumo','activo'] },
+                'empleados': { url: '/api/erp/empleados', titulo: 'Recursos Humanos (ERP)', cols: ['id','nombre','puesto','area','telefono','email','salario','fecha_ingreso','activo'] },
+                'pedidos-compra': { url: '/api/scm/pedidos-compra', titulo: 'Pedidos de Compra (SCM)', cols: ['id','proveedor_nombre','estado','productos','total','creado_automatico','fecha_creacion'] }
+            };
+            const config = rutas[modulo];
+            if (!config) return;
+            try {
+                const res = await fetch(config.url);
+                const data = await res.json();
+                if (!data.success) { tablaDiv.innerHTML = '<p style="color:#ff6b6b;">Error: ' + (data.error || 'Sin respuesta') + '</p>'; return; }
+                let items = data.proveedores || data.empleados || data.pedidos_compra || [];
+                let total = data.total || items.length;
+                let extra = '';
+                if (modulo === 'empleados') {
+                    extra = '<div style="background:rgba(0,0,0,0.2);padding:10px;border-radius:5px;text-align:center;"><div style="font-size:1.2em;font-weight:bold;color:#ffd700;">$' + (data.nominaTotal || 0).toFixed(2) + '</div><div>Nomina Total</div></div><div style="background:rgba(0,0,0,0.2);padding:10px;border-radius:5px;text-align:center;"><div style="font-size:1.2em;font-weight:bold;color:#90ee90;">' + (data.activos || 0) + '</div><div>Activos</div></div><div style="background:rgba(0,0,0,0.2);padding:10px;border-radius:5px;text-align:center;"><div style="font-size:1.2em;font-weight:bold;color:#ff6b6b;">' + (data.inactivos || 0) + '</div><div>Inactivos</div></div>';
+                } else if (modulo === 'proveedores') {
+                    const activos = items.filter(p => p.activo == 1).length;
+                    extra = '<div style="background:rgba(0,0,0,0.2);padding:10px;border-radius:5px;text-align:center;"><div style="font-size:1.2em;font-weight:bold;color:#90ee90;">' + activos + '</div><div>Activos</div></div><div style="background:rgba(0,0,0,0.2);padding:10px;border-radius:5px;text-align:center;"><div style="font-size:1.2em;font-weight:bold;">' + total + '</div><div>Total</div></div>';
+                } else if (modulo === 'pedidos-compra') {
+                    extra = '<div style="background:rgba(0,0,0,0.2);padding:10px;border-radius:5px;text-align:center;"><div style="font-size:1.2em;font-weight:bold;color:#ffb366;">' + (data.pendientes || 0) + '</div><div>Pendientes</div></div><div style="background:rgba(0,0,0,0.2);padding:10px;border-radius:5px;text-align:center;"><div style="font-size:1.2em;font-weight:bold;">$' + (items.reduce((s, p) => s + (p.total || 0), 0)).toFixed(2) + '</div><div>Total Compras</div></div>';
+                }
+                resumenDiv.innerHTML = extra;
+                if (items.length === 0) { tablaDiv.innerHTML = '<p style="text-align:center;opacity:0.6;">No hay datos.</p>'; return; }
+                let html = '<table class="admin-table"><thead><tr>';
+                const labels = { 'id':'ID','nombre':'Nombre','contacto':'Contacto','telefono':'Telefono','email':'Email','tipo_insumo':'Tipo Insumo','activo':'Activo','puesto':'Puesto','area':'Area','salario':'Salario','fecha_ingreso':'F. Ingreso','proveedor_nombre':'Proveedor','estado':'Estado','productos':'Productos','total':'Total','creado_automatico':'Auto','fecha_creacion':'Fecha Creacion' };
+                config.cols.forEach(col => { html += '<th>' + (labels[col] || col) + '</th>'; });
+                html += '</tr></thead><tbody>';
+                items.forEach(item => {
+                    html += '<tr>';
+                    config.cols.forEach(col => {
+                        let val = item[col];
+                        if (col === 'activo') val = val == 1 ? '<span style="color:#90ee90;font-weight:bold;">● Activo</span>' : '<span style="color:#ff6b6b;">○ Inactivo</span>';
+                        else if (col === 'creado_automatico') val = val == 1 ? '<span style="color:#87ceeb;">Si</span>' : 'No';
+                        else if (col === 'productos') { try { val = JSON.parse(val).map(p => p.nombre + ' x' + p.cantidad).join(', '); } catch(e) { val = val || '-'; } }
+                        else if (col === 'total') val = '$' + parseFloat(val || 0).toFixed(2) + ' MXN';
+                        else if (col === 'salario') val = '$' + parseFloat(val || 0).toFixed(2);
+                        else val = (val !== null && val !== undefined) ? val : '-';
+                        html += '<td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + val + '</td>';
+                    });
+                    html += '</tr>';
+                });
+                html += '</tbody></table>';
+                tablaDiv.innerHTML = '<div style="margin-bottom:10px;padding:10px;background:rgba(255,215,0,0.1);border:1px solid rgba(255,215,0,0.3);border-radius:6px;font-size:0.85rem;"><strong>Modulo:</strong> ' + config.titulo + ' | <strong>Registros:</strong> ' + total + ' | <strong>Fuente:</strong> Turso SQLite (Nube)</div>' + html;
+            } catch (err) { tablaDiv.innerHTML = '<p style="color:#ff6b6b;">Error de conexion: ' + err.message + '</p>'; }
+        }
+
+        window.addEventListener('load', async function() {
+            if (authSystem.currentUser) {
+                const u = authSystem.currentUser;
+                document.getElementById('userStatus').innerHTML = '<strong>' + u.name + '</strong><br><span style="font-size:0.7rem;">' + (u.userType === 'administrador' ? 'Administrador' : 'Cliente') + '</span>';
+            }
+            try {
+                const res = await fetch('/api/me', { headers: { 'Authorization': 'Bearer ' + (authSystem.token || '') } });
+                if (res.ok) {
+                    const data = await res.json();
+                    authSystem.setUser(data);
+                    if (authSystem.currentUser) {
+                        const u = authSystem.currentUser;
+                        document.getElementById('userStatus').innerHTML = '<strong>' + u.name + '</strong><br><span style="font-size:0.7rem;">' + (u.userType === 'administrador' ? 'Administrador' : 'Cliente') + '</span>';
+                    }
+                }
+            } catch(e) {}
+        });
     </script>
 </body>
 </html>
