@@ -725,6 +725,33 @@ app.post('/api/scm/pedidos-compra', async (req, res) => {
     }
 });
 
+app.put('/api/scm/pedidos-compra/:id', async (req, res) => {
+    const { id } = req.params;
+    const { estado } = req.body;
+    try {
+        const [pedido] = await dbAll(`SELECT * FROM pedidos_compra_scm WHERE id = ?`, [parseInt(id)]);
+        if (!pedido) return res.status(404).json({ error: "Pedido no encontrado" });
+
+        await db.execute({ sql: "UPDATE pedidos_compra_scm SET estado = ? WHERE id = ?", args: [estado || 'pendiente', parseInt(id)] });
+
+        if (estado === 'recibido' && pedido.productos) {
+            const prods = JSON.parse(pedido.productos);
+            for (const p of prods) {
+                const prodId = p.id;
+                const cantidad = parseInt(p.cantidad) || 1;
+                if (prodId) {
+                    await db.execute({ sql: "UPDATE products SET stock = stock + ? WHERE id = ?", args: [cantidad, parseInt(prodId)] });
+                }
+            }
+        }
+
+        res.json({ success: true, message: "Pedido de compra actualizado" });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "No se pudo actualizar: " + err.message });
+    }
+});
+
 // ============ ENDPOINTS CRM: PRODUCTOS ============
 app.get('/api/products', async (req, res) => {
     try {
@@ -799,6 +826,20 @@ app.put('/api/pedidos/:id', async (req, res) => {
     const { id } = req.params;
     const { estado } = req.body;
     try {
+        const [pedido] = await dbAll(`SELECT * FROM pedidos WHERE id = ?`, [parseInt(id)]);
+        if (!pedido) return res.status(404).json({ error: "Pedido no encontrado" });
+
+        if (estado === 'completado' && pedido.productos) {
+            const prods = JSON.parse(pedido.productos);
+            for (const p of prods) {
+                const prodId = p.id || p.productoId;
+                const cantidad = parseInt(p.cantidad) || 1;
+                if (prodId) {
+                    await db.execute({ sql: "UPDATE products SET stock = stock - ? WHERE id = ?", args: [cantidad, parseInt(prodId)] });
+                }
+            }
+        }
+
         await db.execute({ sql: "UPDATE pedidos SET estado = ? WHERE id = ?", args: [estado || 'pendiente', parseInt(id)] });
         res.json({ success: true, message: "Estado actualizado" });
     } catch (err) {

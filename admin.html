@@ -634,14 +634,37 @@
                     document.getElementById('pedidosListaDiv').innerHTML = '<p style="opacity:0.7;text-align:center;">Sin pedidos.</p>';
                     return;
                 }
-                let html = '<table class="admin-table"><thead><tr><th>ID</th><th>Cliente</th><th>Email</th><th>Total</th><th>Estado</th></tr></thead><tbody>';
+                let html = '<table class="admin-table"><thead><tr><th>ID</th><th>Cliente</th><th>Email</th><th>Total</th><th>Estado</th><th>Accion</th></tr></thead><tbody>';
                 data.pedidos.forEach(p => {
                     const estadoColor = p.estado === 'completado' ? '#90ee90' : p.estado === 'pendiente' ? '#ffd700' : '#ff6b6b';
-                    html += '<tr><td>' + p.id + '</td><td>' + (p.cliente_nombre || '-') + '</td><td>' + (p.cliente_email || '-') + '</td><td>$' + parseFloat(p.total || 0).toFixed(2) + '</td><td><span style="color:' + estadoColor + ';font-weight:bold;">' + p.estado + '</span></td></tr>';
+                    html += '<tr><td>' + p.id + '</td><td>' + (p.cliente_nombre || '-') + '</td><td>' + (p.cliente_email || '-') + '</td><td>$' + parseFloat(p.total || 0).toFixed(2) + '</td><td><select onchange="actualizarEstadoPedido(' + p.id + ', this.value)" style="background:' + estadoColor + ';color:white;border:none;padding:4px 8px;border-radius:4px;font-size:0.8em;"><option value="pendiente"' + (p.estado === 'pendiente' ? ' selected' : '') + '>Pendiente</option><option value="completado"' + (p.estado === 'completado' ? ' selected' : '') + '>Completado</option><option value="cancelado"' + (p.estado === 'cancelado' ? ' selected' : '') + '>Cancelado</option></select></td><td><button onclick="verDetallePedido(' + p.id + ')" style="padding:3px 8px;cursor:pointer;font-size:0.75em;">Ver</button></td></tr>';
                 });
                 html += '</tbody></table>';
-                document.getElementById('pedidosListaDiv').innerHTML = '<div style="margin-bottom:10px;padding:10px;background:rgba(102,126,234,0.1);border:1px solid rgba(102,126,234,0.3);border-radius:6px;font-size:0.8rem;"><strong>Fuente:</strong> Turso SQLite | Total: ' + data.pedidos.length + ' pedidos</div>' + html;
+                document.getElementById('pedidosListaDiv').innerHTML = '<div style="margin-bottom:10px;padding:10px;background:rgba(102,126,234,0.1);border:1px solid rgba(102,126,234,0.3);border-radius:6px;font-size:0.8rem;"><strong>Regla SCM:</strong> Al marcar "Completado", el stock de productos disminuye automaticamente.</div><div style="margin-bottom:10px;padding:10px;background:rgba(102,126,234,0.1);border:1px solid rgba(102,126,234,0.3);border-radius:6px;font-size:0.8rem;"><strong>Fuente:</strong> Turso SQLite | Total: ' + data.pedidos.length + ' pedidos</div>' + html;
             } catch(e) { document.getElementById('pedidosListaDiv').innerHTML = '<p style="color:#ff6b6b;">Error de conexion: ' + e.message + '</p>'; }
+        }
+
+        async function actualizarEstadoPedido(id, estado) {
+            try {
+                const res = await fetch('/api/pedidos/' + id, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ estado })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert(estado === 'completado' ? 'Inventario actualizado: stock disminuido' : 'Estado actualizado');
+                    cargarPedidosAdmin();
+                    cargarProductosAdmin();
+                } else alert('Error: ' + (data.error || 'No se actualizo'));
+            } catch(e) { alert('Error: ' + e.message); }
+        }
+
+        function verDetallePedido(id) {
+            fetch('/api/pedidos').then(r => r.json()).then(data => {
+                const p = data.pedidos.find(x => x.id === id);
+                if (p) alert('Pedido #' + p.id + '\nCliente: ' + (p.cliente_nombre || '-') + '\nEmail: ' + (p.cliente_email || '-') + '\nTelefono: ' + (p.cliente_telefono || '-') + '\nTotal: $' + parseFloat(p.total || 0).toFixed(2) + '\nEstado: ' + p.estado + '\nNotas: ' + (p.notas || '-'));
+            });
         }
 
         function cargarReservas() {
@@ -788,14 +811,29 @@
                     document.getElementById('comprasListaDiv').innerHTML = '<p style="opacity:0.7;text-align:center;">Sin pedidos de compra.</p>';
                     return;
                 }
-                let html = '<table class="admin-table"><thead><tr><th>ID</th><th>Proveedor</th><th>Estado</th><th>Total</th><th>Fecha</th></tr></thead><tbody>';
+                let html = '<table class="admin-table"><thead><tr><th>ID</th><th>Proveedor</th><th>Estado</th><th>Total</th><th>Fecha</th><th>Accion</th></tr></thead><tbody>';
                 data.pedidos_compra.forEach(p => {
                     const estadoColor = p.estado === 'recibido' ? '#90ee90' : p.estado === 'pendiente' ? '#ffd700' : '#ff6b6b';
-                    html += '<tr><td>' + p.id + '</td><td>' + (p.proveedor_nombre || '-') + '</td><td><span style="color:' + estadoColor + ';font-weight:bold;">' + p.estado + '</span></td><td>$' + parseFloat(p.total || 0).toFixed(2) + '</td><td>' + (p.fecha_creacion || '-') + '</td></tr>';
+                    html += '<tr><td>' + p.id + '</td><td>' + (p.proveedor_nombre || '-') + '</td><td><select onchange="actualizarEstadoPedidoCompra(' + p.id + ', this.value)" style="background:' + estadoColor + ';color:white;border:none;padding:4px 8px;border-radius:4px;font-size:0.8em;"><option value="pendiente"' + (p.estado === 'pendiente' ? ' selected' : '') + '>Pendiente</option><option value="recibido"' + (p.estado === 'recibido' ? ' selected' : '') + '>Recibido</option><option value="cancelado"' + (p.estado === 'cancelado' ? ' selected' : '') + '>Cancelado</option></select></td><td>$' + parseFloat(p.total || 0).toFixed(2) + '</td><td>' + (p.fecha_creacion || '-') + '</td><td><span style="font-size:0.75em;color:#aaa;">' + (p.creado_automatico == 1 ? 'Auto' : 'Manual') + '</span></td></tr>';
                 });
                 html += '</tbody></table>';
-                document.getElementById('comprasListaDiv').innerHTML = '<div style="margin-bottom:10px;padding:10px;background:rgba(102,126,234,0.1);border:1px solid rgba(102,126,234,0.3);border-radius:6px;font-size:0.8rem;"><strong>Fuente:</strong> Turso SQLite | Total: ' + data.total + ' | Pendientes: ' + (data.pendientes || 0) + '</div>' + html;
+                document.getElementById('comprasListaDiv').innerHTML = '<div style="margin-bottom:10px;padding:10px;background:rgba(102,126,234,0.1);border:1px solid rgba(102,126,234,0.3);border-radius:6px;font-size:0.8rem;"><strong>Regla SCM:</strong> Al marcar "Recibido", el stock de productos aumenta automaticamente.</div><div style="margin-bottom:10px;padding:10px;background:rgba(102,126,234,0.1);border:1px solid rgba(102,126,234,0.3);border-radius:6px;font-size:0.8rem;"><strong>Fuente:</strong> Turso SQLite | Total: ' + data.total + ' | Pendientes: ' + (data.pendientes || 0) + '</div>' + html;
             } catch(e) { document.getElementById('comprasListaDiv').innerHTML = '<p style="color:#ff6b6b;">Error de conexion: ' + e.message + '</p>'; }
+        }
+
+        async function actualizarEstadoPedidoCompra(id, estado) {
+            try {
+                const res = await fetch('/api/scm/pedidos-compra/' + id, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ estado })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert(estado === 'recibido' ? 'Inventario actualizado: stock aumentado' : 'Estado actualizado');
+                    cargarPedidosCompraAdmin();
+                } else alert('Error: ' + (data.error || 'No se actualizo'));
+            } catch(e) { alert('Error: ' + e.message); }
         }
 
         function cargarUsuariosAdmin() {
