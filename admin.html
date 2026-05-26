@@ -136,11 +136,12 @@
         <div id="vista-escuela-log" class="school-card" style="display:none;">
             <h2>⚙️ Logistica de Reabastecimiento Automatizado</h2>
             <p>Diferenciacion de ordenes de compra segun el comportamiento de la demanda real del mercado.</p>
-            <table>
-                <tr><th>ID Pedido</th><th>Proveedor</th><th>Insumo Requerido</th><th>Cantidad</th><th>Estrategia SCM</th><th>Criterio Tecnico</th></tr>
-                <tr><td>#SCM-101</td><td>Distribuidora de Insumos</td><td>Lote Papel Fine Art (24x36)</td><td>50 unidades</td><td><span class="badge push">PUSH</span></td><td>Basado en Pronostico (Pre-compra para sets estacionales navideños)</td></tr>
-                <tr><td>#SCM-102</td><td>Tech Photo Equipment</td><td>Kit Iluminacion Softbox</td><td>2 unidades</td><td><span class="badge pull">PULL</span></td><td>Basado en Demanda (Disparado por exceso de reservas de bodas activas)</td></tr>
-            </table>
+            <div style="margin-bottom: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
+                <span style="background:rgba(255,179,102,0.2);padding:4px 10px;border-radius:4px;font-size:0.8em;color:#e67e22;font-weight:bold;">📦 PUSH = Basado en Pronostico (reabastecimiento automatico)</span>
+                <span style="background:rgba(255,107,107,0.2);padding:4px 10px;border-radius:4px;font-size:0.8em;color:#c0392b;font-weight:bold;">🔄 PULL = Basado en Demanda Real del Mercado</span>
+            </div>
+            <button onclick="cargarLogisticaPushPull()" style="background:#5165ff;color:white;border:none;padding:10px 20px;border-radius:8px;cursor:pointer;font-weight:bold;margin-bottom:15px;">🔄 Cargar datos desde Turso</button>
+            <div id="logisticaTabla"></div>
         </div>
 
         <!-- PANEL ADMIN MORADO -->
@@ -358,6 +359,7 @@
             document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('active'));
             if (btn) btn.classList.add('active');
             if (vista === 'admin') actualizarDashboard();
+            if (vista === 'escuela-log') cargarLogisticaPushPull();
         }
 
         function mostrarTabAdmin(tabName, event) {
@@ -625,7 +627,32 @@
                         else if (col === 'salario') val = '$' + parseFloat(val || 0).toFixed(2);
                         else val = (val !== null && val !== undefined) ? val : '-';
                         html += '<td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + val + '</td>';
-                    });
+        });
+
+        async function cargarLogisticaPushPull() {
+            const div = document.getElementById('logisticaTabla');
+            div.innerHTML = '<p style="text-align:center;opacity:0.7;">Cargando datos desde Turso...</p>';
+            try {
+                const res = await fetch('/api/scm/pedidos-compra');
+                const data = await res.json();
+                if (!data.success || !data.pedidos_compra || data.pedidos_compra.length === 0) {
+                    div.innerHTML = '<p style="text-align:center;opacity:0.6;">No hay pedidos de compra registrados en Turso.</p>';
+                    return;
+                }
+                let html = '<table><thead><tr><th>ID</th><th>Proveedor</th><th>Total</th><th>Estado</th><th>Fecha</th><th>Auto</th></tr></thead><tbody>';
+                data.pedidos_compra.forEach(p => {
+                    const estadoColor = p.estado === 'recibido' ? 'green' : p.estado === 'pendiente' ? '#e67e22' : '#c0392b';
+                    const autoBadge = p.creado_automatico == 1
+                        ? '<span class="badge push">PUSH</span>'
+                        : '<span class="badge pull">PULL</span>';
+                    html += '<tr><td>' + (p.id || '-') + '</td><td>' + (p.proveedor_nombre || '-') + '</td><td>$' + parseFloat(p.total || 0).toFixed(2) + '</td><td><span style="color:' + estadoColor + ';font-weight:bold;">' + (p.estado || '-') + '</span></td><td>' + (p.fecha_creacion || '-') + '</td><td>' + autoBadge + '</td></tr>';
+                });
+                html += '</tbody></table>';
+                div.innerHTML = '<div style="margin-bottom:10px;padding:10px;background:rgba(81,101,255,0.1);border:1px solid rgba(81,101,255,0.3);border-radius:6px;font-size:0.85rem;"><strong>Fuente:</strong> Turso SQLite (Nube) | <strong>Registros:</strong> ' + data.pedidos_compra.length + ' | <strong>Pendientes:</strong> ' + (data.pendientes || 0) + '</div>' + html;
+            } catch (err) {
+                div.innerHTML = '<p style="color:#ff6b6b;">Error de conexion: ' + err.message + '</p>';
+            }
+        }
                     html += '</tr>';
                 });
                 html += '</tbody></table>';
