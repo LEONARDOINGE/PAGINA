@@ -1377,306 +1377,6 @@
     </section>
 
     <!-- ============ PANEL DE ADMINISTRADOR ============ -->
-    <section id="adminPanel" class="admin-panel">
-        <div class="container">
-            <h2>🔧 Panel de Administrador</h2>
-            <p>Gestiona productos, pedidos, usuarios y configuración del sistema</p>
-
-            <!-- Tabs de navegación del admin (ERP + SCM + CRM) -->
-            <div class="admin-tabs">
-                <button class="admin-tab-btn active" onclick="mostrarTabAdmin('dashboard')">📊 Dashboard</button>
-                <button class="admin-tab-btn" onclick="mostrarTabAdmin('productos')">📦 Productos</button>
-                <button class="admin-tab-btn" onclick="mostrarTabAdmin('pedidos')">🛒 Pedidos</button>
-                <button class="admin-tab-btn" onclick="mostrarTabAdmin('reservas')">📅 Reservas</button>
-                <button class="admin-tab-btn" onclick="mostrarTabAdmin('proveedores')">🚚 Proveedores</button>
-                <button class="admin-tab-btn" onclick="mostrarTabAdmin('empleados')">👔 Recursos Humanos</button>
-                <button class="admin-tab-btn" onclick="mostrarTabAdmin('compras')">📥 Pedidos Compra</button>
-                <button class="admin-tab-btn" onclick="mostrarTabAdmin('usuarios')">👥 Usuarios</button>
-                <button class="admin-tab-btn" onclick="mostrarTabAdmin('reportes')">📈 Reportes</button>
-                <button class="admin-tab-btn" onclick="mostrarTabAdmin('auditoria')" style="background: rgba(255,215,0,0.2); border: 1px solid rgba(255,215,0,0.4);">📋 Auditoría Escolar</button>
-            </div>
-
-            <!-- TAB: Dashboard -->
-            <div id="adminDashboard" class="admin-content active">
-                <div class="admin-section">
-                    <h3>📊 Resumen Integral (ERP + SCM + CRM)</h3>
-                    <div id="dashboardResumen" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px;">
-                        <div style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 5px; text-align: center;">
-                            <div style="font-size: 1.8em; font-weight: bold;" id="totalProductos">0</div>
-                            <div style="font-size: 0.8em; opacity: 0.8;">Productos</div>
-                        </div>
-                        <div style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 5px; text-align: center;">
-                            <div style="font-size: 1.8em; font-weight: bold;" id="totalPedidos">0</div>
-                            <div style="font-size: 0.8em; opacity: 0.8;">Pedidos (CRM)</div>
-                        </div>
-                        <div style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 5px; text-align: center;">
-                            <div style="font-size: 1.8em; font-weight: bold; color: #90ee90;" id="ingresos">$0</div>
-                            <div style="font-size: 0.8em; opacity: 0.8;">Ingresos</div>
-                        </div>
-                        <div style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 5px; text-align: center;">
-                            <div style="font-size: 1.8em; font-weight: bold; color: #ff6b6b;" id="productosAgotados">0</div>
-                            <div style="font-size: 0.8em; opacity: 0.8;">Agotados</div>
-                        </div>
-                        <div style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 5px; text-align: center;">
-                            <div style="font-size: 1.8em; font-weight: bold; color: #87ceeb;" id="totalProveedores">0</div>
-                            <div style="font-size: 0.8em; opacity: 0.8;">Proveedores (SCM)</div>
-                        </div>
-                        <div style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 5px; text-align: center;">
-                            <div style="font-size: 1.8em; font-weight: bold; color: #ffb366;" id="totalEmpleados">0</div>
-                            <div style="font-size: 0.8em; opacity: 0.8;">Empleados (RH)</div>
-                        </div>
-                        <div style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 5px; text-align: center;">
-                            <div style="font-size: 1.8em; font-weight: bold; color: #dda0dd;" id="pedidosCompraPendientes">0</div>
-                            <div style="font-size: 0.8em; opacity: 0.8;">Ped. Compra</div>
-                        </div>
-                        <div style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 5px; text-align: center;">
-                            <div style="font-size: 1.8em; font-weight: bold; color: #ffd700;" id="nominaTotal">$0</div>
-                            <div style="font-size: 0.8em; opacity: 0.8;">Nómina Mensual</div>
-                        </div>
-                    </div>
-                </div>
-                <button class="admin-form button" style="margin-top: 15px;" onclick="actualizarDashboard()">🔄 Actualizar Dashboard</button>
-            </div>
-
-            <!-- TAB: Productos -->
-            <div id="adminProductos" class="admin-content">
-                <div class="admin-section">
-                    <h3>➕ Crear / Editar Producto (con Estrategia SCM)</h3>
-                    <div class="admin-form">
-                        <div class="admin-form-row">
-                            <div class="admin-form-group">
-                                <label for="newProdNombre">Nombre del Producto</label>
-                                <input type="text" id="newProdNombre" placeholder="Ej: Sesión de Estudio">
-                            </div>
-                            <div class="admin-form-group">
-                                <label for="newProdCategoria">Categoría</label>
-                                <select id="newProdCategoria">
-                                    <option value="estudio">Sesión Estudio</option>
-                                    <option value="boda">Boda</option>
-                                    <option value="impresion">Impresión</option>
-                                    <option value="otro">Otro</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="admin-form-group">
-                            <label for="newProdDescripcion">Descripción</label>
-                            <textarea id="newProdDescripcion" placeholder="Describe el producto..."></textarea>
-                        </div>
-                        <div class="admin-form-row">
-                            <div class="admin-form-group">
-                                <label for="newProdPrecio">Precio ($)</label>
-                                <input type="number" id="newProdPrecio" placeholder="50" step="0.01">
-                            </div>
-                            <div class="admin-form-group">
-                                <label for="newProdStock">Stock Inicial</label>
-                                <input type="number" id="newProdStock" placeholder="100">
-                            </div>
-                        </div>
-                        <div class="admin-form-row">
-                            <div class="admin-form-group">
-                                <label for="newProdEstrategia">Estrategia de Reabastecimiento (SCM)</label>
-                                <select id="newProdEstrategia">
-                                    <option value="pull">🔄 PULL - Bajo demanda del cliente</option>
-                                    <option value="push">📦 PUSH - Basado en pronóstico / Stock mínimo</option>
-                                </select>
-                            </div>
-                            <div class="admin-form-group">
-                                <label for="newProdStockMinimo">Stock Mínimo (para activar PUSH)</label>
-                                <input type="number" id="newProdStockMinimo" placeholder="20" value="10">
-                            </div>
-                        </div>
-                        <div class="admin-form-group">
-                            <label for="newProdProveedor">Proveedor Asociado (SCM)</label>
-                            <select id="newProdProveedor">
-                                <option value="">-- Sin proveedor --</option>
-                            </select>
-                        </div>
-                        <button onclick="crearNuevoProducto()" class="btn-success" style="width: 100%;">✅ Crear Producto</button>
-                    </div>
-                </div>
-
-                <div class="admin-section">
-                    <h3>📋 Lista de Productos</h3>
-                    <div style="margin-bottom: 10px; display: flex; gap: 10px; flex-wrap: wrap;">
-                        <span style="background: rgba(135,206,235,0.2); padding: 4px 8px; border-radius: 4px; font-size: 0.8em;">🔄 PULL = Bajo demanda</span>
-                        <span style="background: rgba(255,179,102,0.2); padding: 4px 8px; border-radius: 4px; font-size: 0.8em;">📦 PUSH = Reabastecimiento automático</span>
-                    </div>
-                    <div id="productosListaDiv" style="overflow-x: auto;"></div>
-                </div>
-            </div>
-
-            <!-- TAB: Pedidos -->
-            <div id="adminPedidos" class="admin-content">
-                <div class="admin-section">
-                    <h3>📋 Gestión de Pedidos (CRM)</h3>
-                    <div id="pedidosListaDiv" style="overflow-x: auto;"></div>
-                </div>
-            </div>
-
-            <!-- TAB: Reservas -->
-            <div id="adminReservas" class="admin-content">
-                <div class="admin-section">
-                    <h3>📅 Reservas de Clientes</h3>
-                    <button class="admin-form button" style="margin-bottom: 15px;" onclick="cargarReservas()">🔄 Actualizar</button>
-                    <div id="reservasListaDiv" style="overflow-x: auto;"></div>
-                </div>
-            </div>
-
-            <!-- TAB: Proveedores (SCM) -->
-            <div id="adminProveedores" class="admin-content">
-                <div class="admin-section">
-                    <h3>🚚 Gestión de Proveedores (SCM)</h3>
-                    <div class="admin-form">
-                        <div class="admin-form-row">
-                            <div class="admin-form-group">
-                                <label for="newProvNombre">Nombre / Razón Social</label>
-                                <input type="text" id="newProvNombre" placeholder="Ej: Distribuidora ABC">
-                            </div>
-                            <div class="admin-form-group">
-                                <label for="newProvContacto">Persona de Contacto</label>
-                                <input type="text" id="newProvContacto" placeholder="Nombre del contacto">
-                            </div>
-                        </div>
-                        <div class="admin-form-row">
-                            <div class="admin-form-group">
-                                <label for="newProvTelefono">Teléfono</label>
-                                <input type="text" id="newProvTelefono" placeholder="8991234567">
-                            </div>
-                            <div class="admin-form-group">
-                                <label for="newProvEmail">Email</label>
-                                <input type="email" id="newProvEmail" placeholder="proveedor@email.com">
-                            </div>
-                        </div>
-                        <div class="admin-form-row">
-                            <div class="admin-form-group">
-                                <label for="newProvTipoInsumo">Tipo de Insumo</label>
-                                <select id="newProvTipoInsumo">
-                                    <option value="papel_fotografico">Papel Fotográfico</option>
-                                    <option value="equipo">Equipo Fotográfico</option>
-                                    <option value="tintas">Tintas y Cartuchos</option>
-                                    <option value="marcos">Marcos y Acabados</option>
-                                    <option value="iluminacion">Iluminación y Estudio</option>
-                                    <option value="otro">Otro</option>
-                                </select>
-                            </div>
-                            <div class="admin-form-group">
-                                <label for="newProvInsumoDetalle">Detalle de Insumos</label>
-                                <input type="text" id="newProvInsumoDetalle" placeholder="Ej: Papel Glossy 4x6, 8x10...">
-                            </div>
-                        </div>
-                        <button onclick="crearNuevoProveedor()" class="btn-success" style="width: 100%;">✅ Registrar Proveedor</button>
-                    </div>
-                </div>
-                <div class="admin-section">
-                    <h3>📋 Catálogo de Proveedores</h3>
-                    <div id="proveedoresListaDiv" style="overflow-x: auto;"></div>
-                </div>
-            </div>
-
-            <!-- TAB: Recursos Humanos (ERP) -->
-            <div id="adminEmpleados" class="admin-content">
-                <div class="admin-section">
-                    <h3>👔 Gestión de Recursos Humanos (ERP)</h3>
-                    <div class="admin-form">
-                        <div class="admin-form-row">
-                            <div class="admin-form-group">
-                                <label for="newEmpNombre">Nombre Completo</label>
-                                <input type="text" id="newEmpNombre" placeholder="Nombre del empleado">
-                            </div>
-                            <div class="admin-form-group">
-                                <label for="newEmpPuesto">Puesto</label>
-                                <input type="text" id="newEmpPuesto" placeholder="Ej: Fotógrafo">
-                            </div>
-                        </div>
-                        <div class="admin-form-row">
-                            <div class="admin-form-group">
-                                <label for="newEmpArea">Área / Departamento</label>
-                                <select id="newEmpArea">
-                                    <option value="Producción">Producción</option>
-                                    <option value="Post-producción">Post-producción</option>
-                                    <option value="Administración">Administración</option>
-                                    <option value="Ventas">Ventas</option>
-                                    <option value="Marketing">Marketing</option>
-                                    <option value="Otro">Otro</option>
-                                </select>
-                            </div>
-                            <div class="admin-form-group">
-                                <label for="newEmpFechaIngreso">Fecha de Ingreso</label>
-                                <input type="date" id="newEmpFechaIngreso">
-                            </div>
-                        </div>
-                        <div class="admin-form-row">
-                            <div class="admin-form-group">
-                                <label for="newEmpTelefono">Teléfono</label>
-                                <input type="text" id="newEmpTelefono" placeholder="8991234567">
-                            </div>
-                            <div class="admin-form-group">
-                                <label for="newEmpEmail">Email</label>
-                                <input type="email" id="newEmpEmail" placeholder="email@fototec.com">
-                            </div>
-                        </div>
-                        <div class="admin-form-group">
-                            <label for="newEmpSalario">Salario Mensual ($)</label>
-                            <input type="number" id="newEmpSalario" placeholder="10000" step="0.01">
-                        </div>
-                        <button onclick="crearNuevoEmpleado()" class="btn-success" style="width: 100%;">✅ Registrar Empleado</button>
-                    </div>
-                </div>
-                <div class="admin-section">
-                    <h3>📋 Nómina de Personal</h3>
-                    <div id="empleadosListaDiv" style="overflow-x: auto;"></div>
-                </div>
-            </div>
-
-            <!-- TAB: Pedidos de Compra (SCM) -->
-            <div id="adminCompras" class="admin-content">
-                <div class="admin-section">
-                    <h3>📥 Pedidos de Compra a Proveedores (SCM)</h3>
-                    <div class="admin-alert alert-info" style="margin-bottom: 15px;">
-                        <strong>📌 Estrategia PUSH:</strong> Cuando el stock de un producto baja del mínimo, se genera automáticamente un borrador de pedido de compra dirigido al proveedor asociado.
-                    </div>
-                    <button onclick="verificarStockYPush()" class="btn-success" style="width: 100%; margin-bottom: 15px;">🔍 Verificar Stock y Generar Pedidos PUSH</button>
-                    <div id="comprasMensajeDiv" style="margin-bottom: 15px;"></div>
-                    <div id="comprasListaDiv" style="overflow-x: auto;"></div>
-                </div>
-            </div>
-
-            <!-- TAB: Usuarios -->
-            <div id="adminUsuarios" class="admin-content">
-                <div class="admin-section">
-                    <h3>👥 Usuarios Registrados</h3>
-                    <div id="usuariosListaDiv" style="overflow-x: auto;"></div>
-                </div>
-            </div>
-
-            <!-- TAB: Reportes -->
-            <div id="adminReportes" class="admin-content">
-                <div class="admin-section">
-                    <h3>📊 Reportes Consolidados (ERP + SCM + CRM)</h3>
-                    <button onclick="generarReporte()" class="btn-success" style="width: 100%; margin-bottom: 15px;">📄 Generar Reporte Completo</button>
-                    <div id="reporteDiv"></div>
-                </div>
-            </div>
-
-            <!-- TAB: Auditoría Escolar (SCM + ERP) -->
-            <div id="adminAuditoria" class="admin-content">
-                <div class="admin-section">
-                    <h3>📋 Auditoría Escolar - Módulos SCM y ERP</h3>
-                    <p style="opacity:0.8; font-size:0.85rem; margin-bottom: 15px;">Consulta en tiempo real las tablas de Proveedores, Recursos Humanos y Pedidos de Compra desde Turso.</p>
-                    <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px;">
-                        <button onclick="activarAuditoria('proveedores')" class="btn-success" style="flex:1; min-width: 180px;">🚚 Proveedores (SCM)</button>
-                        <button onclick="activarAuditoria('empleados')" class="btn-success" style="flex:1; min-width: 180px;">👔 Recursos Humanos (ERP)</button>
-                        <button onclick="activarAuditoria('pedidos-compra')" class="btn-success" style="flex:1; min-width: 180px;">📥 Pedidos de Compra (SCM)</button>
-                    </div>
-                    <div id="auditoriaResumen" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 15px;"></div>
-                    <div id="auditoriaTabla" style="overflow-x: auto;"></div>
-                </div>
-            </div>
-
-            <button onclick="cerrarPanelAdmin()" style="width: 100%; margin-top: 20px; background: rgba(255,100,100,0.3); border: 1px solid rgba(255,100,100,0.5);">❌ Cerrar Panel</button>
-        </div>
-    </section>
-
     <!-- SOBRE NOSOTROS -->
     <section id="nosotros" class="nosotros">
         <div class="container">
@@ -2190,6 +1890,7 @@
             if (result.success) {
                 closeAuthModal();
                 showUserProfile();
+                verificarAccesoBotonAdmin();
             } else {
                 errorDiv.textContent = result.message;
             }
@@ -2210,6 +1911,7 @@
             if (result.success) {
                 closeAuthModal();
                 showUserProfile();
+                verificarAccesoBotonAdmin();
             } else {
                 errorDiv.textContent = result.message;
             }
@@ -2225,6 +1927,7 @@
             if (result.success) {
                 closeAuthModal();
                 showUserProfile();
+                verificarAccesoBotonAdmin();
             } else {
                 errorDiv.textContent = result.message;
             }
@@ -2242,7 +1945,7 @@
                         <div style="width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.25);display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;color:white;">${inicial}</div>
                         <span style="color:white;font-size:0.88rem;font-weight:500;">${u.name}</span>
                     </button>
-                    ${isAdmin ? '<button onclick="toggleAdminPanel()" style="background:rgba(255,255,255,0.15);color:white;border:none;padding:6px 12px;border-radius:16px;cursor:pointer;font-size:0.8em;font-weight:500;">Panel Admin</button>' : ''}
+                    <button id="btn-nav-admin" onclick="window.open('admin.html', '_blank')" style="display: none; background:rgba(255,255,255,0.15);color:white;border:none;padding:6px 12px;border-radius:16px;cursor:pointer;font-size:0.8em;font-weight:500;">Panel Admin</button>
                     <button onclick="logout()" style="background:none;border:none;color:rgba(255,255,255,0.7);cursor:pointer;font-size:0.85rem;padding:6px 8px;transition:color 0.2s;" onmouseover="this.style.color='white'" onmouseout="this.style.color='rgba(255,255,255,0.7)'">Salir</button>
                 </div>`;
         }
@@ -2252,6 +1955,7 @@
             const userInfo = document.getElementById('userInfo');
             if (userInfo) userInfo.innerHTML = '<button class="login-btn-navbar" onclick="openLoginModal()">🔐 Iniciar Sesión</button>';
             closeProfileModal();
+            verificarAccesoBotonAdmin();
         }
 
         function openProfileModal() {
@@ -2383,8 +2087,19 @@
         }
 
         function toggleAdminPanel() {
-            const panel = document.getElementById('adminPanel');
-            if (panel) panel.classList.toggle('active');
+            window.open('admin.html', '_blank');
+        }
+
+        function verificarAccesoBotonAdmin() {
+            const usuarioLogueado = authSystem.currentUser || JSON.parse(localStorage.getItem("fotovecCurrentUser"));
+            const botonAdminNav = document.getElementById('btn-nav-admin');
+            if (botonAdminNav) {
+                if (usuarioLogueado && (usuarioLogueado.userType === 'administrador' || usuarioLogueado.username === 'admin')) {
+                    botonAdminNav.style.display = 'inline-block';
+                } else {
+                    botonAdminNav.style.display = 'none';
+                }
+            }
         }
 
         // Verificar si hay usuario autenticado
@@ -2393,6 +2108,7 @@
                 await authSystem.restoreSession();
                 if (authSystem.currentUser) showUserProfile();
             }
+            verificarAccesoBotonAdmin();
         });
 
         // ============ FUNCIONALIDAD DEL SITIO ============
