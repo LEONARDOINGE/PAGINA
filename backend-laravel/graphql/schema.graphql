@@ -1,0 +1,894 @@
+scalar DateTime
+scalar Date
+
+enum UserRole {
+  super_admin
+  gerente_ventas
+  coordinador_scm
+  coordinador_rrhh
+  empleado
+  cliente
+}
+
+enum LeadStage {
+  nuevo
+  contactado
+  calificado
+  propuesta
+  negociacion
+  ganado
+  perdido
+}
+
+enum QuoteStatus {
+  borrador
+  enviado
+  aprobado
+  rechazado
+  vencido
+}
+
+enum InvoiceStatus {
+  pendiente
+  pagado
+  vencido
+  cancelado
+}
+
+enum POStatus {
+  borrador
+  enviado
+  parcial
+  recibido
+  cancelado
+}
+
+enum AttendanceStatus {
+  presente
+  falta
+  retardo
+  permiso
+  vacaciones
+  incapacidad
+}
+
+enum LeaveStatus {
+  solicitado
+  aprobado
+  rechazado
+  cancelado
+}
+
+enum TicketStatus {
+  abierto
+  en_progreso
+  esperando
+  resuelto
+  cerrado
+}
+
+enum TicketPriority {
+  baja
+  media
+  alta
+  urgente
+}
+
+enum StockMovementType {
+  entrada
+  salida
+  ajuste
+  transferencia
+  devolucion
+}
+
+type User {
+  id: ID!
+  name: String!
+  email: String!
+  active: Boolean!
+  roles: [String!]!
+  permissions: [String!]!
+  employee: Employee
+  created_at: DateTime
+}
+
+type Role {
+  id: ID!
+  name: String!
+  guard_name: String!
+  permissions: [String!]!
+}
+
+type Client {
+  id: ID!
+  name: String!
+  email: String
+  phone: String
+  company: String
+  rfc: String
+  address: String
+  city: String
+  state: String
+  zip: String
+  segment: String
+  tags: [String!]
+  leadSource: String
+  lifetimeValue: Float
+  healthScore: Int
+  notes: String
+  active: Boolean!
+  leads: [Lead!]!
+  quotes: [Quote!]!
+  invoices: [Invoice!]!
+  payments: [Payment!]!
+  notes2: [Note!]!
+  activities: [Activity!]!
+  appointments: [Appointment!]!
+  tickets: [Ticket!]!
+  created_at: DateTime
+}
+
+type Lead {
+  id: ID!
+  client: Client!
+  assignedTo: User
+  stage: LeadStage!
+  score: Int
+  source: String
+  interestLevel: String
+  budget: Float
+  timeline: String
+  notes: String
+  convertedAt: DateTime
+  activities: [Activity!]!
+  created_at: DateTime
+}
+
+type Quote {
+  id: ID!
+  client: Client!
+  user: User
+  folio: String!
+  status: QuoteStatus!
+  subtotal: Float!
+  iva: Float!
+  total: Float!
+  discount: Float
+  validUntil: Date
+  notes: String
+  version: Int!
+  items: [QuoteItem!]!
+  created_at: DateTime
+}
+
+type QuoteItem {
+  id: ID!
+  product: Product
+  description: String!
+  quantity: Int!
+  price: Float!
+  discount: Float
+  subtotal: Float!
+}
+
+type Invoice {
+  id: ID!
+  client: Client!
+  user: User
+  folio: String!
+  rfc: String
+  nombre: String
+  direccion: String
+  usoCfdi: String
+  metodoPago: String
+  numeroCuenta: String
+  status: InvoiceStatus!
+  subtotal: Float!
+  iva: Float!
+  total: Float!
+  saldo: Float!
+  fechaEmision: Date
+  fechaPago: Date
+  items: [InvoiceItem!]!
+  payments: [Payment!]!
+  created_at: DateTime
+}
+
+type InvoiceItem {
+  id: ID!
+  product: Product
+  description: String!
+  quantity: Int!
+  price: Float!
+  discount: Float
+  subtotal: Float!
+}
+
+type Payment {
+  id: ID!
+  invoice: Invoice
+  client: Client
+  amount: Float!
+  method: String!
+  reference: String
+  paidAt: DateTime
+  notes: String
+}
+
+type Note {
+  id: ID!
+  entityType: String!
+  entityId: ID!
+  user: User
+  content: String!
+  pinned: Boolean!
+  private: Boolean!
+  created_at: DateTime
+}
+
+type Activity {
+  id: ID!
+  entityType: String
+  entityId: ID
+  user: User
+  assignedTo: User
+  type: String!
+  description: String!
+  metadata: String
+  dueDate: Date
+  completedAt: DateTime
+  created_at: DateTime
+}
+
+type Appointment {
+  id: ID!
+  client: Client
+  user: User
+  employee: Employee
+  title: String!
+  type: String!
+  date: Date!
+  time: String!
+  duration: Int
+  location: String
+  status: String!
+  notes: String
+  reminderSent: Boolean!
+  created_at: DateTime
+}
+
+type Ticket {
+  id: ID!
+  client: Client
+  assignedTo: User
+  user: User
+  subject: String!
+  description: String
+  priority: TicketPriority!
+  status: TicketStatus!
+  category: String!
+  slaDeadline: DateTime
+  resolvedAt: DateTime
+  created_at: DateTime
+}
+
+type Campaign {
+  id: ID!
+  user: User
+  name: String!
+  type: String!
+  channel: String!
+  status: String!
+  startedAt: Date
+  endedAt: Date
+  budget: Float
+  target: Int
+  clients: [Client!]!
+  created_at: DateTime
+}
+
+type Supplier {
+  id: ID!
+  name: String!
+  contactName: String
+  email: String
+  phone: String
+  address: String
+  category: String
+  rating: Float
+  paymentTerms: String
+  leadTimeDays: Int
+  active: Boolean!
+  products: [Product!]!
+  purchaseOrders: [PurchaseOrder!]!
+  created_at: DateTime
+}
+
+type Product {
+  id: ID!
+  category: Category
+  preferredSupplier: Supplier
+  sku: String!
+  name: String!
+  description: String
+  price: Float!
+  cost: Float!
+  stock: Int!
+  stockMin: Int!
+  unit: String!
+  barcode: String
+  serialNumber: String
+  expiryDate: Date
+  location: String
+  type: String!
+  strategy: String!
+  imageUrl: String
+  active: Boolean!
+  isLowStock: Boolean!
+  margin: Float!
+  created_at: DateTime
+}
+
+type Category {
+  id: ID!
+  name: String!
+  description: String
+  icon: String
+  parent: Category
+  children: [Category!]!
+  products: [Product!]!
+}
+
+type Warehouse {
+  id: ID!
+  name: String!
+  address: String
+  phone: String
+  manager: String
+  active: Boolean!
+  inventory: [Inventory!]!
+}
+
+type Inventory {
+  id: ID!
+  product: Product!
+  warehouse: Warehouse!
+  quantity: Int!
+  locationBin: String
+}
+
+type StockMovement {
+  id: ID!
+  product: Product!
+  warehouse: Warehouse
+  type: StockMovementType!
+  quantity: Int!
+  reason: String
+  referenceType: String
+  referenceId: ID
+  user: User
+  created_at: DateTime
+}
+
+type PurchaseOrder {
+  id: ID!
+  supplier: Supplier!
+  user: User
+  folio: String!
+  status: POStatus!
+  subtotal: Float!
+  iva: Float!
+  total: Float!
+  notes: String
+  expectedDate: Date
+  receivedAt: DateTime
+  items: [PurchaseOrderItem!]!
+  created_at: DateTime
+}
+
+type PurchaseOrderItem {
+  id: ID!
+  product: Product
+  description: String!
+  quantity: Int!
+  receivedQuantity: Int!
+  price: Float!
+  subtotal: Float!
+}
+
+type Employee {
+  id: ID!
+  department: Department
+  position: Position
+  user: User
+  employeeNumber: String!
+  name: String!
+  curp: String
+  rfc: String
+  nss: String
+  phone: String
+  email: String
+  address: String
+  birthDate: Date
+  hireDate: Date!
+  terminationDate: Date
+  salary: Float
+  commissionRate: Float
+  active: Boolean!
+  attendance: [Attendance!]!
+  leaves: [Leave!]!
+  attendanceRate: Float
+  created_at: DateTime
+}
+
+type Department {
+  id: ID!
+  name: String!
+  code: String!
+  manager: Employee
+  description: String
+  color: String
+  costCenter: String
+  budget: Float
+  active: Boolean!
+  employees: [Employee!]!
+  employeeCount: Int!
+  salaryBudget: Float!
+}
+
+type Position {
+  id: ID!
+  department: Department
+  name: String!
+  level: String!
+  minSalary: Float
+  maxSalary: Float
+  description: String
+}
+
+type Attendance {
+  id: ID!
+  employee: Employee!
+  date: Date!
+  clockIn: String
+  clockOut: String
+  hoursWorked: Float
+  status: AttendanceStatus!
+  notes: String
+  correctionRequested: Boolean!
+  approved: Boolean!
+}
+
+type Leave {
+  id: ID!
+  employee: Employee!
+  approver: User
+  type: String!
+  startDate: Date!
+  endDate: Date!
+  days: Int!
+  reason: String
+  status: LeaveStatus!
+  documentUrl: String
+  created_at: DateTime
+}
+
+type Training {
+  id: ID!
+  name: String!
+  description: String
+  instructor: String
+  durationHours: Int!
+  type: String!
+  active: Boolean!
+  enrollments: [TrainingEnrollment!]!
+}
+
+type TrainingEnrollment {
+  id: ID!
+  employee: Employee!
+  training: Training!
+  enrolledAt: Date!
+  completedAt: Date
+  score: Float
+  certificateUrl: String
+  status: String!
+}
+
+type Review {
+  id: ID!
+  employee: Employee!
+  reviewer: User
+  period: String!
+  ratingOverall: Float
+  ratingPerformance: Float
+  ratingTeamwork: Float
+  ratingLeadership: Float
+  goalsAchieved: String
+  goalsNext: String
+  strengths: String
+  areasImprovement: String
+  comments: String
+  status: String!
+}
+
+type Notification {
+  id: ID!
+  type: String!
+  title: String!
+  message: String!
+  link: String
+  readAt: DateTime
+  priority: String!
+  created_at: DateTime
+}
+
+type AuditLog {
+  id: ID!
+  user: User
+  action: String!
+  entityType: String!
+  entityId: ID
+  oldValues: String
+  newValues: String
+  ipAddress: String
+  created_at: DateTime
+}
+
+type Survey {
+  id: ID!
+  client: Client
+  appointment: Appointment
+  type: String!
+  score: Int
+  responses: String
+  feedback: String
+  created_at: DateTime
+}
+
+type AuthPayload {
+  token: String!
+  user: User!
+}
+
+type ERPDashboard {
+  clientsTotal: Int!
+  clientsActive: Int!
+  clientsNewThisMonth: Int!
+  leadsTotal: Int!
+  leadsByStage: [StageCount!]!
+  quotesTotal: Int!
+  quotesPending: Int!
+  invoicesTotal: Float!
+  invoicesPending: Float!
+  invoicesPaidThisMonth: Float!
+  ordersTotal: Int!
+  ordersPending: Int!
+  ordersCompleted: Int!
+  productsTotal: Int!
+  productsLowStock: Int!
+  inventoryValue: Float!
+  employeesTotal: Int!
+  employeesActive: Int!
+  attendanceToday: AttendanceSummary!
+  revenueThisMonth: Float!
+  revenueLastMonth: Float!
+  topProducts: [ProductSales!]!
+  topClients: [ClientRevenue!]!
+  monthlyRevenue: [MonthlyRevenue!]!
+  pipelineValue: PipelineSummary!
+}
+
+type StageCount {
+  stage: String!
+  count: Int!
+}
+
+type ProductSales {
+  product: Product!
+  totalSold: Int!
+  revenue: Float!
+}
+
+type ClientRevenue {
+  client: Client!
+  totalRevenue: Float!
+}
+
+type MonthlyRevenue {
+  month: String!
+  revenue: Float!
+  orders: Int!
+}
+
+type PipelineSummary {
+  interesadas: Int!
+  cotizadas: Int!
+  apartadas: Int!
+  entregadas: Int!
+  totalValue: Float!
+}
+
+type AttendanceSummary {
+  presentes: Int!
+  faltas: Int!
+  permisos: Int!
+  total: Int!
+}
+
+type PaginatedClients {
+  data: [Client!]!
+  total: Int!
+  page: Int!
+  perPage: Int!
+}
+
+type PaginatedEmployees {
+  data: [Employee!]!
+  total: Int!
+  page: Int!
+  perPage: Int!
+}
+
+input ClientInput {
+  name: String!
+  email: String
+  phone: String
+  company: String
+  rfc: String
+  address: String
+  city: String
+  state: String
+  zip: String
+  segment: String
+  tags: [String!]
+  leadSource: String
+}
+
+input QuoteItemInput {
+  productId: ID
+  description: String!
+  quantity: Int!
+  price: Float!
+  discount: Float
+}
+
+input QuoteInput {
+  clientId: ID!
+  leadId: ID
+  status: String
+  validUntil: Date
+  notes: String
+  items: [QuoteItemInput!]
+}
+
+input InvoiceInput {
+  clientId: ID!
+  rfc: String
+  nombre: String
+  direccion: String
+  usoCfdi: String
+  metodoPago: String
+  numeroCuenta: String
+  items: [QuoteItemInput!]
+}
+
+input ProductInput {
+  categoryId: ID
+  sku: String!
+  name: String!
+  description: String
+  price: Float!
+  cost: Float
+  stock: Int
+  stockMin: Int
+  unit: String
+  type: String
+  strategy: String
+  barcode: String
+  expiryDate: Date
+}
+
+input SupplierInput {
+  name: String!
+  contactName: String
+  email: String
+  phone: String
+  address: String
+  category: String
+  paymentTerms: String
+  leadTimeDays: Int
+}
+
+input POItemInput {
+  productId: ID
+  description: String!
+  quantity: Int!
+  price: Float!
+}
+
+input POInput {
+  supplierId: ID!
+  notes: String
+  expectedDate: Date
+  items: [POItemInput!]
+}
+
+input EmployeeInput {
+  departmentId: ID
+  positionId: ID
+  name: String!
+  email: String
+  phone: String
+  address: String
+  hireDate: Date
+  salary: Float
+  commissionRate: Float
+}
+
+input AttendanceInput {
+  date: Date!
+  status: String!
+  clockIn: String
+  clockOut: String
+  notes: String
+}
+
+input LeaveInput {
+  employeeId: ID!
+  type: String!
+  startDate: Date!
+  endDate: Date!
+  reason: String
+}
+
+input UserInput {
+  name: String!
+  email: String!
+  password: String!
+  role: UserRole
+}
+
+input NotificationInput {
+  userId: ID!
+  title: String!
+  message: String!
+  type: String
+  priority: String
+  link: String
+}
+
+type Mutation {
+  login(email: String!, password: String!): AuthPayload!
+
+  createClient(input: ClientInput!): Client!
+  updateClient(id: ID!, input: ClientInput!): Client!
+  deleteClient(id: ID!): Client!
+  convertLead(id: ID!, assignedTo: ID): Client!
+
+  createQuote(input: QuoteInput!): Quote!
+  updateQuote(id: ID!, input: QuoteInput!): Quote!
+  deleteQuote(id: ID!): Quote!
+  convertQuoteToInvoice(quoteId: ID!): Invoice!
+
+  createInvoice(input: InvoiceInput!): Invoice!
+  updateInvoice(id: ID!, status: InvoiceStatus): Invoice!
+  registerPayment(invoiceId: ID!, amount: Float!, method: String): Payment!
+
+  createSupplier(input: SupplierInput!): Supplier!
+  updateSupplier(id: ID!, input: SupplierInput!): Supplier!
+  deleteSupplier(id: ID!): Supplier!
+
+  createProduct(input: ProductInput!): Product!
+  updateProduct(id: ID!, input: ProductInput!): Product!
+  deleteProduct(id: ID!): Product!
+  adjustStock(productId: ID!, quantity: Int!, type: StockMovementType!, reason: String): StockMovement!
+
+  createPurchaseOrder(input: POInput!): PurchaseOrder!
+  updatePurchaseOrderStatus(id: ID!, status: POStatus!): PurchaseOrder!
+  receivePurchaseOrder(id: ID!): PurchaseOrder!
+
+  createDepartment(name: String!, code: String!, color: String): Department!
+  updateDepartment(id: ID!, name: String, color: String): Department!
+  createPosition(departmentId: ID!, name: String!, level: String, minSalary: Float, maxSalary: Float): Position!
+
+  createEmployee(input: EmployeeInput!): Employee!
+  updateEmployee(id: ID!, input: EmployeeInput!): Employee!
+  deactivateEmployee(id: ID!): Employee!
+
+  clockIn(employeeId: ID!): Attendance!
+  clockOut(employeeId: ID!): Attendance!
+  recordAttendance(employeeId: ID!, input: AttendanceInput!): Attendance!
+  requestLeave(input: LeaveInput!): Leave!
+  approveLeave(id: ID!): Leave!
+  rejectLeave(id: ID!): Leave!
+
+  createTraining(name: String!, description: String, instructor: String, durationHours: Int, type: String): Training!
+  enrollTraining(employeeId: ID!, trainingId: ID!): TrainingEnrollment!
+  completeTraining(enrollmentId: ID!, score: Float): TrainingEnrollment!
+
+  createTicket(clientId: ID, subject: String!, description: String, priority: TicketPriority, category: String): Ticket!
+  updateTicket(id: ID!, status: TicketStatus, assignedTo: ID, priority: TicketPriority): Ticket!
+
+  addNote(entityType: String!, entityId: ID!, content: String!, pinned: Boolean, private: Boolean): Note!
+  logActivity(entityType: String, entityId: ID, type: String!, description: String!, dueDate: Date, assignedTo: ID): Activity!
+  completeActivity(id: ID!): Activity!
+  scheduleAppointment(clientId: ID, title: String!, type: String, date: Date!, time: String!, duration: Int, location: String): Appointment!
+  updateAppointment(id: ID!, status: String): Appointment!
+
+  createCampaign(name: String!, type: String!, channel: String, budget: Float): Campaign!
+  updateCampaign(id: ID!, status: String): Campaign!
+  sendCampaign(campaignId: ID!): Campaign!
+
+  createSurvey(clientId: ID!, appointmentId: ID, type: String, score: Int, feedback: String): Survey!
+
+  createUser(input: UserInput!): User!
+  updateUser(id: ID!, name: String, email: String, password: String, role: UserRole): User!
+  deleteUser(id: ID!): User!
+  assignRole(userId: ID!, role: UserRole!): User!
+
+  createNotification(input: NotificationInput!): Notification!
+  markNotificationRead(id: ID!): Notification!
+  markAllNotificationsRead: Boolean!
+
+  exportReport(format: String!, type: String!): String!
+  syncToTurso: Boolean!
+  pullFromTurso: Boolean!
+}
+
+type Query {
+  me: User
+  users: [User!]!
+  user(id: ID!): User
+  roles: [Role!]!
+
+  erpDashboard: ERPDashboard!
+
+  clients(page: Int, perPage: Int, search: String, segment: String): PaginatedClients!
+  client(id: ID!): Client
+  leads(search: String, stage: LeadStage): [Lead!]!
+  lead(id: ID!): Lead
+  quotes(clientId: ID): [Quote!]!
+  quote(id: ID!): Quote
+  invoices(clientId: ID, status: InvoiceStatus): [Invoice!]!
+  invoice(id: ID!): Invoice
+
+  suppliers(search: String): [Supplier!]!
+  supplier(id: ID!): Supplier
+  products(search: String, categoryId: ID, lowStock: Boolean): [Product!]!
+  product(id: ID!): Product
+  categories: [Category!]!
+  warehouses: [Warehouse!]!
+  inventory(warehouseId: ID): [Inventory!]!
+  stockMovements(productId: ID, limit: Int): [StockMovement!]!
+  purchaseOrders(supplierId: ID, status: POStatus): [PurchaseOrder!]!
+  purchaseOrder(id: ID!): PurchaseOrder
+
+  employees(page: Int, perPage: Int, search: String, departmentId: ID, active: Boolean): PaginatedEmployees!
+  employee(id: ID!): Employee
+  departments: [Department!]!
+  positions(departmentId: ID): [Position!]!
+  attendance(date: Date, employeeId: ID, month: Int, year: Int): [Attendance!]!
+  leaves(status: LeaveStatus, employeeId: ID): [Leave!]!
+  trainings: [Training!]!
+  reviews(employeeId: ID): [Review!]!
+  orgChart: [Department!]!
+
+  appointments(date: Date, from: Date, to: Date): [Appointment!]!
+  appointment(id: ID!): Appointment
+  tickets(status: TicketStatus, priority: TicketPriority): [Ticket!]!
+  ticket(id: ID!): Ticket
+  campaigns(status: String): [Campaign!]!
+  surveys(type: String): [Survey!]!
+
+  activities(entityType: String, entityId: ID, pending: Boolean): [Activity!]!
+  notes(entityType: String, entityId: ID): [Note!]!
+
+  notifications(unreadOnly: Boolean): [Notification!]!
+  notificationCount: Int!
+  auditLogs(entityType: String, limit: Int): [AuditLog!]!
+  globalSearch(query: String!): [SearchResult!]!
+}
+
+union SearchResult = Client | Lead | Quote | Invoice | Product | Supplier | Employee | Ticket | Appointment

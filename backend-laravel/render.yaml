@@ -1,11 +1,22 @@
-# Deploy Backend (Laravel) en Render
+database:
+  name: fototec-db
+  databaseName: fototec_app
+  plan: free
+  postgresMajorVersion: "17"
+
 services:
   - type: web
     name: fototec-api
     runtime: php
     region: oregon
-    buildCommand: composer install --no-dev --optimize-autoloader && php artisan config:cache && php artisan route:cache && php artisan view:cache
-    preDeployCommand: php artisan migrate --force && php artisan db:seed --class=RoleSeeder --class=AdminUserSeeder --class=DepartmentSeeder --class=CategorySeeder --class=SampleDataSeeder || true
+    buildCommand: |
+      composer install --no-dev --optimize-autoloader
+      php artisan config:cache
+      php artisan route:cache
+      php artisan view:cache
+    preDeployCommand: |
+      php artisan migrate --force
+      php artisan db:seed --class=RoleSeeder --class=PermissionSeeder --class=AdminUserSeeder || true
     startCommand: php artisan serve --host=0.0.0.0 --port=10000
     healthCheckPath: /graphql
     envVars:
@@ -43,9 +54,3 @@ services:
         sync: false
       - key: FRONTEND_URL
         value: https://fototec-web.onrender.com
-
-databases:
-  - name: fototec-db
-    databaseName: fototec_app
-    plan: free
-    postgresMajorVersion: "17"

@@ -1,0 +1,44 @@
+---
+import Layout from '../../../layouts/Main.astro';
+---
+
+<Layout title="Movimientos de Stock" activeModule="scm" activePage="Movimientos">
+<div class="space-y-6">
+  <div><h2 class="text-xl font-bold text-gray-900">Movimientos de Stock</h2><p class="text-sm text-gray-500">SCM &bull; Historial de entradas y salidas</p></div>
+  <div class="card overflow-hidden p-0">
+    <div class="p-4 border-b border-gray-100 flex items-center gap-3">
+      <select class="input w-auto" id="mov-type" onchange="loadMovements()">
+        <option value="">Todos</option>
+        <option value="entrada">Entradas</option>
+        <option value="salida">Salidas</option>
+        <option value="ajuste">Ajustes</option>
+      </select>
+    </div>
+    <table class="w-full text-sm">
+      <thead class="table-header">
+        <tr><th class="px-4 py-3 text-left">Fecha</th><th class="px-4 py-3 text-left">Tipo</th><th class="px-4 py-3 text-left">Producto</th><th class="px-4 py-3 text-left">Cantidad</th><th class="px-4 py-3 text-left">Razon</th></tr>
+      </thead>
+      <tbody id="mov-table"><tr><td colspan="5" class="px-4 py-8 text-center text-gray-400">Cargando...</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+async function loadMovements() {
+  const type = document.getElementById('mov-type')?.value || '';
+  try {
+    const data = await window.gql(`query { stockMovements(limit: 100) { id type quantity reason created_at product { name sku } user { name } } }`);
+    const movs = (data.stockMovements || []).filter(m => !type || m.type === type);
+    const badge = { entrada: 'badge-success', salida: 'badge-danger', ajuste: 'badge-warning', transferencia: 'badge-info', devolucion: 'badge-purple' };
+    document.getElementById('mov-table').innerHTML = movs.length ? movs.map(m => `<tr class="table-row">
+      <td class="px-4 py-3 text-gray-500 text-xs">${new Date(m.created_at).toLocaleString('es-MX')}</td>
+      <td class="px-4 py-3"><span class="${badge[m.type] || 'badge-info'}">${m.type}</span></td>
+      <td class="px-4 py-3 font-medium">${m.product?.name || '-'}</td>
+      <td class="px-4 py-3 font-bold ${m.type === 'entrada' ? 'text-green-600' : 'text-red-600'}">${m.type === 'entrada' ? '+' : '-'}${m.quantity}</td>
+      <td class="px-4 py-3 text-gray-500 text-xs">${m.reason || '-'}</td>
+    </tr>`).join('') : '<tr><td colspan="5" class="px-4 py-8 text-center text-gray-400">Sin movimientos</td></tr>';
+  } catch (err) { console.error(err); }
+}
+loadMovements();
+</script>
+</Layout>

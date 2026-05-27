@@ -1,0 +1,182 @@
+---
+import Layout from '../../../layouts/Main.astro';
+---
+
+<Layout title="Inventario" activeModule="scm" activePage="Inventario">
+<div class="space-y-6">
+
+  <div class="flex items-center justify-between">
+    <div>
+      <h2 class="text-xl font-bold text-gray-900">Control de Inventario</h2>
+      <p class="text-sm text-gray-500">SCM &bull; Stock en almacenes</p>
+    </div>
+    <div class="flex gap-2">
+      <button onclick="showAdjustModal()" class="btn-secondary flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+        Ajustar Stock
+      </button>
+      <button onclick="exportInventory()" class="btn-outline flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+        Exportar CSV
+      </button>
+    </div>
+  </div>
+
+  <!-- KPI Cards -->
+  <div class="grid grid-cols-4 gap-4">
+    <div class="card-sm text-center"><div class="text-2xl font-bold text-blue-600" id="inv-products">--</div><div class="text-xs text-gray-500">Total SKUs</div></div>
+    <div class="card-sm text-center"><div class="text-2xl font-bold text-green-600" id="inv-units">--</div><div class="text-xs text-gray-500">Unidades Totales</div></div>
+    <div class="card-sm text-center"><div class="text-2xl font-bold text-yellow-600" id="inv-low">--</div><div class="text-xs text-gray-500">Bajo Stock</div></div>
+    <div class="card-sm text-center"><div class="text-2xl font-bold text-purple-600" id="inv-value">$--</div><div class="text-xs text-gray-500">Valor Inventario</div></div>
+  </div>
+
+  <!-- Alerts -->
+  <div id="stock-alerts" class="space-y-2"></div>
+
+  <!-- Table -->
+  <div class="card overflow-hidden p-0">
+    <div class="p-4 border-b border-gray-100 flex items-center gap-3 flex-wrap">
+      <div class="search-bar flex-1 min-w-64">
+        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input type="text" class="search-input" placeholder="Buscar producto o SKU..." id="inv-search" oninput="searchInventory(this.value)" />
+      </div>
+      <select class="input w-auto" id="inv-warehouse" onchange="loadInventory()"><option value="">Todos los almacenes</option></select>
+      <label class="flex items-center gap-2 text-sm"><input type="checkbox" id="inv-lowstock" onchange="loadInventory()" class="rounded" /> Solo bajo stock</label>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="table-header">
+          <tr>
+            <th class="px-4 py-3 text-left">Producto</th>
+            <th class="px-4 py-3 text-left">SKU</th>
+            <th class="px-4 py-3 text-left">Categoria</th>
+            <th class="px-4 py-3 text-left">Stock</th>
+            <th class="px-4 py-3 text-left">Min</th>
+            <th class="px-4 py-3 text-left">Costo</th>
+            <th class="px-4 py-3 text-left">Valor</th>
+            <th class="px-4 py-3 text-left">Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="inv-table"><tr><td colspan="8" class="px-4 py-8 text-center text-gray-400">Cargando...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Adjust Modal -->
+<div id="adjust-modal" class="hidden">
+  <div class="modal-overlay" onclick="closeAdjust()">
+    <div class="modal-content max-w-md" onclick="event.stopPropagation()">
+      <div class="p-6 border-b border-gray-100">
+        <h3 class="text-lg font-semibold">Ajuste de Inventario</h3>
+      </div>
+      <form id="adjust-form" class="p-6 space-y-4">
+        <div><label class="label">Producto *</label><select id="adj-product" class="input" required><option value="">Seleccionar...</option></select></div>
+        <div><label class="label">Tipo de Movimiento</label>
+          <select id="adj-type" class="input">
+            <option value="entrada">Entrada (+)</option><option value="salida">Salida (-)</option>
+            <option value="ajuste">Ajuste</option>
+          </select>
+        </div>
+        <div><label class="label">Cantidad *</label><input type="number" id="adj-qty" class="input" min="1" required /></div>
+        <div><label class="label">Razon</label><input type="text" id="adj-reason" class="input" placeholder="ej.Recepcions de OC, Devolucion, etc." /></div>
+        <div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
+          <button type="button" onclick="closeAdjust()" class="btn-secondary">Cancelar</button>
+          <button type="submit" class="btn-primary">Aplicar Ajuste</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+async function loadInventory(search = '') {
+  const lowStock = document.getElementById('inv-lowstock')?.checked;
+  try {
+    const data = await window.gql(`
+      query Products($search: String, $lowStock: Boolean) {
+        products(search: $search, lowStock: $lowStock) {
+          id sku name stock stockMin cost unit price type
+          category { name }
+          warehouse { name }
+        }
+      }
+    `, { search, lowStock });
+
+    const prods = data.products || [];
+
+    document.getElementById('inv-products').textContent = prods.length;
+    document.getElementById('inv-units').textContent = prods.reduce((s, p) => s + (p.stock || 0), 0).toLocaleString();
+    document.getElementById('inv-low').textContent = prods.filter(p => p.stock <= p.stockMin).length;
+    document.getElementById('inv-value').textContent = '$' + Math.round(prods.reduce((s, p) => s + (p.stock * p.cost), 0) / 1000) + 'k';
+
+    const alertsEl = document.getElementById('stock-alerts');
+    const critical = prods.filter(p => p.stock === 0);
+    const low = prods.filter(p => p.stock > 0 && p.stock <= p.stockMin);
+    alertsEl.innerHTML = [...critical.map(p => `<div class="card-sm border-l-4 border-red-500 flex items-center gap-2"><svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg><span class="text-sm font-medium text-red-700">AGOTADO: ${p.name} (${p.sku})</span></div>`),
+      ...low.map(p => `<div class="card-sm border-l-4 border-yellow-500 flex items-center gap-2"><svg class="w-4 h-4 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><span class="text-sm font-medium text-yellow-700">Stock bajo: ${p.name} (${p.stock}/${p.stockMin} ${p.unit})</span></div>`)].join('');
+
+    const tbody = document.getElementById('inv-table');
+    if (!prods.length) { tbody.innerHTML = '<tr><td colspan="8" class="px-4 py-8 text-center text-gray-400">Sin productos</td></tr>'; return; }
+
+    tbody.innerHTML = prods.map(p => {
+      const isLow = p.stock <= p.stockMin;
+      const isOut = p.stock === 0;
+      return `<tr class="table-row">
+        <td class="px-4 py-3 font-medium text-gray-900">${p.name}</td>
+        <td class="px-4 py-3 font-mono text-xs text-gray-500">${p.sku}</td>
+        <td class="px-4 py-3 text-gray-500 text-xs">${p.category?.name || '-'}</td>
+        <td class="px-4 py-3"><span class="${isOut ? 'text-red-600 font-bold' : isLow ? 'text-yellow-600 font-bold' : 'text-gray-900'}">${p.stock} ${p.unit}</span></td>
+        <td class="px-4 py-3 text-gray-500">${p.stockMin} ${p.unit}</td>
+        <td class="px-4 py-3 text-gray-900">$${Number(p.cost).toLocaleString('es-MX')}</td>
+        <td class="px-4 py-3 font-semibold text-gray-900">$${Number(p.stock * p.cost).toLocaleString('es-MX')}</td>
+        <td class="px-4 py-3">
+          <button onclick="quickAdjust('${p.id}', '${p.name}', 'entrada')" class="btn-sm btn-success text-xs px-2 py-1">+</button>
+          <button onclick="quickAdjust('${p.id}', '${p.name}', 'salida')" class="btn-sm btn-danger text-xs px-2 py-1">-</button>
+          <button onclick="showAdjustModal('${p.id}')" class="btn-sm btn-secondary text-xs px-2 py-1">Ajustar</button>
+        </td>
+      </tr>`;
+    }).join('');
+
+  } catch (err) { console.error(err); }
+}
+
+let searchTimer;
+window.searchInventory = (q) => { clearTimeout(searchTimer); searchTimer = setTimeout(() => loadInventory(q), 300); };
+
+window.showAdjustModal = (productId) => {
+  document.getElementById('adjust-modal').classList.remove('hidden');
+  if (productId) document.getElementById('adj-product').value = productId;
+};
+window.closeAdjust = () => document.getElementById('adjust-modal').classList.add('hidden');
+
+window.quickAdjust = async (productId, name, type) => {
+  const qty = prompt(`${type === 'entrada' ? 'Agregar' : 'Quitar'} unidades de ${name}:`);
+  if (!qty || isNaN(qty) || parseInt(qty) <= 0) return;
+  try {
+    await window.gql(`mutation { adjustStock(productId: "${productId}", quantity: ${parseInt(qty)}, type: ${type}, reason: "Ajuste rapido") { id } }`);
+    alert('Stock actualizado');
+    loadInventory();
+  } catch (err) { alert('Error: ' + err.message); }
+};
+
+document.getElementById('adjust-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  try {
+    await window.gql(`mutation { adjustStock(productId: "${document.getElementById('adj-product').value}", quantity: ${parseInt(document.getElementById('adj-qty').value)}, type: "${document.getElementById('adj-type').value}", reason: "${document.getElementById('adj-reason').value}") { id } }`);
+    closeAdjust();
+    loadInventory();
+  } catch (err) { alert('Error: ' + err.message); }
+});
+
+window.exportInventory = async () => {
+  const data = await window.gql(`query { products { sku name stock stockMin cost unit category { name } } }`);
+  let csv = 'SKU,Nombre,Categoria,Stock,Stock Min,Costo,Valor\n';
+  data.products.forEach(p => { csv += `${p.sku},${p.name},${p.category?.name || ''},${p.stock},${p.stockMin},${p.cost},${p.stock * p.cost}\n`; });
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'inventario.csv'; a.click();
+};
+
+loadInventory();
+</script>
+</Layout>

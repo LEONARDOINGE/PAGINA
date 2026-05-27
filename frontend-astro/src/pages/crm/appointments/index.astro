@@ -1,0 +1,119 @@
+---
+import Layout from '../../../layouts/Main.astro';
+---
+
+<Layout title="Citas" activeModule="crm" activePage="Citas">
+<div class="space-y-6">
+  <div class="flex items-center justify-between">
+    <div><h2 class="text-xl font-bold text-gray-900">Calendario de Citas</h2><p class="text-sm text-gray-500">CRM &bull; Agenda de sesiones y entregas</p></div>
+    <button onclick="showCreateModal()" class="btn-primary flex items-center gap-2">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+      Nueva Cita
+    </button>
+  </div>
+
+  <div class="grid grid-cols-4 gap-4">
+    <div class="card-sm text-center"><div class="text-2xl font-bold text-blue-600" id="apt-total">--</div><div class="text-xs text-gray-500">Total Citas</div></div>
+    <div class="card-sm text-center"><div class="text-2xl font-bold text-green-600" id="apt-confirmed">--</div><div class="text-xs text-gray-500">Hoy</div></div>
+    <div class="card-sm text-center"><div class="text-2xl font-bold text-yellow-600" id="apt-upcoming">--</div><div class="text-xs text-gray-500">Esta Semana</div></div>
+    <div class="card-sm text-center"><div class="text-2xl font-bold text-red-600" id="apt-cancelled">--</div><div class="text-xs text-gray-500">Canceladas</div></div>
+  </div>
+
+  <div class="card overflow-hidden p-0">
+    <div class="p-4 border-b border-gray-100 flex items-center gap-3">
+      <select class="input w-auto" id="apt-date" onchange="loadAppointments()">
+        <option value="">Todas las fechas</option>
+        <option value={new Date().toISOString().split('T')[0]} selected>Hoy</option>
+      </select>
+      <select class="input w-auto" id="apt-status" onchange="loadAppointments()">
+        <option value="">Todos</option><option value="programado">Programado</option>
+        <option value="confirmado">Confirmado</option><option value="completado">Completado</option>
+        <option value="cancelado">Cancelado</option>
+      </select>
+    </div>
+    <table class="w-full text-sm">
+      <thead class="table-header">
+        <tr><th class="px-4 py-3 text-left">Hora</th><th class="px-4 py-3 text-left">Titulo</th><th class="px-4 py-3 text-left">Cliente</th><th class="px-4 py-3 text-left">Tipo</th><th class="px-4 py-3 text-left">Ubicacion</th><th class="px-4 py-3 text-left">Estado</th><th class="px-4 py-3 text-left">Acciones</th></tr>
+      </thead>
+      <tbody id="apt-table"><tr><td colspan="7" class="px-4 py-8 text-center text-gray-400">Cargando...</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<div id="apt-modal" class="hidden">
+  <div class="modal-overlay" onclick="closeModal()">
+    <div class="modal-content max-w-md" onclick="event.stopPropagation()">
+      <div class="p-6 border-b border-gray-100"><h3 class="text-lg font-semibold">Nueva Cita</h3></div>
+      <form id="apt-form" class="p-6 space-y-4">
+        <div><label class="label">Titulo *</label><input type="text" id="a-title" class="input" required /></div>
+        <div><label class="label">Cliente</label><select id="a-client" class="input"><option value="">Sin cliente</option></select></div>
+        <div><label class="label">Tipo</label>
+          <select id="a-type" class="input">
+            <option value="sesion_foto">Sesion Fotografica</option><option value="consulta">Consulta</option>
+            <option value="entrega">Entrega</option><option value="reunion">Reunion</option><option value="otro">Otro</option>
+          </select>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div><label class="label">Fecha *</label><input type="date" id="a-date" class="input" required /></div>
+          <div><label class="label">Hora *</label><input type="time" id="a-time" class="input" required /></div>
+        </div>
+        <div><label class="label">Duracion (minutos)</label><input type="number" id="a-duration" class="input" value="60" /></div>
+        <div><label class="label">Ubicacion</label><input type="text" id="a-location" class="input" placeholder="Estudio o direccion" /></div>
+        <div><label class="label">Notas</label><textarea id="a-notes" class="input" rows="2"></textarea></div>
+        <div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
+          <button type="button" onclick="closeModal()" class="btn-secondary">Cancelar</button>
+          <button type="submit" class="btn-primary">Crear Cita</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+async function loadAppointments() {
+  const date = document.getElementById('apt-date')?.value || '';
+  const status = document.getElementById('apt-status')?.value || '';
+  try {
+    const data = await window.gql(`query { appointments${date ? `(date: "${date}")` : ''} { id title type date time duration location status notes client { id name } } }`);
+    const apts = (data.appointments || []).filter(a => !status || a.status === status);
+    document.getElementById('apt-total').textContent = apts.length;
+    document.getElementById('apt-confirmed').textContent = apts.filter(a => a.status === 'confirmado').length;
+    document.getElementById('apt-cancelled').textContent = apts.filter(a => a.status === 'cancelado').length;
+
+    const tbody = document.getElementById('apt-table');
+    const badge = { programado: 'badge-info', confirmado: 'badge-success', en_proceso: 'badge-warning', completado: 'badge-purple', cancelado: 'badge-danger', no_asistio: 'badge-danger' };
+    const typeLabel = { sesion_foto: 'Sesion Foto', consulta: 'Consulta', entrega: 'Entrega', reunion: 'Reunion', otro: 'Otro' };
+
+    tbody.innerHTML = apts.length ? apts.map(a => `<tr class="table-row">
+      <td class="px-4 py-3 font-mono font-bold text-gray-900">${a.time}</td>
+      <td class="px-4 py-3 font-medium">${a.title}</td>
+      <td class="px-4 py-3 text-gray-600">${a.client?.name || '-'}</td>
+      <td class="px-4 py-3 text-gray-500 text-xs">${typeLabel[a.type] || a.type}</td>
+      <td class="px-4 py-3 text-gray-500 text-xs">${a.location || '-'}</td>
+      <td class="px-4 py-3"><span class="${badge[a.status] || 'badge-info'}">${a.status}</span></td>
+      <td class="px-4 py-3">
+        <button onclick="updateApt('${a.id}', 'completado')" class="btn-sm btn-success text-xs">Completar</button>
+        <button onclick="updateApt('${a.id}', 'cancelado')" class="btn-sm btn-danger text-xs">Cancelar</button>
+      </td>
+    </tr>`).join('') : '<tr><td colspan="7" class="px-4 py-8 text-center text-gray-400">Sin citas</td></tr>';
+  } catch (err) { console.error(err); }
+}
+
+window.showCreateModal = () => document.getElementById('apt-modal').classList.remove('hidden');
+window.closeModal = () => document.getElementById('apt-modal').classList.add('hidden');
+
+window.updateApt = async (id, status) => {
+  try { await window.gql(`mutation { updateAppointment(id: "${id}", status: "${status}") { id } }`); loadAppointments(); } catch (err) { alert('Error: ' + err.message); }
+};
+
+document.getElementById('apt-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  try {
+    await window.gql(`mutation { scheduleAppointment(clientId: "${document.getElementById('a-client').value}", title: "${document.getElementById('a-title').value}", type: "${document.getElementById('a-type').value}", date: "${document.getElementById('a-date').value}", time: "${document.getElementById('a-time').value}", duration: ${parseInt(document.getElementById('a-duration').value)}, location: "${document.getElementById('a-location').value}") { id } }`);
+    closeModal(); loadAppointments();
+  } catch (err) { alert('Error: ' + err.message); }
+});
+
+loadAppointments();
+</script>
+</Layout>

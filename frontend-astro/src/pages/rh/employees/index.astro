@@ -1,0 +1,228 @@
+---
+import Layout from '../../../layouts/Main.astro';
+---
+
+<Layout title="Empleados" activeModule="rh" activePage="Empleados">
+<div class="space-y-6">
+
+  <div class="flex items-center justify-between">
+    <div>
+      <h2 class="text-xl font-bold text-gray-900">Gestion de Empleados</h2>
+      <p class="text-sm text-gray-500">RRHH &bull; Catalogo de personal</p>
+    </div>
+    <button onclick="showCreateModal()" class="btn-primary flex items-center gap-2">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+      Nuevo Empleado
+    </button>
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+    <div class="card-sm flex items-center gap-3">
+      <div class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-sm" id="emp-total">--</div>
+      <div><div class="font-semibold text-gray-900">Total</div><div class="text-xs text-gray-500">Empleados</div></div>
+    </div>
+    <div class="card-sm flex items-center gap-3">
+      <div class="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center text-green-600 font-bold text-sm" id="emp-active">--</div>
+      <div><div class="font-semibold text-gray-900">Activos</div><div class="text-xs text-gray-500">En nomina</div></div>
+    </div>
+    <div class="card-sm flex items-center gap-3">
+      <div class="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center text-purple-600 font-bold text-sm" id="emp-depts">--</div>
+      <div><div class="font-semibold text-gray-900">Departamentos</div><div class="text-xs text-gray-500">Activos</div></div>
+    </div>
+    <div class="card-sm flex items-center gap-3">
+      <div class="w-10 h-10 rounded-lg bg-yellow-100 flex items-center justify-center text-yellow-600 font-bold text-sm" id="emp-masa">$--</div>
+      <div><div class="font-semibold text-gray-900">Nomina Mensual</div><div class="text-xs text-gray-500">Estimada</div></div>
+    </div>
+  </div>
+
+  <!-- Department filter tabs -->
+  <div class="flex gap-2 overflow-x-auto pb-2" id="dept-tabs">
+    <button class="btn-sm btn-primary" onclick="filterByDept('')" data-dept="">Todos</button>
+  </div>
+
+  <!-- Employees Grid -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" id="employees-grid">
+    <div class="card-sm text-center text-gray-400 col-span-4 py-8">Cargando empleados...</div>
+  </div>
+</div>
+
+<!-- Attendance Quick Actions -->
+<div class="mt-6">
+  <div class="card">
+    <h3 class="font-semibold text-gray-900 mb-4">Registro Rapido de Asistencia</h3>
+    <div class="flex flex-wrap gap-3" id="attendance-quick">
+      <div class="text-sm text-gray-500 self-center mr-4">Empleado:</div>
+      <select class="input w-48" id="att-employee-select"><option value="">Seleccionar...</option></select>
+      <button onclick="clockIn()" class="btn-success btn-sm">Entrada</button>
+      <button onclick="clockOut()" class="btn-danger btn-sm">Salida</button>
+    </div>
+  </div>
+</div>
+
+<div id="employee-modal" class="hidden">
+  <div class="modal-overlay" onclick="closeModal()">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <div class="p-6 border-b border-gray-100 flex items-center justify-between">
+        <h3 class="text-lg font-semibold" id="modal-title">Nuevo Empleado</h3>
+        <button onclick="closeModal()" class="p-1 rounded hover:bg-gray-100"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+      </div>
+      <form id="employee-form" class="p-6 space-y-4">
+        <input type="hidden" id="emp-id" />
+        <div class="grid grid-cols-2 gap-4">
+          <div><label class="label">Nombre Completo *</label><input type="text" id="e-name" class="input" required /></div>
+          <div><label class="label">Email</label><input type="email" id="e-email" class="input" /></div>
+          <div><label class="label">Telefono</label><input type="text" id="e-phone" class="input" /></div>
+          <div><label class="label">Direccion</label><input type="text" id="e-address" class="input" /></div>
+          <div><label class="label">Departamento</label><select id="e-dept" class="input"></select></div>
+          <div><label class="label">Puesto</label><select id="e-pos" class="input"></select></div>
+          <div><label class="label">Fecha Contratacion</label><input type="date" id="e-hire" class="input" /></div>
+          <div><label class="label">Salario Mensual</label><input type="number" id="e-salary" class="input" step="0.01" placeholder="0.00" /></div>
+        </div>
+        <div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
+          <button type="button" onclick="closeModal()" class="btn-secondary">Cancelar</button>
+          <button type="submit" class="btn-primary">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentDept = '';
+
+async function loadEmployees(deptId = '') {
+  currentDept = deptId;
+  try {
+    const data = await window.gql(`
+      query {
+        employees(page: 1, perPage: 100, departmentId: ${deptId || 'null'}, active: true) {
+          data { id employeeNumber name email phone hireDate salary commissionRate active attendanceRate department { id name color } position { id name } }
+          total
+        }
+        departments { id name color }
+      }
+    `);
+
+    const { data: employees, total } = data.employees;
+    const depts = data.departments || [];
+
+    document.getElementById('emp-total').textContent = total;
+    document.getElementById('emp-active').textContent = employees.filter(e => e.active).length;
+    document.getElementById('emp-depts').textContent = depts.length;
+
+    const totalSalary = employees.reduce((s, e) => s + (parseFloat(e.salary) || 0), 0);
+    document.getElementById('emp-masa').textContent = '$' + Math.round(totalSalary / 1000) + 'k';
+
+    // Dept tabs
+    const tabsEl = document.getElementById('dept-tabs');
+    tabsEl.innerHTML = `<button class="btn-sm ${!deptId ? 'btn-primary' : 'btn-secondary'}" onclick="filterByDept('')">Todos</button>` +
+      depts.map(d => `<button class="btn-sm ${deptId == d.id ? 'btn-primary' : 'btn-secondary'}" onclick="filterByDept('${d.id}')" style="${deptId == d.id ? '' : ''}">${d.name}</button>`).join('');
+
+    // Employee select for attendance
+    const selectEl = document.getElementById('att-employee-select');
+    selectEl.innerHTML = '<option value="">Seleccionar...</option>' + employees.map(e => `<option value="${e.id}">${e.name}</option>`).join('');
+
+    // Grid
+    const grid = document.getElementById('employees-grid');
+    if (!employees.length) { grid.innerHTML = '<div class="col-span-4 card-sm text-center text-gray-400 py-8">Sin empleados en este departamento</div>'; return; }
+
+    grid.innerHTML = employees.map(e => `
+      <div class="card-sm hover:shadow-md transition-shadow">
+        <div class="flex items-start gap-3">
+          <div class="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg" style="background:${e.department?.color || '#7c3aed'}">${e.name[0]}</div>
+          <div class="flex-1 min-w-0">
+            <div class="font-semibold text-gray-900 truncate">${e.name}</div>
+            <div class="text-xs text-gray-500 truncate">${e.position?.name || 'Sin puesto'}</div>
+            <div class="text-xs text-gray-400">${e.department?.name || 'Sin dept.'}</div>
+          </div>
+          <span class="${e.active ? 'badge-success' : 'badge-danger'}">${e.active ? 'Activo' : 'Inactivo'}</span>
+        </div>
+        <div class="mt-3 grid grid-cols-2 gap-2 text-xs">
+          <div><span class="text-gray-400">No.</span> <span class="font-medium">${e.employeeNumber}</span></div>
+          <div><span class="text-gray-400">Email</span> <span class="font-medium truncate">${e.email || '-'}</span></div>
+          <div><span class="text-gray-400">Antiguedad</span> <span class="font-medium">${Math.floor((new Date() - new Date(e.hireDate)) / 86400000)} dias</span></div>
+          <div><span class="text-gray-400">Asistencia</span> <span class="font-medium ${e.attendanceRate >= 90 ? 'text-green-600' : 'text-red-600'}">${e.attendanceRate}%</span></div>
+        </div>
+        <div class="mt-3 flex gap-2">
+          <button onclick="editEmployee('${e.id}')" class="btn-sm btn-outline flex-1 text-xs">Editar</button>
+          <button onclick="viewEmployee('${e.id}')" class="btn-sm btn-secondary flex-1 text-xs">Ver</button>
+        </div>
+      </div>
+    `).join('');
+
+  } catch (err) { console.error(err); }
+}
+
+window.filterByDept = (deptId) => loadEmployees(deptId);
+
+window.showCreateModal = () => {
+  document.getElementById('modal-title').textContent = 'Nuevo Empleado';
+  document.getElementById('employee-form').reset();
+  document.getElementById('emp-id').value = '';
+  document.getElementById('employee-modal').classList.remove('hidden');
+};
+
+window.closeModal = () => document.getElementById('employee-modal').classList.add('hidden');
+
+window.editEmployee = async (id) => {
+  const data = await window.gql(`query { employee(id: "${id}") { id name email phone address department { id } position { id } hireDate salary active } }`);
+  const e = data.employee;
+  document.getElementById('emp-id').value = e.id;
+  document.getElementById('e-name').value = e.name || '';
+  document.getElementById('e-email').value = e.email || '';
+  document.getElementById('e-phone').value = e.phone || '';
+  document.getElementById('e-address').value = e.address || '';
+  document.getElementById('e-hire').value = e.hireDate || '';
+  document.getElementById('e-salary').value = e.salary || '';
+  document.getElementById('modal-title').textContent = 'Editar Empleado';
+  document.getElementById('employee-modal').classList.remove('hidden');
+};
+
+window.viewEmployee = (id) => { window.location.href = `/rh/employees/${id}`; };
+
+window.clockIn = async () => {
+  const empId = document.getElementById('att-employee-select').value;
+  if (!empId) { alert('Selecciona un empleado'); return; }
+  try {
+    await window.gql(`mutation { clockIn(employeeId: "${empId}") { id clockIn } }`);
+    alert('Entrada registrada');
+  } catch (err) { alert('Error: ' + err.message); }
+};
+
+window.clockOut = async () => {
+  const empId = document.getElementById('att-employee-select').value;
+  if (!empId) { alert('Selecciona un empleado'); return; }
+  try {
+    await window.gql(`mutation { clockOut(employeeId: "${empId}") { id clockOut } }`);
+    alert('Salida registrada');
+  } catch (err) { alert('Error: ' + err.message); }
+};
+
+document.getElementById('employee-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const id = document.getElementById('emp-id').value;
+  const input = {
+    name: document.getElementById('e-name').value,
+    email: document.getElementById('e-email').value,
+    phone: document.getElementById('e-phone').value,
+    address: document.getElementById('e-address').value,
+    departmentId: document.getElementById('e-dept').value || null,
+    positionId: document.getElementById('e-pos').value || null,
+    hireDate: document.getElementById('e-hire').value,
+    salary: parseFloat(document.getElementById('e-salary').value) || 0,
+  };
+  try {
+    if (id) {
+      await window.gql(`mutation { updateEmployee(id: "${id}", input: {name:"${input.name}",email:"${input.email}",phone:"${input.phone}",address:"${input.address}"}) { id } }`);
+    } else {
+      await window.gql(`mutation { createEmployee(input: {name:"${input.name}",email:"${input.email}",phone:"${input.phone}"}) { id } }`);
+    }
+    closeModal();
+    loadEmployees(currentDept);
+  } catch (err) { alert('Error: ' + err.message); }
+});
+
+loadEmployees();
+</script>
+</Layout>

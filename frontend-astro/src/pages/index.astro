@@ -1,0 +1,104 @@
+---
+import Layout from '../layouts/Main.astro';
+---
+
+<Layout title="Login" activeModule="">
+<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-600 via-primary-700 to-purple-900">
+  <div class="w-full max-w-md p-8">
+    <div class="text-center mb-8">
+      <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white/10 backdrop-blur mb-4">
+        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+        </svg>
+      </div>
+      <h1 class="text-3xl font-bold text-white">FotoTec ERP</h1>
+      <p class="text-purple-200 mt-2">Sistema Integral de Gestion</p>
+      <p class="text-purple-300/60 text-xs mt-1">CRM &bull; SCM &bull; RRHH &bull; ERP</p>
+    </div>
+
+    <div class="bg-white/10 backdrop-blur-md rounded-2xl p-8 border border-white/20">
+      <div class="space-y-4">
+        <div>
+          <label class="label text-purple-100">Correo Electronico</label>
+          <input type="email" id="email" value="admin@fototec.com" placeholder="correo@ejemplo.com"
+                 class="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-white placeholder-purple-200/60 focus:outline-none focus:ring-2 focus:ring-white/50" />
+        </div>
+        <div>
+          <label class="label text-purple-100">Contrasena</label>
+          <input type="password" id="password" value="admin123" placeholder="********"
+                 class="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-white placeholder-purple-200/60 focus:outline-none focus:ring-2 focus:ring-white/50" />
+        </div>
+        <div id="error-msg" class="hidden text-red-200 text-sm text-center"></div>
+        <button onclick="handleLogin()" id="login-btn"
+                class="w-full py-3 bg-white text-primary-700 font-bold rounded-xl hover:bg-purple-50 transition-all flex items-center justify-center gap-2">
+          <span>Iniciar Sesion</span>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="mt-6 pt-6 border-t border-white/20">
+        <p class="text-xs text-purple-200/60 text-center">Credenciales de prueba</p>
+        <div class="mt-2 grid grid-cols-2 gap-2 text-xs text-purple-200/80">
+          <div class="bg-white/10 rounded-lg p-2">
+            <div class="font-semibold">Admin</div>
+            <div>admin@fototec.com</div>
+            <div>admin123</div>
+          </div>
+          <div class="bg-white/10 rounded-lg p-2">
+            <div class="font-semibold">RRHH</div>
+            <div>sofia@fototec.com</div>
+            <div>password</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p class="text-center text-purple-200/40 text-xs mt-6">
+      &copy; 2024 FotoTec Studio &bull; Reynosa, Tamaulipas
+    </p>
+  </div>
+</div>
+
+<script>
+async function handleLogin() {
+  const btn = document.getElementById('login-btn');
+  const email = (document.getElementById('email') as HTMLInputElement).value;
+  const password = (document.getElementById('password') as HTMLInputElement).value;
+  const errorDiv = document.getElementById('error-msg');
+
+  btn.innerHTML = '<span class="animate-spin">&#8987;</span>';
+  (btn as HTMLButtonElement).disabled = true;
+
+  try {
+    const res = await fetch(window.API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        query: `mutation Login($email: String!, $password: String!) {
+          login(email: $email, password: $password) {
+            token user { id name email roles permissions }
+          }
+        }`,
+        variables: { email, password },
+      }),
+    });
+
+    const json = await res.json();
+    if (json.errors?.length) throw new Error(json.errors[0].message);
+
+    const { token, user } = json.data.login;
+    localStorage.setItem('fototec_token', token);
+    localStorage.setItem('fototec_user', JSON.stringify({ ...user, permissions: user.permissions || [] }));
+    window.location.href = '/dashboard';
+  } catch (err: any) {
+    errorDiv.textContent = err.message;
+    errorDiv.classList.remove('hidden');
+    btn.innerHTML = '<span>Iniciar Sesion</span>';
+    (btn as HTMLButtonElement).disabled = false;
+  }
+}
+</script>
+</Layout>

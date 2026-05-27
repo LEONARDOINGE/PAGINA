@@ -1,0 +1,68 @@
+---
+import Layout from '../../../layouts/Main.astro';
+---
+
+<Layout title="Configuracion" activeModule="erp" activePage="Configuracion">
+<div class="space-y-6">
+  <div><h2 class="text-xl font-bold text-gray-900">Configuracion del Sistema</h2><p class="text-sm text-gray-500">ERP &bull; Parametros generales</p></div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="card">
+      <h3 class="font-semibold text-gray-900 mb-4">Datos de la Empresa</h3>
+      <form class="space-y-4">
+        <div><label class="label">Nombre de la Empresa</label><input type="text" class="input" value="FotoTec Studio" /></div>
+        <div><label class="label">RFC</label><input type="text" class="input" value="FOT260101XXX" /></div>
+        <div><label class="label">Direccion</label><textarea class="input" rows="2">Av. Mexico #100, Reynosa, Tamaulipas</textarea></div>
+        <div><label class="label">Telefono</label><input type="text" class="input" value="899-123-4567" /></div>
+        <div><label class="label">Email</label><input type="email" class="input" value="contacto@fototec.com" /></div>
+        <button type="button" class="btn-primary" onclick="saveSettings()">Guardar Cambios</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h3 class="font-semibold text-gray-900 mb-4">Parametros Financieros</h3>
+      <form class="space-y-4">
+        <div><label class="label">Tasa IVA (%)</label><input type="number" class="input" value="16" /></div>
+        <div><label class="label">Moneda</label><select class="input"><option selected>MXN - Peso Mexicano</option><option>USD - Dolar Estadounidense</option></select></div>
+        <div><label class="label">Regimen Fiscal</label><input type="text" class="input" value="601 - General de Ley Personas Morales" /></div>
+      </form>
+    </div>
+
+    <div class="card">
+      <h3 class="font-semibold text-gray-900 mb-4">Inventario</h3>
+      <form class="space-y-4">
+        <div><label class="label">Umbral Stock Minimo Global</label><input type="number" class="input" value="10" /></div>
+        <div><label class="label">Alerta Expiracion (dias antes)</label><input type="number" class="input" value="30" /></div>
+        <label class="flex items-center gap-2"><input type="checkbox" class="rounded" checked /> Enviar alertas de stock bajo</label>
+        <label class="flex items-center gap-2"><input type="checkbox" class="rounded" checked /> Auto-reorden desde proveedor</label>
+      </form>
+    </div>
+
+    <div class="card">
+      <h3 class="font-semibold text-gray-900 mb-4">Integraciones</h3>
+      <form class="space-y-4">
+        <div><label class="label">Webhook URL</label><input type="url" class="input" placeholder="https://..." /></div>
+        <div><label class="label">Token API Turso</label><input type="password" class="input" placeholder="••••••••" /></div>
+        <button type="button" class="btn-primary" onclick="syncTurso()">Sincronizar con Turso</button>
+        <button type="button" class="btn-secondary" onclick="pullTurso()">Pull desde Turso</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+function saveSettings() { alert('Configuracion guardada!'); }
+async function syncTurso() {
+  try {
+    const data = await window.gql(`mutation { syncToTurso }`);
+    alert(data.syncToTurso ? 'Sincronizado a Turso!' : 'Error en sincronizacion');
+  } catch (err) { alert('Error: ' + err.message); }
+}
+async function pullTurso() {
+  try {
+    const data = await window.gql(`mutation { pullFromTurso }`);
+    alert(data.pullFromTurso ? 'Datos traidos de Turso!' : 'Error');
+  } catch (err) { alert('Error: ' + err.message); }
+}
+</script>
+</Layout>

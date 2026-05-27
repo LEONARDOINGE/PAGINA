@@ -1,0 +1,126 @@
+---
+import Layout from '../../../layouts/Main.astro';
+---
+
+<Layout title="Productos" activeModule="scm" activePage="Productos">
+<div class="space-y-6">
+  <div class="flex items-center justify-between">
+    <div><h2 class="text-xl font-bold text-gray-900">Catalogo de Productos</h2><p class="text-sm text-gray-500">SCM &bull; Productos y servicios</p></div>
+    <button onclick="showCreateModal()" class="btn-primary flex items-center gap-2">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+      Nuevo Producto
+    </button>
+  </div>
+
+  <div class="grid grid-cols-5 gap-4">
+    <div class="card-sm text-center"><div class="text-2xl font-bold text-blue-600" id="p-total">--</div><div class="text-xs text-gray-500">Total SKUs</div></div>
+    <div class="card-sm text-center"><div class="text-2xl font-bold text-green-600" id="p-active">--</div><div class="text-xs text-gray-500">Activos</div></div>
+    <div class="card-sm text-center"><div class="text-2xl font-bold text-yellow-600" id="p-services">--</div><div class="text-xs text-gray-500">Servicios</div></div>
+    <div class="card-sm text-center"><div class="text-2xl font-bold text-purple-600" id="p-margin">--%</div><div class="text-xs text-gray-500">Margen Promedio</div></div>
+    <div class="card-sm text-center"><div class="text-2xl font-bold text-gray-600" id="p-value">$--</div><div class="text-xs text-gray-500">Valor Inventario</div></div>
+  </div>
+
+  <div class="card overflow-hidden p-0">
+    <div class="p-4 border-b border-gray-100 flex items-center gap-3">
+      <div class="search-bar flex-1">
+        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input type="text" class="search-input" placeholder="Buscar productos..." id="prod-search" oninput="searchProducts(this.value)" />
+      </div>
+      <select class="input w-auto" id="prod-type" onchange="loadProducts()">
+        <option value="">Todos los tipos</option><option value="producto">Producto</option>
+        <option value="servicio">Servicio</option><option value="insumo">Insumo</option>
+        <option value="equipo">Equipo</option>
+      </select>
+    </div>
+    <table class="w-full text-sm">
+      <thead class="table-header">
+        <tr><th class="px-4 py-3 text-left">Producto</th><th class="px-4 py-3 text-left">SKU</th><th class="px-4 py-3 text-left">Categoria</th><th class="px-4 py-3 text-left">Precio</th><th class="px-4 py-3 text-left">Costo</th><th class="px-4 py-3 text-left">Margen</th><th class="px-4 py-3 text-left">Stock</th><th class="px-4 py-3 text-left">Acciones</th></tr>
+      </thead>
+      <tbody id="products-table"><tr><td colspan="8" class="px-4 py-8 text-center text-gray-400">Cargando...</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<div id="prod-modal" class="hidden">
+  <div class="modal-overlay" onclick="closeModal()">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <div class="p-6 border-b border-gray-100"><h3 class="text-lg font-semibold">Nuevo Producto</h3></div>
+      <form id="prod-form" class="p-6 space-y-4">
+        <div class="grid grid-cols-2 gap-4">
+          <div><label class="label">Nombre *</label><input type="text" id="p-name" class="input" required /></div>
+          <div><label class="label">SKU *</label><input type="text" id="p-sku" class="input" required /></div>
+          <div><label class="label">Precio Venta *</label><input type="number" id="p-price" class="input" step="0.01" required /></div>
+          <div><label class="label">Costo</label><input type="number" id="p-cost" class="input" step="0.01" /></div>
+          <div><label class="label">Stock</label><input type="number" id="p-stock" class="input" value="0" /></div>
+          <div><label class="label">Stock Minimo</label><input type="number" id="p-stockmin" class="input" value="10" /></div>
+          <div><label class="label">Tipo</label>
+            <select id="p-type" class="input">
+              <option value="producto">Producto</option><option value="servicio">Servicio</option>
+              <option value="insumo">Insumo</option><option value="equipo">Equipo</option>
+            </select>
+          </div>
+          <div><label class="label">Estrategia</label>
+            <select id="p-strategy" class="input">
+              <option value="pull">Pull (bajo demanda)</option><option value="push">Push (inventario)</option>
+              <option value="hybrid">Hibrido</option>
+            </select>
+          </div>
+        </div>
+        <div><label class="label">Descripcion</label><textarea id="p-desc" class="input" rows="2"></textarea></div>
+        <div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
+          <button type="button" onclick="closeModal()" class="btn-secondary">Cancelar</button>
+          <button type="submit" class="btn-primary">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+let searchTimer;
+async function loadProducts(search = '') {
+  const type = document.getElementById('prod-type')?.value || '';
+  try {
+    const data = await window.gql(`query { products(search: $search) { id sku name price cost stock stockMin unit type strategy description category { name } } }`, { search });
+    const prods = (data.products || []).filter(p => !type || p.type === type);
+    document.getElementById('p-total').textContent = prods.length;
+    document.getElementById('p-active').textContent = prods.filter(p => p.stock > 0).length;
+    document.getElementById('p-services').textContent = prods.filter(p => p.type === 'servicio').length;
+    const margins = prods.map(p => p.price > 0 ? ((p.price - (p.cost || 0)) / p.price) * 100 : 0);
+    document.getElementById('p-margin').textContent = margins.length ? Math.round(margins.reduce((a, b) => a + b, 0) / margins.length) + '%' : '0%';
+    document.getElementById('p-value').textContent = '$' + Math.round(prods.reduce((s, p) => s + p.stock * (p.cost || 0), 0) / 1000) + 'k';
+
+    const tbody = document.getElementById('products-table');
+    tbody.innerHTML = prods.length ? prods.map(p => {
+      const margin = p.price > 0 ? ((p.price - (p.cost || 0)) / p.price * 100).toFixed(1) : '0';
+      const isLow = p.stock <= p.stockMin;
+      return `<tr class="table-row">
+        <td class="px-4 py-3 font-medium text-gray-900">${p.name}</td>
+        <td class="px-4 py-3 font-mono text-xs text-gray-500">${p.sku}</td>
+        <td class="px-4 py-3 text-xs text-gray-500">${p.category?.name || '-'}</td>
+        <td class="px-4 py-3 font-bold text-gray-900">$${Number(p.price).toLocaleString('es-MX')}</td>
+        <td class="px-4 py-3 text-gray-500">$${Number(p.cost || 0).toLocaleString('es-MX')}</td>
+        <td class="px-4 py-3"><span class="${parseFloat(margin) >= 40 ? 'text-green-600' : parseFloat(margin) >= 20 ? 'text-yellow-600' : 'text-red-600'} font-bold">${margin}%</span></td>
+        <td class="px-4 py-3 ${isLow ? 'text-red-600 font-bold' : 'text-gray-900'}">${p.stock} ${p.unit}</td>
+        <td class="px-4 py-3"><button onclick="editProduct('${p.id}')" class="btn-sm btn-outline text-xs">Editar</button></td>
+      </tr>`;
+    }).join('') : '<tr><td colspan="8" class="px-4 py-8 text-center text-gray-400">Sin productos</td></tr>';
+  } catch (err) { console.error(err); }
+}
+
+window.searchProducts = (q) => { clearTimeout(searchTimer); searchTimer = setTimeout(() => loadProducts(q), 300); };
+window.showCreateModal = () => document.getElementById('prod-modal').classList.remove('hidden');
+window.closeModal = () => document.getElementById('prod-modal').classList.add('hidden');
+window.editProduct = (id) => alert('Edicion de producto ID: ' + id);
+
+document.getElementById('prod-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  try {
+    await window.gql(`mutation { createProduct(input: { sku: "${document.getElementById('p-sku').value}", name: "${document.getElementById('p-name').value}", price: ${parseFloat(document.getElementById('p-price').value) || 0}, cost: ${parseFloat(document.getElementById('p-cost').value) || 0}, stock: ${parseInt(document.getElementById('p-stock').value) || 0}, stockMin: ${parseInt(document.getElementById('p-stockmin').value) || 10}, type: "${document.getElementById('p-type').value}", strategy: "${document.getElementById('p-strategy').value}" }) { id } }`);
+    closeModal(); loadProducts();
+  } catch (err) { alert('Error: ' + err.message); }
+});
+
+loadProducts();
+</script>
+</Layout>

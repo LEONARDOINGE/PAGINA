@@ -1,0 +1,135 @@
+---
+import Layout from '../../../layouts/Main.astro';
+---
+
+<Layout title="Ordenes de Compra" activeModule="scm" activePage="Orden Compra">
+<div class="space-y-6">
+  <div class="flex items-center justify-between">
+    <div><h2 class="text-xl font-bold text-gray-900">Ordenes de Compra</h2><p class="text-sm text-gray-500">SCM &bull; Compras a proveedores</p></div>
+    <button onclick="showCreateModal()" class="btn-primary flex items-center gap-2">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+      Nueva Orden
+    </button>
+  </div>
+
+  <div class="grid grid-cols-4 gap-4">
+    <div class="card-sm text-center"><div class="text-2xl font-bold text-blue-600" id="po-total">--</div><div class="text-xs text-gray-500">Total OC</div></div>
+    <div class="card-sm text-center"><div class="text-2xl font-bold text-yellow-600" id="po-pending">--</div><div class="text-xs text-gray-500">Pendientes</div></div>
+    <div class="card-sm text-center"><div class="text-2xl font-bold text-green-600" id="po-received">--</div><div class="text-xs text-gray-500">Recibidas</div></div>
+    <div class="card-sm text-center"><div class="text-2xl font-bold text-purple-600" id="po-total-amt">$--</div><div class="text-xs text-gray-500">Valor Total</div></div>
+  </div>
+
+  <div class="card overflow-hidden p-0">
+    <div class="p-4 border-b border-gray-100 flex items-center gap-3">
+      <select class="input w-auto" id="po-status" onchange="loadPOs()">
+        <option value="">Todos</option>
+        <option value="borrador">Borrador</option>
+        <option value="enviado">Enviado</option>
+        <option value="parcial">Parcial</option>
+        <option value="recibido">Recibido</option>
+        <option value="cancelado">Cancelado</option>
+      </select>
+    </div>
+    <table class="w-full text-sm">
+      <thead class="table-header">
+        <tr>
+          <th class="px-4 py-3 text-left">Folio OC</th><th class="px-4 py-3 text-left">Proveedor</th>
+          <th class="px-4 py-3 text-left">Estado</th><th class="px-4 py-3 text-left">Total</th>
+          <th class="px-4 py-3 text-left">Fecha Esperada</th><th class="px-4 py-3 text-left">Recibido</th>
+          <th class="px-4 py-3 text-left">Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="po-table"><tr><td colspan="7" class="px-4 py-8 text-center text-gray-400">Cargando...</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<div id="po-modal" class="hidden">
+  <div class="modal-overlay" onclick="closeModal()">
+    <div class="modal-content max-w-2xl" onclick="event.stopPropagation()">
+      <div class="p-6 border-b border-gray-100 flex items-center justify-between">
+        <h3 class="text-lg font-semibold">Nueva Orden de Compra</h3>
+        <button onclick="closeModal()" class="p-1 rounded hover:bg-gray-100"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+      </div>
+      <form id="po-form" class="p-6 space-y-4">
+        <div class="grid grid-cols-2 gap-4">
+          <div><label class="label">Proveedor *</label><select id="po-supplier" class="input" required><option value="">Seleccionar...</option></select></div>
+          <div><label class="label">Fecha Esperada</label><input type="date" id="po-expected" class="input" /></div>
+        </div>
+        <div><label class="label">Notas</label><textarea id="po-notes" class="input" rows="2" placeholder="Indicaciones especiales para el pedido..."></textarea></div>
+        <div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
+          <button type="button" onclick="closeModal()" class="btn-secondary">Cancelar</button>
+          <button type="submit" class="btn-primary">Crear Orden</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+async function loadPOs() {
+  const status = document.getElementById('po-status')?.value || '';
+  try {
+    const data = await window.gql(`query { purchaseOrders${status ? `(status: ${status})` : ''} { id folio status subtotal iva total expectedDate receivedAt supplier { id name } items { id description quantity price } } }`);
+    const pos = data.purchaseOrders || [];
+    document.getElementById('po-total').textContent = pos.length;
+    document.getElementById('po-pending').textContent = pos.filter(p => ['borrador', 'enviado'].includes(p.status)).length;
+    document.getElementById('po-received').textContent = pos.filter(p => p.status === 'recibido').length;
+    document.getElementById('po-total-amt').textContent = '$' + Math.round(pos.reduce((s, p) => s + p.total, 0) / 1000) + 'k';
+
+    const tbody = document.getElementById('po-table');
+    if (!pos.length) { tbody.innerHTML = '<tr><td colspan="7" class="px-4 py-8 text-center text-gray-400">Sin ordenes de compra</td></tr>'; return; }
+
+    tbody.innerHTML = pos.map(p => {
+      const badge = { borrador: 'badge-secondary', enviado: 'badge-info', parcial: 'badge-warning', recibido: 'badge-success', cancelado: 'badge-danger' }[p.status] || 'badge-info';
+      return `<tr class="table-row">
+        <td class="px-4 py-3 font-mono font-bold text-primary-600">${p.folio}</td>
+        <td class="px-4 py-3">${p.supplier?.name || '-'}</td>
+        <td class="px-4 py-3"><span class="${badge}">${p.status}</span></td>
+        <td class="px-4 py-3 font-bold text-gray-900">$${Number(p.total).toLocaleString('es-MX')}</td>
+        <td class="px-4 py-3 text-gray-500 text-xs">${p.expectedDate ? new Date(p.expectedDate).toLocaleDateString('es-MX') : '-'}</td>
+        <td class="px-4 py-3 text-gray-500 text-xs">${p.receivedAt ? new Date(p.receivedAt).toLocaleDateString('es-MX') : '-'}</td>
+        <td class="px-4 py-3">
+          ${p.status !== 'recibido' ? `<button onclick="receivePO('${p.id}')" class="btn-sm btn-success text-xs">Recibir</button>` : '<span class="text-xs text-green-600 font-medium">Completada</span>'}
+          <button onclick="viewPO('${p.id}')" class="btn-sm btn-secondary text-xs">Ver</button>
+        </td>
+      </tr>`;
+    }).join('');
+  } catch (err) { console.error(err); }
+}
+
+window.showCreateModal = () => document.getElementById('po-modal').classList.remove('hidden');
+window.closeModal = () => document.getElementById('po-modal').classList.add('hidden');
+
+window.receivePO = async (id) => {
+  if (!confirm('Marcar esta orden como recibida?\nEl stock de productos se incrementara automaticamente.')) return;
+  try {
+    await window.gql(`mutation { receivePurchaseOrder(id: "${id}") { id status } }`);
+    alert('Orden recibida! Stock actualizado.');
+    loadPOs();
+  } catch (err) { alert('Error: ' + err.message); }
+};
+
+window.viewPO = async (id) => {
+  const data = await window.gql(`query { purchaseOrder(id: "${id}") { folio subtotal iva total expectedDate receivedAt supplier { name } items { description quantity price } } }`);
+  const po = data.purchaseOrder;
+  let txt = `ORDEN DE COMPRA: ${po.folio}\nProveedor: ${po.supplier?.name}\n========================\n`;
+  po.items?.forEach(i => { txt += `${i.description} x${i.quantity} @ $${i.price} = $${i.quantity * i.price}\n`; });
+  txt += `========================\nSubtotal: $${po.subtotal}\nIVA: $${po.iva}\nTotal: $${po.total}\n`;
+  alert(txt);
+};
+
+document.getElementById('po-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const supplierId = document.getElementById('po-supplier').value;
+  if (!supplierId) { alert('Selecciona un proveedor'); return; }
+  try {
+    await window.gql(`mutation { createPurchaseOrder(input: { supplierId: "${supplierId}", expectedDate: "${document.getElementById('po-expected').value}", notes: "${document.getElementById('po-notes').value}", items: [] }) { id folio } }`);
+    closeModal();
+    loadPOs();
+  } catch (err) { alert('Error: ' + err.message); }
+});
+
+loadPOs();
+</script>
+</Layout>

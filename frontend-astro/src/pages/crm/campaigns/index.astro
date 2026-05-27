@@ -1,0 +1,50 @@
+---
+import Layout from '../../../layouts/Main.astro';
+---
+
+<Layout title="Campanas" activeModule="crm" activePage="Campanas">
+<div class="space-y-6">
+  <div class="flex items-center justify-between">
+    <div><h2 class="text-xl font-bold text-gray-900">Campanas de Marketing</h2><p class="text-sm text-gray-500">CRM &bull; Email, SMS, WhatsApp</p></div>
+    <button onclick="showCreateModal()" class="btn-primary flex items-center gap-2">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+      Nueva Campana
+    </button>
+  </div>
+  <div class="card overflow-hidden p-0">
+    <table class="w-full text-sm">
+      <thead class="table-header">
+        <tr><th class="px-4 py-3 text-left">Nombre</th><th class="px-4 py-3 text-left">Tipo</th><th class="px-4 py-3 text-left">Canal</th><th class="px-4 py-3 text-left">Estado</th><th class="px-4 py-3 text-left">Presupuesto</th><th class="px-4 py-3 text-left">Acciones</th></tr>
+      </thead>
+      <tbody id="campaigns-table"><tr><td colspan="6" class="px-4 py-8 text-center text-gray-400">Cargando...</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+async function loadCampaigns() {
+  try {
+    const data = await window.gql(`query { campaigns { id name type channel status budget target } }`);
+    const c = data.campaigns || [];
+    const badge = { borrador: 'badge-secondary', activa: 'badge-success', pausada: 'badge-warning', finalizada: 'badge-info' };
+    document.getElementById('campaigns-table').innerHTML = c.length ? c.map(camp => `<tr class="table-row">
+      <td class="px-4 py-3 font-medium">${camp.name}</td>
+      <td class="px-4 py-3 text-gray-500">${camp.type}</td>
+      <td class="px-4 py-3"><span class="badge-info">${camp.channel}</span></td>
+      <td class="px-4 py-3"><span class="${badge[camp.status] || 'badge-info'}">${camp.status}</span></td>
+      <td class="px-4 py-3 font-medium">$${(camp.budget || 0).toLocaleString('es-MX')}</td>
+      <td class="px-4 py-3">
+        <button onclick="sendCampaign('${camp.id}')" class="btn-sm btn-success text-xs">Enviar</button>
+      </td>
+    </tr>`).join('') : '<tr><td colspan="6" class="px-4 py-8 text-center text-gray-400">Sin campanas</td></tr>';
+  } catch (err) { console.error(err); }
+}
+
+window.showCreateModal = () => alert('Crea campana desde el dashboard');
+window.sendCampaign = async (id) => {
+  try { await window.gql(`mutation { sendCampaign(campaignId: "${id}") { id } }`); alert('Campana enviada!'); loadCampaigns(); } catch (err) { alert('Error: ' + err.message); }
+};
+
+loadCampaigns();
+</script>
+</Layout>

@@ -1,0 +1,111 @@
+---
+import Layout from '../../../layouts/Main.astro';
+---
+
+<Layout title="Reportes" activeModule="erp" activePage="Reportes">
+<div class="space-y-6">
+  <div class="flex items-center justify-between">
+    <div><h2 class="text-xl font-bold text-gray-900">Reportes y Analiticas</h2><p class="text-sm text-gray-500">ERP &bull; Informes ejecutivos</p></div>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <button onclick="exportReport('clients')" class="card-sm hover:shadow-md transition-shadow text-left">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        </div>
+        <div><div class="font-semibold text-gray-900">Clientes</div><div class="text-xs text-gray-500">CSV de clientes</div></div>
+      </div>
+    </button>
+
+    <button onclick="exportReport('products')" class="card-sm hover:shadow-md transition-shadow text-left">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center text-green-600">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+        </div>
+        <div><div class="font-semibold text-gray-900">Inventario</div><div class="text-xs text-gray-500">CSV de productos</div></div>
+      </div>
+    </button>
+
+    <button onclick="exportReport('employees')" class="card-sm hover:shadow-md transition-shadow text-left">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center text-red-600">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+        </div>
+        <div><div class="font-semibold text-gray-900">Nomina</div><div class="text-xs text-gray-500">CSV de empleados</div></div>
+      </div>
+    </button>
+
+    <button onclick="exportReport('invoices')" class="card-sm hover:shadow-md transition-shadow text-left">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-lg bg-yellow-100 flex items-center justify-center text-yellow-600">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        </div>
+        <div><div class="font-semibold text-gray-900">Facturas</div><div class="text-xs text-gray-500">CSV de facturas</div></div>
+      </div>
+    </button>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="card">
+      <h3 class="font-semibold text-gray-900 mb-4">Ventas por Categoria</h3>
+      <div class="h-64"><canvas id="salesByCategoryChart"></canvas></div>
+    </div>
+    <div class="card">
+      <h3 class="font-semibold text-gray-900 mb-4">Empleados por Departamento</h3>
+      <div class="h-64"><canvas id="empByDeptChart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 class="font-semibold text-gray-900 mb-4">Log de Auditoria</h3>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="table-header">
+          <tr><th class="px-4 py-3 text-left">Fecha</th><th class="px-4 py-3 text-left">Usuario</th><th class="px-4 py-3 text-left">Accion</th><th class="px-4 py-3 text-left">Entidad</th><th class="px-4 py-3 text-left">ID</th></tr>
+        </thead>
+        <tbody id="audit-table"><tr><td colspan="5" class="px-4 py-8 text-center text-gray-400">Cargando...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+window.exportReport = async (type) => {
+  try {
+    const data = await window.gql(`mutation { exportReport(format: "csv", type: "${type}") }`);
+    const blob = new Blob([data.exportReport], { type: 'text/csv' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${type}_report.csv`; a.click();
+  } catch (err) { alert('Error exportando: ' + err.message); }
+};
+
+async function loadReports() {
+  try {
+    const auditData = await window.gql(`query { auditLogs(limit: 20) { id action entityType entityId created_at user { name } } }`);
+    const audits = auditData.auditLogs || [];
+    document.getElementById('audit-table').innerHTML = audits.length ? audits.map(a => `<tr class="table-row">
+      <td class="px-4 py-3 text-xs text-gray-500">${new Date(a.created_at).toLocaleString('es-MX')}</td>
+      <td class="px-4 py-3">${a.user?.name || 'Sistema'}</td>
+      <td class="px-4 py-3"><span class="badge-info">${a.action}</span></td>
+      <td class="px-4 py-3 text-gray-500">${a.entityType}</td>
+      <td class="px-4 py-3 font-mono text-xs">#${a.entityId}</td>
+    </tr>`).join('') : '<tr><td colspan="5" class="px-4 py-8 text-center text-gray-400">Sin registros</td></tr>';
+
+    // Charts
+    new Chart(document.getElementById('salesByCategoryChart'), {
+      type: 'bar',
+      data: { labels: ['Sesiones', 'Impresiones', 'Albumes', 'Eventos', 'Insumos'], datasets: [{ label: 'Ventas', data: [45000, 28000, 15000, 62000, 8000], backgroundColor: ['#6366f1', '#22c55e', '#f59e0b', '#ec4899', '#3b82f6'] }] },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } },
+    });
+
+    new Chart(document.getElementById('empByDeptChart'), {
+      type: 'doughnut',
+      data: { labels: ['Ventas', 'SCM', 'RRHH', 'Finanzas', 'Marketing'], datasets: [{ data: [3, 2, 2, 1, 1], backgroundColor: ['#6366f1', '#22c55e', '#ef4444', '#f59e0b', '#ec4899'] }] },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12 } } } },
+    });
+  } catch (err) { console.error(err); }
+}
+
+loadReports();
+</script>
+</Layout>

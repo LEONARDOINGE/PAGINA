@@ -1,0 +1,85 @@
+---
+import Layout from '../../../layouts/Main.astro';
+---
+
+<Layout title="Departamentos" activeModule="rh" activePage="Departamentos">
+<div class="space-y-6">
+  <div class="flex items-center justify-between">
+    <div><h2 class="text-xl font-bold text-gray-900">Departamentos</h2><p class="text-sm text-gray-500">RRHH &bull; Estructura organizacional</p></div>
+    <button onclick="showCreateModal()" class="btn-primary flex items-center gap-2">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+      Nuevo Departamento
+    </button>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="depts-grid">
+    <div class="col-span-3 card-sm text-center text-gray-400 py-8">Cargando...</div>
+  </div>
+</div>
+
+<div id="dept-modal" class="hidden">
+  <div class="modal-overlay" onclick="closeModal()">
+    <div class="modal-content max-w-md" onclick="event.stopPropagation()">
+      <div class="p-6 border-b border-gray-100"><h3 class="text-lg font-semibold">Nuevo Departamento</h3></div>
+      <form id="dept-form" class="p-6 space-y-4">
+        <div><label class="label">Nombre *</label><input type="text" id="d-name" class="input" required /></div>
+        <div><label class="label">Codigo *</label><input type="text" id="d-code" class="input" maxlength="10" required /></div>
+        <div><label class="label">Centro de Costo</label><input type="text" id="d-cost" class="input" /></div>
+        <div><label class="label">Presupuesto Anual</label><input type="number" id="d-budget" class="input" step="0.01" /></div>
+        <div><label class="label">Color</label><input type="color" id="d-color" class="w-full h-10 rounded cursor-pointer" value="#6366f1" /></div>
+        <div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
+          <button type="button" onclick="closeModal()" class="btn-secondary">Cancelar</button>
+          <button type="submit" class="btn-primary">Crear</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+async function loadDepts() {
+  try {
+    const data = await window.gql(`query { departments { id name code color costCenter budget active employees { id name } salaryBudget positions { id name } } }`);
+    const depts = data.departments || [];
+    const grid = document.getElementById('depts-grid');
+    if (!depts.length) { grid.innerHTML = '<div class="col-span-3 card-sm text-center text-gray-400 py-8">Sin departamentos</div>'; return; }
+
+    grid.innerHTML = depts.map(d => `
+      <div class="card-sm border-t-4" style="border-top-color:${d.color}">
+        <div class="flex items-center justify-between mb-3">
+          <div>
+            <div class="font-bold text-gray-900">${d.name}</div>
+            <div class="text-xs text-gray-400">${d.code} &bull; ${d.costCenter || 'Sin CC'}</div>
+          </div>
+          <span class="${d.active ? 'badge-success' : 'badge-danger'}">${d.active ? 'Activo' : 'Inactivo'}</span>
+        </div>
+        <div class="grid grid-cols-2 gap-2 text-xs mb-3">
+          <div class="bg-gray-50 rounded p-2 text-center"><div class="font-bold text-lg text-gray-900">${d.employees?.length || 0}</div><div class="text-gray-400">Empleados</div></div>
+          <div class="bg-gray-50 rounded p-2 text-center"><div class="font-bold text-lg text-gray-900">${d.positions?.length || 0}</div><div class="text-gray-400">Puestos</div></div>
+          <div class="bg-gray-50 rounded p-2 text-center"><div class="font-bold text-lg text-gray-900">$${Math.round((d.salaryBudget || 0) / 1000)}k</div><div class="text-gray-400">Nomina Mens.</div></div>
+          <div class="bg-gray-50 rounded p-2 text-center"><div class="font-bold text-lg text-gray-900">$${Math.round((d.budget || 0) / 1000)}k</div><div class="text-gray-400">Presupuesto</div></div>
+        </div>
+        <div class="flex gap-2">
+          <a href="/rh/employees?dept=${d.id}" class="btn-sm btn-outline flex-1 text-center">Ver Equipo</a>
+          <button onclick="editDept('${d.id}')" class="btn-sm btn-secondary">Editar</button>
+        </div>
+      </div>
+    `).join('');
+  } catch (err) { console.error(err); }
+}
+
+window.showCreateModal = () => document.getElementById('dept-modal').classList.remove('hidden');
+window.closeModal = () => document.getElementById('dept-modal').classList.add('hidden');
+
+document.getElementById('dept-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  try {
+    await window.gql(`mutation { createDepartment(name: "${document.getElementById('d-name').value}", code: "${document.getElementById('d-code').value}", color: "${document.getElementById('d-color').value}") { id } }`);
+    closeModal();
+    loadDepts();
+  } catch (err) { alert('Error: ' + err.message); }
+});
+
+loadDepts();
+</script>
+</Layout>

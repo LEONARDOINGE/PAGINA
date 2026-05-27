@@ -1,0 +1,126 @@
+---
+import Layout from '../../../layouts/Main.astro';
+---
+
+<Layout title="Proveedores" activeModule="scm" activePage="Proveedores">
+<div class="space-y-6">
+  <div class="flex items-center justify-between">
+    <div><h2 class="text-xl font-bold text-gray-900">Proveedores</h2><p class="text-sm text-gray-500">SCM &bull; Cadena de suministro</p></div>
+    <button onclick="showCreateModal()" class="btn-primary flex items-center gap-2">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+      Nuevo Proveedor
+    </button>
+  </div>
+
+  <div class="grid grid-cols-4 gap-4">
+    <div class="card-sm text-center"><div class="text-2xl font-bold text-blue-600" id="sup-total">--</div><div class="text-xs text-gray-500">Proveedores</div></div>
+    <div class="card-sm text-center"><div class="text-2xl font-bold text-green-600" id="sup-active">--</div><div class="text-xs text-gray-500">Activos</div></div>
+    <div class="card-sm text-center"><div class="text-2xl font-bold text-yellow-600" id="sup-orders">--</div><div class="text-xs text-gray-500">Ordenes Pendientes</div></div>
+    <div class="card-sm text-center"><div class="text-2xl font-bold text-purple-600" id="sup-products">--</div><div class="text-xs text-gray-500">Productos Suministrados</div></div>
+  </div>
+
+  <div class="card overflow-hidden p-0">
+    <table class="w-full text-sm">
+      <thead class="table-header">
+        <tr>
+          <th class="px-4 py-3 text-left">Proveedor</th><th class="px-4 py-3 text-left">Contacto</th>
+          <th class="px-4 py-3 text-left">Categoria</th><th class="px-4 py-3 text-left">Rating</th>
+          <th class="px-4 py-3 text-left">Tiempo Entrega</th><th class="px-4 py-3 text-left">Terminos</th>
+          <th class="px-4 py-3 text-left">Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="suppliers-table"><tr><td colspan="7" class="px-4 py-8 text-center text-gray-400">Cargando...</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<div id="supplier-modal" class="hidden">
+  <div class="modal-overlay" onclick="closeModal()">
+    <div class="modal-content max-w-lg" onclick="event.stopPropagation()">
+      <div class="p-6 border-b border-gray-100 flex items-center justify-between">
+        <h3 class="text-lg font-semibold">Nuevo Proveedor</h3>
+        <button onclick="closeModal()" class="p-1 rounded hover:bg-gray-100"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+      </div>
+      <form id="supplier-form" class="p-6 space-y-4">
+        <div class="grid grid-cols-2 gap-4">
+          <div><label class="label">Nombre *</label><input type="text" id="s-name" class="input" required /></div>
+          <div><label class="label">Contacto</label><input type="text" id="s-contact" class="input" /></div>
+          <div><label class="label">Email</label><input type="email" id="s-email" class="input" /></div>
+          <div><label class="label">Telefono</label><input type="text" id="s-phone" class="input" /></div>
+          <div><label class="label">Categoria</label><input type="text" id="s-category" class="input" /></div>
+          <div><label class="label">Dias Entrega</label><input type="number" id="s-lead" class="input" value="7" /></div>
+          <div><label class="label">Terminos Pago</label>
+            <select id="s-terms" class="input">
+              <option value="contado">Contado</option><option value="15 dias">15 dias</option>
+              <option value="30 dias">30 dias</option><option value="45 dias">45 dias</option>
+              <option value="60 dias">60 dias</option>
+            </select>
+          </div>
+          <div><label class="label">Rating Inicial</label><input type="number" id="s-rating" class="input" min="1" max="5" step="0.1" value="4.0" /></div>
+        </div>
+        <div><label class="label">Direccion</label><textarea id="s-address" class="input" rows="2"></textarea></div>
+        <div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
+          <button type="button" onclick="closeModal()" class="btn-secondary">Cancelar</button>
+          <button type="submit" class="btn-primary">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+async function loadSuppliers() {
+  try {
+    const data = await window.gql(`query { suppliers { id name contactName email phone category rating paymentTerms leadTimeDays active products { id } purchaseOrders { id status } } }`);
+    const supps = data.suppliers || [];
+    document.getElementById('sup-total').textContent = supps.length;
+    document.getElementById('sup-active').textContent = supps.filter(s => s.active).length;
+    document.getElementById('sup-orders').textContent = supps.flatMap(s => s.purchaseOrders || []).filter(o => o.status !== 'recibido').length;
+    document.getElementById('sup-products').textContent = supps.flatMap(s => s.products || []).length;
+
+    const tbody = document.getElementById('suppliers-table');
+    if (!supps.length) { tbody.innerHTML = '<tr><td colspan="7" class="px-4 py-8 text-center text-gray-400">Sin proveedores</td></tr>'; return; }
+
+    tbody.innerHTML = supps.map(s => {
+      const stars = '\u2605'.repeat(Math.round(s.rating || 0)) + '\u2606'.repeat(5 - Math.round(s.rating || 0));
+      return `<tr class="table-row">
+        <td class="px-4 py-3">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center text-green-700 font-bold text-xs">${s.name[0]}</div>
+            <div><div class="font-medium text-gray-900">${s.name}</div><span class="${s.active ? 'badge-success' : 'badge-danger'} text-xs">${s.active ? 'Activo' : 'Inactivo'}</span></div>
+          </div>
+        </td>
+        <td class="px-4 py-3 text-gray-600">${s.contactName || '-'}<br><span class="text-xs text-gray-400">${s.email || s.phone || '-'}</span></td>
+        <td class="px-4 py-3 text-gray-500 text-xs">${s.category || '-'}</td>
+        <td class="px-4 py-3"><span class="text-yellow-500">${stars}</span> <span class="text-xs text-gray-500">${s.rating || 0}</span></td>
+        <td class="px-4 py-3 text-gray-500">${s.leadTimeDays || 0} dias</td>
+        <td class="px-4 py-3 text-gray-500 text-xs">${s.paymentTerms || '-'}</td>
+        <td class="px-4 py-3">
+          <button onclick="createPO('${s.id}', '${s.name}')" class="btn-sm btn-primary text-xs">Orden Compra</button>
+          <button onclick="editSupplier('${s.id}')" class="btn-sm btn-outline text-xs">Editar</button>
+        </td>
+      </tr>`;
+    }).join('');
+  } catch (err) { console.error(err); }
+}
+
+window.showCreateModal = () => document.getElementById('supplier-modal').classList.remove('hidden');
+window.closeModal = () => document.getElementById('supplier-modal').classList.add('hidden');
+
+window.createPO = (supplierId, name) => {
+  alert(`Crear orden de compra para: ${name}\n(ID: ${supplierId})\nVe a: /scm/purchase-orders`);
+  window.location.href = '/scm/purchase-orders';
+};
+
+document.getElementById('supplier-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  try {
+    await window.gql(`mutation { createSupplier(input: { name: "${document.getElementById('s-name').value}", contactName: "${document.getElementById('s-contact').value}", email: "${document.getElementById('s-email').value}", phone: "${document.getElementById('s-phone').value}", category: "${document.getElementById('s-category').value}", paymentTerms: "${document.getElementById('s-terms').value}", leadTimeDays: ${parseInt(document.getElementById('s-lead').value) || 7} }) { id } }`);
+    closeModal();
+    loadSuppliers();
+  } catch (err) { alert('Error: ' + err.message); }
+});
+
+loadSuppliers();
+</script>
+</Layout>

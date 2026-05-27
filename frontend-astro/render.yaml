@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: fototec-web
+    runtime: static
+    region: oregon
+    branch: main
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: PUBLIC_API_URL
+        fromService:
+          name: fototec-api
+          type: web
+          envVarKey: RENDER_EXTERNAL_URL
+          format: url
+        suffix: /graphql
+      - key: PUBLIC_API_URL
+        value: https://fototec-api.onrender.com/graphql

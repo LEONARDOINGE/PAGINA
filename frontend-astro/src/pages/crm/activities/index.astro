@@ -1,0 +1,75 @@
+---
+import Layout from '../../../layouts/Main.astro';
+---
+
+<Layout title="Actividades" activeModule="crm" activePage="Actividades">
+<div class="space-y-6">
+  <div class="flex items-center justify-between">
+    <div><h2 class="text-xl font-bold text-gray-900">Actividades</h2><p class="text-sm text-gray-500">CRM &bull; Llamadas, emails, reuniones y tareas</p></div>
+    <button onclick="showCreateModal()" class="btn-primary flex items-center gap-2">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+      Nueva Actividad
+    </button>
+  </div>
+
+  <div class="grid grid-cols-4 gap-4">
+    <div class="card-sm text-center"><div class="text-2xl font-bold text-blue-600" id="act-total">--</div><div class="text-xs text-gray-500">Total</div></div>
+    <div class="card-sm text-center"><div class="text-2xl font-bold text-yellow-600" id="act-pending">--</div><div class="text-xs text-gray-500">Pendientes</div></div>
+    <div class="card-sm text-center"><div class="text-2xl font-bold text-red-600" id="act-overdue">--</div><div class="text-xs text-gray-500">Vencidas</div></div>
+    <div class="card-sm text-center"><div class="text-2xl font-bold text-green-600" id="act-done">--</div><div class="text-xs text-gray-500">Completadas</div></div>
+  </div>
+
+  <div class="card overflow-hidden p-0">
+    <div class="p-4 border-b border-gray-100 flex gap-2 overflow-x-auto">
+      <button class="tab-btn-active" onclick="filterAct('')">Todas</button>
+      <button class="tab-btn" onclick="filterAct('llamada')">Llamadas</button>
+      <button class="tab-btn" onclick="filterAct('email')">Emails</button>
+      <button class="tab-btn" onclick="filterAct('reunion')">Reuniones</button>
+      <button class="tab-btn" onclick="filterAct('tarea')">Tareas</button>
+      <button class="tab-btn" onclick="filterAct('whatsapp')">WhatsApp</button>
+    </div>
+    <table class="w-full text-sm">
+      <thead class="table-header">
+        <tr><th class="px-4 py-3 text-left">Tipo</th><th class="px-4 py-3 text-left">Descripcion</th><th class="px-4 py-3 text-left">Fecha Limite</th><th class="px-4 py-3 text-left">Asignado</th><th class="px-4 py-3 text-left">Acciones</th></tr>
+      </thead>
+      <tbody id="activities-table"><tr><td colspan="5" class="px-4 py-8 text-center text-gray-400">Cargando...</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+let currentType = '';
+
+async function loadActivities(type = '') {
+  currentType = type;
+  try {
+    const data = await window.gql(`query { activities${type ? `(entityType: "${type}")` : ''} { id type description dueDate completedAt created_at assignedTo { name } } }`);
+    const acts = data.activities || [];
+    document.getElementById('act-total').textContent = acts.length;
+    document.getElementById('act-pending').textContent = acts.filter(a => !a.completedAt && a.dueDate && new Date(a.dueDate) >= new Date()).length;
+    document.getElementById('act-overdue').textContent = acts.filter(a => !a.completedAt && a.dueDate && new Date(a.dueDate) < new Date()).length;
+    document.getElementById('act-done').textContent = acts.filter(a => a.completedAt).length;
+
+    const icon = { llamada: '\u260E', email: '\u2709', reunion: '\u260F', tarea: '\u2611', whatsapp: '\u260E', sms: '\u2709' };
+    document.getElementById('activities-table').innerHTML = acts.length ? acts.map(a => `<tr class="table-row">
+      <td class="px-4 py-3"><span class="badge-info">${icon[a.type] || ''} ${a.type}</span></td>
+      <td class="px-4 py-3 font-medium">${a.description}</td>
+      <td class="px-4 py-3 text-xs ${!a.completedAt && a.dueDate && new Date(a.dueDate) < new Date() ? 'text-red-600 font-bold' : 'text-gray-500'}">${a.dueDate ? new Date(a.dueDate).toLocaleDateString('es-MX') : '-'}</td>
+      <td class="px-4 py-3 text-gray-500 text-xs">${a.assignedTo?.name || '-'}</td>
+      <td class="px-4 py-3">
+        ${!a.completedAt ? `<button onclick="completeActivity('${a.id}')" class="btn-sm btn-success text-xs">Completar</button>` : '<span class="text-xs text-green-600">Completada</span>'}
+      </td>
+    </tr>`).join('') : '<tr><td colspan="5" class="px-4 py-8 text-center text-gray-400">Sin actividades</td></tr>';
+  } catch (err) { console.error(err); }
+}
+
+window.filterAct = (type) => loadActivities(type);
+
+window.completeActivity = async (id) => {
+  try { await window.gql(`mutation { completeActivity(id: "${id}") { id } }`); loadActivities(currentType); } catch (err) { alert('Error: ' + err.message); }
+};
+window.showCreateModal = () => alert('Crea actividad desde la vista de cliente');
+
+loadActivities();
+</script>
+</Layout>

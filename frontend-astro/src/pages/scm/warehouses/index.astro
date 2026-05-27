@@ -1,0 +1,73 @@
+---
+import Layout from '../../../layouts/Main.astro';
+---
+
+<Layout title="Almacenes" activeModule="scm" activePage="Almacenes">
+<div class="space-y-6">
+  <div class="flex items-center justify-between">
+    <div><h2 class="text-xl font-bold text-gray-900">Almacenes</h2><p class="text-sm text-gray-500">SCM &bull; Ubicaciones de inventario</p></div>
+    <button onclick="showCreateModal()" class="btn-primary flex items-center gap-2">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+      Nuevo Almacen
+    </button>
+  </div>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="warehouses-grid">
+    <div class="col-span-3 card-sm text-center text-gray-400 py-8">Cargando...</div>
+  </div>
+</div>
+
+<div id="wh-modal" class="hidden">
+  <div class="modal-overlay" onclick="closeModal()">
+    <div class="modal-content max-w-md" onclick="event.stopPropagation()">
+      <div class="p-6 border-b border-gray-100"><h3 class="text-lg font-semibold">Nuevo Almacen</h3></div>
+      <form id="wh-form" class="p-6 space-y-4">
+        <div><label class="label">Nombre *</label><input type="text" id="wh-name" class="input" required /></div>
+        <div><label class="label">Encargado</label><input type="text" id="wh-manager" class="input" /></div>
+        <div><label class="label">Telefono</label><input type="text" id="wh-phone" class="input" /></div>
+        <div><label class="label">Direccion</label><textarea id="wh-address" class="input" rows="2"></textarea></div>
+        <div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
+          <button type="button" onclick="closeModal()" class="btn-secondary">Cancelar</button>
+          <button type="submit" class="btn-primary">Crear</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+async function loadWarehouses() {
+  try {
+    const data = await window.gql(`query { warehouses { id name address phone manager active inventory { id quantity product { name } } } }`);
+    const whs = data.warehouses || [];
+    const grid = document.getElementById('warehouses-grid');
+    grid.innerHTML = whs.length ? whs.map(w => `<div class="card">
+      <div class="flex items-center justify-between mb-3">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center text-green-600"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg></div>
+          <div><div class="font-bold text-gray-900">${w.name}</div><div class="text-xs text-gray-500">${w.manager || 'Sin encargado'}</div></div>
+        </div>
+        <span class="${w.active ? 'badge-success' : 'badge-danger'}">${w.active ? 'Activo' : 'Inactivo'}</span>
+      </div>
+      <div class="text-sm text-gray-500 mb-3">${w.address || 'Sin direccion'}</div>
+      <div class="grid grid-cols-2 gap-2 text-xs">
+        <div class="bg-gray-50 rounded p-2 text-center"><div class="font-bold text-lg text-gray-900">${w.inventory?.length || 0}</div><div class="text-gray-400">SKUs</div></div>
+        <div class="bg-gray-50 rounded p-2 text-center"><div class="font-bold text-lg text-gray-900">${w.inventory?.reduce((s, i) => s + (i.quantity || 0), 0) || 0}</div><div class="text-gray-400">Unidades</div></div>
+      </div>
+    </div>`).join('') : '<div class="col-span-3 card-sm text-center text-gray-400 py-8">Sin almacenes</div>';
+  } catch (err) { console.error(err); }
+}
+
+window.showCreateModal = () => document.getElementById('wh-modal').classList.remove('hidden');
+window.closeModal = () => document.getElementById('wh-modal').classList.add('hidden');
+
+document.getElementById('wh-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  try {
+    await window.gql(`mutation { createWarehouse(input: { name: "${document.getElementById('wh-name').value}", manager: "${document.getElementById('wh-manager').value}", phone: "${document.getElementById('wh-phone').value}", address: "${document.getElementById('wh-address').value}" }) { id } }`);
+    closeModal(); loadWarehouses();
+  } catch (err) { alert('Error: ' + err.message); }
+});
+
+loadWarehouses();
+</script>
+</Layout>

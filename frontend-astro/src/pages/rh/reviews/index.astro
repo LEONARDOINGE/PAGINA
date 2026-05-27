@@ -1,0 +1,34 @@
+---
+import Layout from '../../../layouts/Main.astro';
+---
+
+<Layout title="Evaluaciones" activeModule="rh" activePage="Evaluaciones">
+<div class="space-y-6">
+  <div><h2 class="text-xl font-bold text-gray-900">Evaluaciones de Desempeno</h2><p class="text-sm text-gray-500">RRHH &bull; Revisiones periodicas</p></div>
+  <div class="card overflow-hidden p-0">
+    <table class="w-full text-sm">
+      <thead class="table-header">
+        <tr><th class="px-4 py-3 text-left">Empleado</th><th class="px-4 py-3 text-left">Periodo</th><th class="px-4 py-3 text-left">Calificacion</th><th class="px-4 py-3 text-left">Estado</th><th class="px-4 py-3 text-left">Revisor</th></tr>
+      </thead>
+      <tbody id="reviews-table"><tr><td colspan="5" class="px-4 py-8 text-center text-gray-400">Cargando...</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+async function loadReviews() {
+  try {
+    const data = await window.gql(`query { reviews { id period ratingOverall status strengths reviewer { name } employee { name } } }`);
+    const r = data.reviews || [];
+    document.getElementById('reviews-table').innerHTML = r.length ? r.map(rev => `<tr class="table-row">
+      <td class="px-4 py-3 font-medium">${rev.employee?.name || '-'}</td>
+      <td class="px-4 py-3 text-gray-500">${rev.period}</td>
+      <td class="px-4 py-3"><span class="font-bold ${(rev.ratingOverall || 0) >= 8 ? 'text-green-600' : (rev.ratingOverall || 0) >= 6 ? 'text-yellow-600' : 'text-red-600'}">${rev.ratingOverall || '-'}/10</span></td>
+      <td class="px-4 py-3"><span class="badge-info">${rev.status}</span></td>
+      <td class="px-4 py-3 text-gray-500">${rev.reviewer?.name || '-'}</td>
+    </tr>`).join('') : '<tr><td colspan="5" class="px-4 py-8 text-center text-gray-400">Sin evaluaciones</td></tr>';
+  } catch (err) { console.error(err); }
+}
+loadReviews();
+</script>
+</Layout>

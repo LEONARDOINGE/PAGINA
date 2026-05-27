@@ -1,0 +1,99 @@
+---
+import Layout from '../../../layouts/Main.astro';
+---
+
+<Layout title="Cotizaciones" activeModule="crm" activePage="Cotizaciones">
+<div class="space-y-6">
+  <div class="flex items-center justify-between">
+    <div><h2 class="text-xl font-bold text-gray-900">Cotizaciones</h2><p class="text-sm text-gray-500">CRM &bull; Quotes y propuestas</p></div>
+    <button onclick="showCreateModal()" class="btn-primary flex items-center gap-2">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+      Nueva Cotizacion
+    </button>
+  </div>
+
+  <div class="grid grid-cols-5 gap-4">
+    <div class="card-sm text-center"><div class="text-2xl font-bold text-gray-600" id="q-total">--</div><div class="text-xs text-gray-500">Total</div></div>
+    <div class="card-sm text-center"><div class="text-2xl font-bold text-yellow-600" id="q-pending">--</div><div class="text-xs text-gray-500">Pendientes</div></div>
+    <div class="card-sm text-center"><div class="text-2xl font-bold text-blue-600" id="q-sent">--</div><div class="text-xs text-gray-500">Enviadas</div></div>
+    <div class="card-sm text-center"><div class="text-2xl font-bold text-green-600" id="q-approved">--</div><div class="text-xs text-gray-500">Aprobadas</div></div>
+    <div class="card-sm text-center"><div class="text-2xl font-bold text-red-600" id="q-rejected">--</div><div class="text-xs text-gray-500">Rechazadas</div></div>
+  </div>
+
+  <div class="card overflow-hidden p-0">
+    <table class="w-full text-sm">
+      <thead class="table-header">
+        <tr><th class="px-4 py-3 text-left">Folio</th><th class="px-4 py-3 text-left">Cliente</th><th class="px-4 py-3 text-left">Total</th><th class="px-4 py-3 text-left">Estado</th><th class="px-4 py-3 text-left">Validez</th><th class="px-4 py-3 text-left">Acciones</th></tr>
+      </thead>
+      <tbody id="quotes-table"><tr><td colspan="6" class="px-4 py-8 text-center text-gray-400">Cargando...</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<div id="quote-modal" class="hidden">
+  <div class="modal-overlay" onclick="closeModal()">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <div class="p-6 border-b border-gray-100"><h3 class="text-lg font-semibold">Nueva Cotizacion</h3></div>
+      <form id="quote-form" class="p-6 space-y-4">
+        <div><label class="label">Cliente *</label><select id="q-client" class="input" required><option value="">Seleccionar...</option></select></div>
+        <div class="grid grid-cols-2 gap-4">
+          <div><label class="label">Fecha Validez</label><input type="date" id="q-valid" class="input" /></div>
+        </div>
+        <div><label class="label">Notas</label><textarea id="q-notes" class="input" rows="2"></textarea></div>
+        <div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
+          <button type="button" onclick="closeModal()" class="btn-secondary">Cancelar</button>
+          <button type="submit" class="btn-primary">Crear Cotizacion</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+async function loadQuotes() {
+  try {
+    const data = await window.gql(`query { quotes { id folio status subtotal iva total discount validUntil client { id name } } }`);
+    const quotes = data.quotes || [];
+    document.getElementById('q-total').textContent = quotes.length;
+    document.getElementById('q-pending').textContent = quotes.filter(q => ['borrador', 'enviado'].includes(q.status)).length;
+    document.getElementById('q-sent').textContent = quotes.filter(q => q.status === 'enviado').length;
+    document.getElementById('q-approved').textContent = quotes.filter(q => q.status === 'aprobado').length;
+    document.getElementById('q-rejected').textContent = quotes.filter(q => q.status === 'rechazado').length;
+
+    const badge = { borrador: 'badge-secondary', enviado: 'badge-info', aprobado: 'badge-success', rechazado: 'badge-danger', vencido: 'badge-warning' };
+    document.getElementById('quotes-table').innerHTML = quotes.length ? quotes.map(q => `<tr class="table-row">
+      <td class="px-4 py-3 font-mono font-bold text-primary-600">${q.folio}</td>
+      <td class="px-4 py-3">${q.client?.name || '-'}</td>
+      <td class="px-4 py-3 font-bold text-gray-900">$${Number(q.total).toLocaleString('es-MX')}</td>
+      <td class="px-4 py-3"><span class="${badge[q.status] || 'badge-info'}">${q.status}</span></td>
+      <td class="px-4 py-3 text-gray-500 text-xs">${q.validUntil ? new Date(q.validUntil).toLocaleDateString('es-MX') : '-'}</td>
+      <td class="px-4 py-3">
+        ${q.status === 'aprobado' ? `<button onclick="convertToInvoice('${q.id}')" class="btn-sm btn-success text-xs">Facturar</button>` : ''}
+        <button onclick="viewQuote('${q.id}')" class="btn-sm btn-secondary text-xs">Ver</button>
+      </td>
+    </tr>`).join('') : '<tr><td colspan="6" class="px-4 py-8 text-center text-gray-400">Sin cotizaciones</td></tr>';
+  } catch (err) { console.error(err); }
+}
+
+window.showCreateModal = () => document.getElementById('quote-modal').classList.remove('hidden');
+window.closeModal = () => document.getElementById('quote-modal').classList.add('hidden');
+
+window.convertToInvoice = async (id) => {
+  try { await window.gql(`mutation { convertQuoteToInvoice(quoteId: "${id}") { folio } }`); alert('Cotizacion convertida a factura'); loadQuotes(); } catch (err) { alert('Error: ' + err.message); }
+};
+window.viewQuote = async (id) => {
+  const d = await window.gql(`query { quote(id: "${id}") { folio subtotal iva total discount validUntil items { description quantity price subtotal } } }`);
+  alert(`Cotizacion ${d.quote.folio}\nSubtotal: $${d.quote.subtotal}\nDesc: $${d.quote.discount}\nIVA: $${d.quote.iva}\nTotal: $${d.quote.total}`);
+};
+
+document.getElementById('quote-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  try {
+    await window.gql(`mutation { createQuote(input: { clientId: "${document.getElementById('q-client').value}", validUntil: "${document.getElementById('q-valid').value}", notes: "${document.getElementById('q-notes').value}" }) { id folio } }`);
+    closeModal(); loadQuotes();
+  } catch (err) { alert('Error: ' + err.message); }
+});
+
+loadQuotes();
+</script>
+</Layout>

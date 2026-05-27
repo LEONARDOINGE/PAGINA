@@ -1,0 +1,111 @@
+---
+import Layout from '../../../layouts/Main.astro';
+---
+
+<Layout title="Asistencia" activeModule="rh" activePage="Asistencia">
+<div class="space-y-6">
+  <div class="flex items-center justify-between">
+    <div><h2 class="text-xl font-bold text-gray-900">Control de Asistencia</h2><p class="text-sm text-gray-500">RRHH &bull; Registro diario</p></div>
+    <div class="flex gap-2">
+      <select class="input w-auto" id="att-month" onchange="loadAttendance()">
+        <option value="1">Enero</option><option value="2">Febrero</option><option value="3">Marzo</option>
+        <option value="4">Abril</option><option value="5">Mayo</option><option value="6">Junio</option>
+        <option value="7">Julio</option><option value="8">Agosto</option><option value="9">Septiembre</option>
+        <option value="10">Octubre</option><option value="11">Noviembre</option><option value="12">Diciembre</option>
+      </select>
+      <select class="input w-auto" id="att-year" onchange="loadAttendance()">
+        <option>2024</option><option>2025</option><option selected>2026</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-5 gap-4">
+    <div class="card-sm text-center"><div class="text-2xl font-bold text-green-600" id="att-presentes">--</div><div class="text-xs text-gray-500">Presentes</div></div>
+    <div class="card-sm text-center"><div class="text-2xl font-bold text-red-500" id="att-faltas">--</div><div class="text-xs text-gray-500">Faltas</div></div>
+    <div class="card-sm text-center"><div class="text-2xl font-bold text-yellow-500" id="att-permisos">--</div><div class="text-xs text-gray-500">Permisos</div></div>
+    <div class="card-sm text-center"><div class="text-2xl font-bold text-blue-500" id="att-retardos">--</div><div class="text-xs text-gray-500">Retardos</div></div>
+    <div class="card-sm text-center"><div class="text-2xl font-bold text-gray-600" id="att-tasa">--%</div><div class="text-xs text-gray-500">Tasa Asistencia</div></div>
+  </div>
+
+  <div class="card overflow-hidden p-0">
+    <table class="w-full text-sm">
+      <thead class="table-header">
+        <tr>
+          <th class="px-4 py-3 text-left">Empleado</th><th class="px-4 py-3 text-left">Depto</th>
+          <th class="px-4 py-3 text-left">Fecha</th><th class="px-4 py-3 text-left">Entrada</th>
+          <th class="px-4 py-3 text-left">Salida</th><th class="px-4 py-3 text-left">Horas</th>
+          <th class="px-4 py-3 text-left">Estado</th><th class="px-4 py-3 text-left">Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="attendance-table"><tr><td colspan="8" class="px-4 py-8 text-center text-gray-400">Cargando...</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+async function loadAttendance() {
+  const month = parseInt(document.getElementById('att-month')?.value || new Date().getMonth() + 1);
+  const year = parseInt(document.getElementById('att-year')?.value || new Date().getFullYear());
+
+  try {
+    const data = await window.gql(`
+      query Attendance($month: Int, $year: Int) {
+        attendance(month: $month, year: $year) {
+          id date clockIn clockOut hoursWorked status notes
+          employee { id name department { name color } }
+        }
+      }
+    `, { month, year });
+
+    const records = data.attendance || [];
+    const presentes = records.filter(r => r.status === 'presente').length;
+    const faltas = records.filter(r => r.status === 'falta').length;
+    const permisos = records.filter(r => ['permiso', 'vacaciones', 'incapacidad'].includes(r.status)).length;
+    const retardos = records.filter(r => r.status === 'retardo').length;
+    const tasa = records.length > 0 ? Math.round((presentes / records.length) * 100) : 0;
+
+    document.getElementById('att-presentes').textContent = presentes;
+    document.getElementById('att-faltas').textContent = faltas;
+    document.getElementById('att-permisos').textContent = permisos;
+    document.getElementById('att-retardos').textContent = retardos;
+    document.getElementById('att-tasa').textContent = tasa + '%';
+
+    const tbody = document.getElementById('attendance-table');
+    if (!records.length) { tbody.innerHTML = '<tr><td colspan="8" class="px-4 py-8 text-center text-gray-400">Sin registros este mes</td></tr>'; return; }
+
+    tbody.innerHTML = records.map(r => {
+      const badge = { presente: 'badge-success', falta: 'badge-danger', retardo: 'badge-warning', permiso: 'badge-info', vacaciones: 'badge-purple', incapacidad: 'badge-pink' }[r.status] || 'badge-info';
+      const isLate = r.clockIn && r.clockIn > '09:00';
+      return `<tr class="table-row">
+        <td class="px-4 py-3">
+          <div class="flex items-center gap-2">
+            <div class="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold" style="background:${r.employee?.department?.color || '#7c3aed'}">${r.employee?.name?.[0] || '?'}</div>
+            <span class="font-medium">${r.employee?.name || '-'}</span>
+          </div>
+        </td>
+        <td class="px-4 py-3 text-xs text-gray-500">${r.employee?.department?.name || '-'}</td>
+        <td class="px-4 py-3 text-xs">${new Date(r.date).toLocaleDateString('es-MX')}</td>
+        <td class="px-4 py-3 ${isLate ? 'text-red-600 font-bold' : 'text-gray-900'}">${r.clockIn || '-'}</td>
+        <td class="px-4 py-3 text-gray-500">${r.clockOut || '-'}</td>
+        <td class="px-4 py-3 text-gray-900">${r.hoursWorked ? r.hoursWorked + 'h' : '-'}</td>
+        <td class="px-4 py-3"><span class="${badge}">${r.status}</span></td>
+        <td class="px-4 py-3">
+          <button onclick="editAttendance('${r.id}')" class="btn-sm btn-outline text-xs">Editar</button>
+        </td>
+      </tr>`;
+    }).join('');
+  } catch (err) { console.error(err); }
+}
+
+window.editAttendance = async (id) => {
+  const status = prompt('Nuevo estado (presente/falta/retardo/permiso):');
+  if (!status) return;
+  try {
+    await window.gql(`mutation { recordAttendance(employeeId: "1", input: { status: "${status}", date: "${new Date().toISOString().split('T')[0]}" }) { id } }`);
+    loadAttendance();
+  } catch (err) { alert('Error: ' + err.message); }
+};
+
+loadAttendance();
+</script>
+</Layout>

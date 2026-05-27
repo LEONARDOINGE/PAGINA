@@ -1,0 +1,44 @@
+---
+import Layout from '../../../layouts/Main.astro';
+---
+
+<Layout title="Capacitaciones" activeModule="rh" activePage="Capacitaciones">
+<div class="space-y-6">
+  <div class="flex items-center justify-between">
+    <div><h2 class="text-xl font-bold text-gray-900">Capacitaciones</h2><p class="text-sm text-gray-500">RRHH &bull; Formacion y desarrollo</p></div>
+    <button onclick="showCreateModal()" class="btn-primary flex items-center gap-2">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+      Nueva Capacitacion
+    </button>
+  </div>
+  <div class="card overflow-hidden p-0">
+    <table class="w-full text-sm">
+      <thead class="table-header">
+        <tr><th class="px-4 py-3 text-left">Nombre</th><th class="px-4 py-3 text-left">Instructor</th><th class="px-4 py-3 text-left">Duracion</th><th class="px-4 py-3 text-left">Tipo</th><th class="px-4 py-3 text-left">Inscritos</th><th class="px-4 py-3 text-left">Estado</th></tr>
+      </thead>
+      <tbody id="trainings-table"><tr><td colspan="6" class="px-4 py-8 text-center text-gray-400">Cargando...</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+async function loadTrainings() {
+  try {
+    const data = await window.gql(`query { trainings { id name instructor durationHours type active enrollments { id status employee { name } } } }`);
+    const t = data.trainings || [];
+    document.getElementById('trainings-table').innerHTML = t.length ? t.map(tr => `<tr class="table-row">
+      <td class="px-4 py-3 font-medium">${tr.name}</td>
+      <td class="px-4 py-3 text-gray-500">${tr.instructor || '-'}</td>
+      <td class="px-4 py-3 text-gray-500">${tr.durationHours}h</td>
+      <td class="px-4 py-3"><span class="badge-info">${tr.type}</span></td>
+      <td class="px-4 py-3">${tr.enrollments?.length || 0}</td>
+      <td class="px-4 py-3"><span class="${tr.active ? 'badge-success' : 'badge-danger'}">${tr.active ? 'Activo' : 'Inactivo'}</span></td>
+    </tr>`).join('') : '<tr><td colspan="6" class="px-4 py-8 text-center text-gray-400">Sin capacitaciones</td></tr>';
+  } catch (err) { console.error(err); }
+}
+
+window.showCreateModal = () => alert('Crea capacitacion desde RRHH');
+
+loadTrainings();
+</script>
+</Layout>

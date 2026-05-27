@@ -1,0 +1,41 @@
+---
+import Layout from '../../../layouts/Main.astro';
+---
+
+<Layout title="Encuestas NPS" activeModule="crm" activePage="Encuestas">
+<div class="space-y-6">
+  <div><h2 class="text-xl font-bold text-gray-900">Encuestas de Satisfaccion</h2><p class="text-sm text-gray-500">CRM &bull; NPS post-sesion</p></div>
+  <div class="grid grid-cols-4 gap-4">
+    <div class="card-sm text-center"><div class="text-2xl font-bold text-blue-600" id="s-total">--</div><div class="text-xs text-gray-500">Total Encuestas</div></div>
+    <div class="card-sm text-center"><div class="text-2xl font-bold text-green-600" id="s-promotores">--</div><div class="text-xs text-gray-500">Promotores (9-10)</div></div>
+    <div class="card-sm text-center"><div class="text-2xl font-bold text-yellow-600" id="s-passive">--</div><div class="text-xs text-gray-500">Pasivos (7-8)</div></div>
+    <div class="card-sm text-center"><div class="text-2xl font-bold text-red-600" id="s-detractores">--</div><div class="text-xs text-gray-500">Detractores (0-6)</div></div>
+  </div>
+  <div class="card overflow-hidden p-0">
+    <table class="w-full text-sm">
+      <thead class="table-header">
+        <tr><th class="px-4 py-3 text-left">Cliente</th><th class="px-4 py-3 text-left">Tipo</th><th class="px-4 py-3 text-left">Score</th><th class="px-4 py-3 text-left">Feedback</th></tr>
+      </thead>
+      <tbody id="surveys-table"><tr><td colspan="4" class="px-4 py-8 text-center text-gray-400">Cargando...</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+async function loadSurveys() {
+  try {
+    const data = await window.gql(`query { surveys { id type score feedback created_at client { name } } }`);
+    const svs = data.surveys || [];
+    document.getElementById('s-total').textContent = svs.length;
+    document.getElementById('s-promotores').textContent = svs.filter(s => (s.score || 0) >= 9).length;
+    document.getElementById('s-passive').textContent = svs.filter(s => (s.score || 0) >= 7 && (s.score || 0) <= 8).length;
+    document.getElementById('s-detractores').textContent = svs.filter(s => (s.score || 0) <= 6).length;
+    document.getElementById('surveys-table').innerHTML = svs.length ? svs.map(s => {
+      const scoreColor = (s.score || 0) >= 9 ? 'text-green-600' : (s.score || 0) >= 7 ? 'text-yellow-600' : 'text-red-600';
+      return `<tr class="table-row"><td class="px-4 py-3">${s.client?.name || '-'}</td><td class="px-4 py-3 badge-info">${s.type}</td><td class="px-4 py-3"><span class="font-bold ${scoreColor}">${s.score || '-'}/10</span></td><td class="px-4 py-3 text-gray-500 text-xs max-w-xs truncate">${s.feedback || '-'}</td></tr>`;
+    }).join('') : '<tr><td colspan="4" class="px-4 py-8 text-center text-gray-400">Sin encuestas</td></tr>';
+  } catch (err) { console.error(err); }
+}
+loadSurveys();
+</script>
+</Layout>

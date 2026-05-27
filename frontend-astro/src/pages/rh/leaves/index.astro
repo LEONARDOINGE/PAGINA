@@ -1,0 +1,106 @@
+---
+import Layout from '../../../layouts/Main.astro';
+---
+
+<Layout title="Permisos y Vacaciones" activeModule="rh" activePage="Permisos">
+<div class="space-y-6">
+  <div class="flex items-center justify-between">
+    <div><h2 class="text-xl font-bold text-gray-900">Solicitudes de Permiso</h2><p class="text-sm text-gray-500">RRHH &bull; Vacaciones, incapacidades y permisos</p></div>
+    <button onclick="showCreateModal()" class="btn-primary flex items-center gap-2">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+      Nueva Solicitud
+    </button>
+  </div>
+
+  <div class="grid grid-cols-4 gap-4">
+    <div class="card-sm text-center"><div class="text-2xl font-bold text-yellow-600" id="leave-pending">--</div><div class="text-xs text-gray-500">Pendientes Aprobacion</div></div>
+    <div class="card-sm text-center"><div class="text-2xl font-bold text-green-600" id="leave-approved">--</div><div class="text-xs text-gray-500">Aprobados</div></div>
+    <div class="card-sm text-center"><div class="text-2xl font-bold text-red-600" id="leave-rejected">--</div><div class="text-xs text-gray-500">Rechazados</div></div>
+    <div class="card-sm text-center"><div class="text-2xl font-bold text-blue-600" id="leave-active">--</div><div class="text-xs text-gray-500">En Curso</div></div>
+  </div>
+
+  <div class="card overflow-hidden p-0">
+    <table class="w-full text-sm">
+      <thead class="table-header">
+        <tr><th class="px-4 py-3 text-left">Empleado</th><th class="px-4 py-3 text-left">Tipo</th><th class="px-4 py-3 text-left">Desde</th><th class="px-4 py-3 text-left">Hasta</th><th class="px-4 py-3 text-left">Dias</th><th class="px-4 py-3 text-left">Estado</th><th class="px-4 py-3 text-left">Acciones</th></tr>
+      </thead>
+      <tbody id="leaves-table"><tr><td colspan="7" class="px-4 py-8 text-center text-gray-400">Cargando...</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<div id="leave-modal" class="hidden">
+  <div class="modal-overlay" onclick="closeModal()">
+    <div class="modal-content max-w-md" onclick="event.stopPropagation()">
+      <div class="p-6 border-b border-gray-100"><h3 class="text-lg font-semibold">Nueva Solicitud</h3></div>
+      <form id="leave-form" class="p-6 space-y-4">
+        <div><label class="label">Empleado *</label><select id="l-employee" class="input" required><option value="">Seleccionar...</option></select></div>
+        <div><label class="label">Tipo *</label>
+          <select id="l-type" class="input" required>
+            <option value="vacaciones">Vacaciones</option><option value="permiso_medico">Permiso Medico</option>
+            <option value="permiso_general">Permiso General</option><option value="incapacidad">Incapacidad</option>
+            <option value="duelo">Duelo</option><option value="maternidad">Maternidad</option>
+          </select>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div><label class="label">Fecha Inicio *</label><input type="date" id="l-start" class="input" required /></div>
+          <div><label class="label">Fecha Fin *</label><input type="date" id="l-end" class="input" required /></div>
+        </div>
+        <div><label class="label">Razon</label><textarea id="l-reason" class="input" rows="2"></textarea></div>
+        <div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
+          <button type="button" onclick="closeModal()" class="btn-secondary">Cancelar</button>
+          <button type="submit" class="btn-primary">Enviar Solicitud</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+async function loadLeaves() {
+  try {
+    const data = await window.gql(`query { leaves { id type startDate endDate days reason status created_at employee { id name department { name } } approver { name } } }`);
+    const leaves = data.leaves || [];
+    document.getElementById('leave-pending').textContent = leaves.filter(l => l.status === 'solicitado').length;
+    document.getElementById('leave-approved').textContent = leaves.filter(l => l.status === 'aprobado').length;
+    document.getElementById('leave-rejected').textContent = leaves.filter(l => l.status === 'rechazado').length;
+    document.getElementById('leave-active').textContent = leaves.filter(l => ['aprobado', 'solicitado'].includes(l.status) && new Date(l.startDate) <= new Date() && new Date(l.endDate) >= new Date()).length;
+
+    const badge = { solicitado: 'badge-warning', aprobado: 'badge-success', rechazado: 'badge-danger', cancelado: 'badge-secondary' };
+    const typeLabel = { vacaciones: 'Vacaciones', permiso_medico: 'Permiso Medico', permiso_general: 'Permiso General', incapacidad: 'Incapacidad', duelo: 'Duelo', maternidad: 'Maternidad' };
+
+    document.getElementById('leaves-table').innerHTML = leaves.length ? leaves.map(l => `<tr class="table-row">
+      <td class="px-4 py-3">${l.employee?.name || '-'}</td>
+      <td class="px-4 py-3"><span class="badge-info">${typeLabel[l.type] || l.type}</span></td>
+      <td class="px-4 py-3 text-xs">${new Date(l.startDate).toLocaleDateString('es-MX')}</td>
+      <td class="px-4 py-3 text-xs">${new Date(l.endDate).toLocaleDateString('es-MX')}</td>
+      <td class="px-4 py-3 font-bold">${l.days}</td>
+      <td class="px-4 py-3"><span class="${badge[l.status] || 'badge-info'}">${l.status}</span></td>
+      <td class="px-4 py-3">
+        ${l.status === 'solicitado' ? `<button onclick="approveLeave('${l.id}')" class="btn-sm btn-success text-xs mr-1">Aprobar</button><button onclick="rejectLeave('${l.id}')" class="btn-sm btn-danger text-xs">Rechazar</button>` : '<span class="text-xs text-gray-400">-</span>'}
+      </td>
+    </tr>`).join('') : '<tr><td colspan="7" class="px-4 py-8 text-center text-gray-400">Sin solicitudes</td></tr>';
+  } catch (err) { console.error(err); }
+}
+
+window.showCreateModal = () => document.getElementById('leave-modal').classList.remove('hidden');
+window.closeModal = () => document.getElementById('leave-modal').classList.add('hidden');
+
+window.approveLeave = async (id) => {
+  try { await window.gql(`mutation { approveLeave(id: "${id}") { id status } }`); loadLeaves(); } catch (err) { alert('Error: ' + err.message); }
+};
+window.rejectLeave = async (id) => {
+  try { await window.gql(`mutation { rejectLeave(id: "${id}") { id status } }`); loadLeaves(); } catch (err) { alert('Error: ' + err.message); }
+};
+
+document.getElementById('leave-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  try {
+    await window.gql(`mutation { requestLeave(input: { employeeId: "${document.getElementById('l-employee').value}", type: "${document.getElementById('l-type').value}", startDate: "${document.getElementById('l-start').value}", endDate: "${document.getElementById('l-end').value}", reason: "${document.getElementById('l-reason').value}" }) { id } }`);
+    closeModal(); loadLeaves();
+  } catch (err) { alert('Error: ' + err.message); }
+});
+
+loadLeaves();
+</script>
+</Layout>

@@ -1,0 +1,351 @@
+---
+import Layout from '../../layouts/Main.astro';
+---
+
+<Layout title="Dashboard ERP" activeModule="erp" activePage="Panel Principal">
+<div class="space-y-6">
+
+  <!-- KPI Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+    <div class="card kpi-card">
+      <div class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+        </svg>
+      </div>
+      <div class="flex-1">
+        <div class="text-2xl font-bold text-gray-900" id="kpi-clients">--</div>
+        <div class="text-xs text-gray-500">Clientes Totales</div>
+        <div class="text-xs text-green-600 mt-1" id="kpi-clients-new">+0 nuevos este mes</div>
+      </div>
+    </div>
+
+    <div class="card kpi-card">
+      <div class="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
+        <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+        </svg>
+      </div>
+      <div class="flex-1">
+        <div class="text-2xl font-bold text-gray-900" id="kpi-revenue">$--</div>
+        <div class="text-xs text-gray-500">Ingresos del Mes</div>
+        <div class="text-xs mt-1" id="kpi-revenue-trend">vs $0 mes anterior</div>
+      </div>
+    </div>
+
+    <div class="card kpi-card">
+      <div class="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
+        <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+        </svg>
+      </div>
+      <div class="flex-1">
+        <div class="text-2xl font-bold text-gray-900" id="kpi-products">--</div>
+        <div class="text-xs text-gray-500">Productos</div>
+        <div class="text-xs text-red-600 mt-1" id="kpi-lowstock">0 bajo stock</div>
+      </div>
+    </div>
+
+    <div class="card kpi-card">
+      <div class="w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center">
+        <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+        </svg>
+      </div>
+      <div class="flex-1">
+        <div class="text-2xl font-bold text-gray-900" id="kpi-employees">--</div>
+        <div class="text-xs text-gray-500">Empleados Activos</div>
+        <div class="text-xs text-blue-600 mt-1" id="kpi-attendance">0 presentes hoy</div>
+      </div>
+    </div>
+
+    <div class="card kpi-card">
+      <div class="w-10 h-10 rounded-lg bg-yellow-100 flex items-center justify-center">
+        <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+        </svg>
+      </div>
+      <div class="flex-1">
+        <div class="text-2xl font-bold text-gray-900" id="kpi-invoices-pending">$--</div>
+        <div class="text-xs text-gray-500">Facturas Pendientes</div>
+        <div class="text-xs text-green-600 mt-1" id="kpi-invoices-paid">$0 pagadas este mes</div>
+      </div>
+    </div>
+
+    <div class="card kpi-card">
+      <div class="w-10 h-10 rounded-lg bg-pink-100 flex items-center justify-center">
+        <svg class="w-5 h-5 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+        </svg>
+      </div>
+      <div class="flex-1">
+        <div class="text-2xl font-bold text-gray-900" id="kpi-leads">--</div>
+        <div class="text-xs text-gray-500">Leads Activos</div>
+        <div class="text-xs text-purple-600 mt-1" id="kpi-leads-cotizadas">0 cotizados</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts Row -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="card lg:col-span-2">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="font-semibold text-gray-900">Ingresos Mensuales</h3>
+        <div class="flex gap-2">
+          <button class="btn-sm btn-secondary" onclick="setChartRange('12m')">12M</button>
+          <button class="btn-sm btn-secondary" onclick="setChartRange('6m')">6M</button>
+          <button class="btn-sm btn-primary" onclick="setChartRange('3m')">3M</button>
+        </div>
+      </div>
+      <div class="h-64">
+        <canvas id="revenueChart"></canvas>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 class="font-semibold text-gray-900 mb-4">Pipeline de Ventas</h3>
+      <div class="space-y-3" id="pipeline-stages">
+        <div class="flex items-center gap-3">
+          <div class="w-3 h-3 rounded-full bg-blue-500"></div>
+          <span class="text-sm text-gray-600 flex-1">Interesadas</span>
+          <span class="text-sm font-bold" id="stage-interesadas">--</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+          <span class="text-sm text-gray-600 flex-1">Cotizadas</span>
+          <span class="text-sm font-bold" id="stage-cotizadas">--</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="w-3 h-3 rounded-full bg-orange-500"></div>
+          <span class="text-sm text-gray-600 flex-1">Apartadas</span>
+          <span class="text-sm font-bold" id="stage-apartadas">--</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="w-3 h-3 rounded-full bg-green-500"></div>
+          <span class="text-sm text-gray-600 flex-1">Entregadas</span>
+          <span class="text-sm font-bold" id="stage-entregadas">--</span>
+        </div>
+      </div>
+      <div class="mt-4 pt-4 border-t border-gray-100">
+        <div class="flex justify-between text-sm">
+          <span class="text-gray-500">Valor Total Pipeline</span>
+          <span class="font-bold text-primary-600" id="pipeline-total">$--</span>
+        </div>
+      </div>
+      <div class="h-40 mt-4">
+        <canvas id="pipelineChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Second Row -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="card">
+      <h3 class="font-semibold text-gray-900 mb-4">Top Productos</h3>
+      <div class="space-y-3" id="top-products">
+        <div class="text-sm text-gray-500 text-center py-4">Cargando...</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 class="font-semibold text-gray-900 mb-4">Top Clientes</h3>
+      <div class="space-y-3" id="top-clients">
+        <div class="text-sm text-gray-500 text-center py-4">Cargando...</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 class="font-semibold text-gray-900 mb-4">Asistencia Hoy</h3>
+      <div class="flex items-center justify-center gap-4 py-4">
+        <div class="text-center">
+          <div class="text-3xl font-bold text-green-600" id="att-presentes">--</div>
+          <div class="text-xs text-gray-500">Presentes</div>
+        </div>
+        <div class="text-2xl text-gray-300">/</div>
+        <div class="text-center">
+          <div class="text-3xl font-bold text-gray-900" id="att-total">--</div>
+          <div class="text-xs text-gray-500">Total</div>
+        </div>
+        <div class="text-center">
+          <div class="text-3xl font-bold text-red-500" id="att-faltas">--</div>
+          <div class="text-xs text-gray-500">Faltas</div>
+        </div>
+      </div>
+      <div class="h-36">
+        <canvas id="attendanceChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Activity -->
+  <div class="card">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="font-semibold text-gray-900">Actividad Reciente</h3>
+      <a href="/crm/activities" class="text-sm text-primary-600 hover:text-primary-700">Ver todo</a>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="table-header">
+            <th class="px-4 py-3 text-left">Tipo</th>
+            <th class="px-4 py-3 text-left">Descripcion</th>
+            <th class="px-4 py-3 text-left">Usuario</th>
+            <th class="px-4 py-3 text-left">Fecha</th>
+          </tr>
+        </thead>
+        <tbody id="recent-activity" class="divide-y divide-gray-50">
+          <tr><td colspan="4" class="px-4 py-8 text-center text-gray-400">Cargando...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script define:vars={{ __env__: import.meta.env }}>
+const fmt = (n) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 }).format(n);
+
+async function loadDashboard() {
+  try {
+    const data = await window.dashboardStore?.fetch() || {};
+    if (!data || !Object.keys(data).length) return;
+
+    document.getElementById('kpi-clients').textContent = data.clientsTotal || 0;
+    document.getElementById('kpi-clients-new').textContent = `+${data.clientsNewThisMonth || 0} nuevos este mes`;
+    document.getElementById('kpi-revenue').textContent = fmt(data.revenueThisMonth || 0);
+    const trend = (data.revenueThisMonth - (data.revenueLastMonth || 0)) / Math.max(1, data.revenueLastMonth || 1);
+    document.getElementById('kpi-revenue-trend').innerHTML = `<span class="${trend >= 0 ? 'text-green-600' : 'text-red-600'}">${trend >= 0 ? '\u2191' : '\u2193'} ${Math.abs(trend * 100).toFixed(0)}% vs mes anterior</span>`;
+    document.getElementById('kpi-products').textContent = data.productsTotal || 0;
+    document.getElementById('kpi-lowstock').textContent = `${data.productsLowStock || 0} bajo stock`;
+    document.getElementById('kpi-employees').textContent = `${data.employeesActive || 0}/${data.employeesTotal || 0}`;
+    document.getElementById('kpi-attendance').textContent = `${data.attendanceToday?.presentes || 0} presentes hoy`;
+    document.getElementById('kpi-invoices-pending').textContent = fmt(data.invoicesPending || 0);
+    document.getElementById('kpi-invoices-paid').textContent = `${fmt(data.invoicesPaidThisMonth || 0)} pagadas`;
+    document.getElementById('kpi-leads').textContent = data.leadsTotal || 0;
+    document.getElementById('kpi-leads-cotizadas').textContent = `${data.pipelineValue?.cotizadas || 0} cotizados`;
+
+    // Pipeline stages
+    document.getElementById('stage-interesadas').textContent = data.pipelineValue?.interesadas || 0;
+    document.getElementById('stage-cotizadas').textContent = data.pipelineValue?.cotizadas || 0;
+    document.getElementById('stage-apartadas').textContent = data.pipelineValue?.apartadas || 0;
+    document.getElementById('stage-entregadas').textContent = data.pipelineValue?.entregadas || 0;
+    document.getElementById('pipeline-total').textContent = fmt(data.pipelineValue?.totalValue || 0);
+
+    // Attendance
+    document.getElementById('att-presentes').textContent = data.attendanceToday?.presentes || 0;
+    document.getElementById('att-total').textContent = data.employeesActive || 0;
+    document.getElementById('att-faltas').textContent = data.attendanceToday?.faltas || 0;
+
+    // Top Products
+    const tpEl = document.getElementById('top-products');
+    if (data.topProducts?.length) {
+      tpEl.innerHTML = data.topProducts.slice(0, 5).map(p => `
+        <div class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50">
+          <div class="flex-1 min-w-0">
+            <div class="text-sm font-medium text-gray-900 truncate">${p.product?.name || 'N/A'}</div>
+            <div class="text-xs text-gray-500">${p.totalSold} vendidos</div>
+          </div>
+          <span class="text-sm font-semibold text-primary-600">${fmt(p.revenue)}</span>
+        </div>
+      `).join('');
+    }
+
+    // Top Clients
+    const tcEl = document.getElementById('top-clients');
+    if (data.topClients?.length) {
+      tcEl.innerHTML = data.topClients.slice(0, 5).map(c => `
+        <div class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50">
+          <div class="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-bold text-xs">
+            ${(c.client?.name || 'N')[0]}
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="text-sm font-medium text-gray-900 truncate">${c.client?.name || 'N/A'}</div>
+          </div>
+          <span class="text-sm font-semibold text-green-600">${fmt(c.totalRevenue)}</span>
+        </div>
+      `).join('');
+    }
+
+    // Revenue Chart
+    if (data.monthlyRevenue?.length) {
+      const ctx = document.getElementById('revenueChart');
+      if (ctx) {
+        if (window.revenueChartInstance) window.revenueChartInstance.destroy();
+        window.revenueChartInstance = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: data.monthlyRevenue.map(m => m.month),
+            datasets: [{
+              label: 'Ingresos',
+              data: data.monthlyRevenue.map(m => m.revenue),
+              borderColor: '#7c3aed',
+              backgroundColor: 'rgba(124, 58, 237, 0.1)',
+              fill: true,
+              tension: 0.4,
+              pointRadius: 3,
+              pointHoverRadius: 6,
+            }],
+          },
+          options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => fmt(ctx.raw) } } },
+            scales: { y: { ticks: { callback: (v) => '$' + (v/1000).toFixed(0) + 'k' } } },
+          },
+        });
+      }
+    }
+
+    // Pipeline Chart
+    const pCtx = document.getElementById('pipelineChart');
+    if (pCtx) {
+      if (window.pipelineChartInstance) window.pipelineChartInstance.destroy();
+      window.pipelineChartInstance = new Chart(pCtx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Interesadas', 'Cotizadas', 'Apartadas', 'Entregadas'],
+          datasets: [{
+            data: [data.pipelineValue?.interesadas || 0, data.pipelineValue?.cotizadas || 0, data.pipelineValue?.apartadas || 0, data.pipelineValue?.entregadas || 0],
+            backgroundColor: ['#3b82f6', '#eab308', '#f97316', '#22c55e'],
+            borderWidth: 0,
+          }],
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 8, font: { size: 10 } } } },
+          cutout: '60%',
+        },
+      });
+    }
+
+    // Attendance Chart
+    const aCtx = document.getElementById('attendanceChart');
+    if (aCtx) {
+      if (window.attendanceChartInstance) window.attendanceChartInstance.destroy();
+      const att = data.attendanceToday || {};
+      window.attendanceChartInstance = new Chart(aCtx, {
+        type: 'bar',
+        data: {
+          labels: ['Presentes', 'Permisos', 'Faltas'],
+          datasets: [{
+            data: [att.presentes || 0, att.permisos || 0, att.faltas || 0],
+            backgroundColor: ['#22c55e', '#eab308', '#ef4444'],
+            borderRadius: 6,
+          }],
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: { y: { beginAtZero: true } },
+        },
+      });
+    }
+
+  } catch (err) {
+    console.error('Dashboard error:', err);
+  }
+}
+
+window.setChartRange = (range) => { loadDashboard(); };
+window.dashboardStore = window.dashboardStore || { fetch: loadDashboard };
+loadDashboard();
+</script>
+</Layout>

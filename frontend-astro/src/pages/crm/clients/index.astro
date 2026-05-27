@@ -1,0 +1,260 @@
+---
+import Layout from '../../../layouts/Main.astro';
+---
+
+<Layout title="Clientes" activeModule="crm" activePage="Clientes">
+<div class="space-y-6">
+
+  <div class="flex items-center justify-between">
+    <div>
+      <h2 class="text-xl font-bold text-gray-900">Gestion de Clientes</h2>
+      <p class="text-sm text-gray-500">CRM &bull; Modulo de Clientes</p>
+    </div>
+    <button onclick="showCreateModal()" class="btn-primary flex items-center gap-2">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+      Nuevo Cliente
+    </button>
+  </div>
+
+  <!-- Filters -->
+  <div class="card-sm flex flex-wrap items-center gap-3">
+    <div class="search-bar flex-1 min-w-64">
+      <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+      <input type="text" class="search-input" placeholder="Buscar por nombre, email o telefono..." id="search-input" oninput="debounceSearch(this.value)" />
+    </div>
+    <select class="input w-auto" id="segment-filter" onchange="loadClients()">
+      <option value="">Todos los segmentos</option>
+      <option value="vip">VIP</option>
+      <option value="corporate">Corporativo</option>
+      <option value="regular">Regular</option>
+      <option value="inactive">Inactivo</option>
+    </select>
+    <select class="input w-auto" id="active-filter" onchange="loadClients()">
+      <option value="true">Activos</option>
+      <option value="">Todos</option>
+      <option value="false">Inactivos</option>
+    </select>
+  </div>
+
+  <!-- Stats -->
+  <div class="grid grid-cols-4 gap-4">
+    <div class="card-sm text-center"><div class="text-2xl font-bold text-blue-600" id="stat-total">--</div><div class="text-xs text-gray-500">Total Clientes</div></div>
+    <div class="card-sm text-center"><div class="text-2xl font-bold text-green-600" id="stat-vip">--</div><div class="text-xs text-gray-500">VIP</div></div>
+    <div class="card-sm text-center"><div class="text-2xl font-bold text-purple-600" id="stat-corp">--</div><div class="text-xs text-gray-500">Corporativos</div></div>
+    <div class="card-sm text-center"><div class="text-2xl font-bold text-gray-600" id="stat-inactive">--</div><div class="text-xs text-gray-500">Inactivos</div></div>
+  </div>
+
+  <!-- Table -->
+  <div class="card overflow-hidden p-0">
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="table-header">
+          <tr>
+            <th class="px-4 py-3 text-left">Cliente</th>
+            <th class="px-4 py-3 text-left">Contacto</th>
+            <th class="px-4 py-3 text-left">Segmento</th>
+            <th class="px-4 py-3 text-left">LTV</th>
+            <th class="px-4 py-3 text-left">Health Score</th>
+            <th class="px-4 py-3 text-left">Estado</th>
+            <th class="px-4 py-3 text-left">Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="clients-table" class="divide-y divide-gray-50">
+          <tr><td colspan="7" class="px-4 py-8 text-center text-gray-400">Cargando...</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="px-4 py-3 border-t border-gray-100 flex items-center justify-between">
+      <div class="text-sm text-gray-500" id="pagination-info">Mostrando 0 de 0</div>
+      <div class="flex gap-2" id="pagination-buttons"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Create/Edit Modal -->
+<div id="client-modal" class="hidden">
+  <div class="modal-overlay" onclick="closeModal()">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <div class="p-6 border-b border-gray-100 flex items-center justify-between">
+        <h3 class="text-lg font-semibold" id="modal-title">Nuevo Cliente</h3>
+        <button onclick="closeModal()" class="p-1 rounded hover:bg-gray-100">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <form id="client-form" class="p-6 space-y-4">
+        <input type="hidden" id="client-id" />
+        <div class="grid grid-cols-2 gap-4">
+          <div><label class="label">Nombre *</label><input type="text" id="c-name" class="input" required /></div>
+          <div><label class="label">Email</label><input type="email" id="c-email" class="input" /></div>
+          <div><label class="label">Telefono</label><input type="text" id="c-phone" class="input" /></div>
+          <div><label class="label">Empresa</label><input type="text" id="c-company" class="input" /></div>
+          <div><label class="label">RFC</label><input type="text" id="c-rfc" class="input" /></div>
+          <div><label class="label">Segmento</label>
+            <select id="c-segment" class="input">
+              <option value="regular">Regular</option><option value="vip">VIP</option>
+              <option value="corporate">Corporativo</option><option value="inactive">Inactivo</option>
+            </select>
+          </div>
+          <div><label class="label">Ciudad</label><input type="text" id="c-city" class="input" /></div>
+          <div><label class="label">Estado</label><input type="text" id="c-state" class="input" /></div>
+        </div>
+        <div><label class="label">Direccion</label><textarea id="c-address" class="input" rows="2"></textarea></div>
+        <div><label class="label">Notas</label><textarea id="c-notes" class="input" rows="2"></textarea></div>
+        <div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
+          <button type="button" onclick="closeModal()" class="btn-secondary">Cancelar</button>
+          <button type="submit" class="btn-primary">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentPage = 1;
+let searchTimeout;
+
+async function loadClients(page = 1) {
+  currentPage = page;
+  const search = document.getElementById('search-input')?.value || '';
+  const segment = document.getElementById('segment-filter')?.value || '';
+  const active = document.getElementById('active-filter')?.value || '';
+
+  try {
+    const data = await window.gql(`
+      query Clients($page: Int, $perPage: Int, $search: String, $segment: String) {
+        clients(page: $page, perPage: 15, search: $search, segment: $segment) {
+          data { id name email phone company segment lifetimeValue healthScore active city state created_at }
+          total page perPage
+        }
+      }
+    `, { page, perPage: 15, search, segment });
+
+    const { data: clients, total, page: pg } = data.clients;
+    const tbody = document.getElementById('clients-table');
+
+    if (!clients.length) {
+      tbody.innerHTML = '<tr><td colspan="7" class="px-4 py-8 text-center text-gray-400">Sin clientes encontrados</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = clients.map(c => `
+      <tr class="table-row">
+        <td class="px-4 py-3">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-bold text-xs">${c.name[0]}</div>
+            <div><div class="font-medium text-gray-900">${c.name}</div><div class="text-xs text-gray-500">${c.city || ''} ${c.state || ''}</div></div>
+          </div>
+        </td>
+        <td class="px-4 py-3 text-gray-600">${c.email || '-'}<br><span class="text-xs text-gray-400">${c.phone || '-'}</span></td>
+        <td class="px-4 py-3"><span class="${c.segment === 'vip' ? 'badge-warning' : c.segment === 'corporate' ? 'badge-purple' : 'badge-info'}">${c.segment || 'regular'}</span></td>
+        <td class="px-4 py-3 font-semibold text-gray-900">$${(c.lifetimeValue || 0).toLocaleString('es-MX')}</td>
+        <td class="px-4 py-3">
+          <div class="flex items-center gap-2">
+            <div class="w-16 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+              <div class="h-full rounded-full ${c.healthScore >= 70 ? 'bg-green-500' : c.healthScore >= 40 ? 'bg-yellow-500' : 'bg-red-500'}" style="width:${c.healthScore || 50}%"></div>
+            </div>
+            <span class="text-xs font-medium">${c.healthScore || 50}</span>
+          </div>
+        </td>
+        <td class="px-4 py-3"><span class="${c.active ? 'badge-success' : 'badge-danger'}">${c.active ? 'Activo' : 'Inactivo'}</span></td>
+        <td class="px-4 py-3">
+          <div class="flex gap-1">
+            <button onclick="editClient('${c.id}')" class="p-1.5 rounded hover:bg-gray-100 text-gray-500" title="Editar"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg></button>
+            <button onclick="viewClient('${c.id}')" class="p-1.5 rounded hover:bg-gray-100 text-gray-500" title="Ver"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg></button>
+            <button onclick="deleteClient('${c.id}')" class="p-1.5 rounded hover:bg-red-50 text-red-400" title="Eliminar"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+
+    document.getElementById('pagination-info').textContent = `Mostrando ${clients.length} de ${total}`;
+    renderPagination(total, pg);
+
+    // Stats
+    document.getElementById('stat-total').textContent = total;
+    document.getElementById('stat-vip').textContent = clients.filter(c => c.segment === 'vip').length;
+    document.getElementById('stat-corp').textContent = clients.filter(c => c.segment === 'corporate').length;
+    document.getElementById('stat-inactive').textContent = clients.filter(c => !c.active).length;
+
+  } catch (err) { console.error(err); }
+}
+
+function renderPagination(total, current) {
+  const totalPages = Math.ceil(total / 15);
+  const btns = document.getElementById('pagination-buttons');
+  btns.innerHTML = '';
+  for (let i = 1; i <= Math.min(totalPages, 5); i++) {
+    btns.innerHTML += `<button onclick="loadClients(${i})" class="btn-sm ${i === current ? 'btn-primary' : 'btn-secondary'}">${i}</button>`;
+  }
+}
+
+window.debounceSearch = (val) => {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => loadClients(1), 400);
+};
+
+window.showCreateModal = () => {
+  document.getElementById('modal-title').textContent = 'Nuevo Cliente';
+  document.getElementById('client-form').reset();
+  document.getElementById('client-id').value = '';
+  document.getElementById('client-modal').classList.remove('hidden');
+};
+
+window.editClient = async (id) => {
+  const data = await window.gql(`query { client(id: "${id}") { id name email phone company rfc segment city state address notes } }`);
+  const c = data.client;
+  document.getElementById('client-id').value = c.id;
+  document.getElementById('c-name').value = c.name || '';
+  document.getElementById('c-email').value = c.email || '';
+  document.getElementById('c-phone').value = c.phone || '';
+  document.getElementById('c-company').value = c.company || '';
+  document.getElementById('c-rfc').value = c.rfc || '';
+  document.getElementById('c-segment').value = c.segment || 'regular';
+  document.getElementById('c-city').value = c.city || '';
+  document.getElementById('c-state').value = c.state || '';
+  document.getElementById('c-address').value = c.address || '';
+  document.getElementById('c-notes').value = c.notes || '';
+  document.getElementById('modal-title').textContent = 'Editar Cliente';
+  document.getElementById('client-modal').classList.remove('hidden');
+};
+
+window.viewClient = (id) => { window.location.href = `/crm/clients/${id}`; };
+
+window.closeModal = () => { document.getElementById('client-modal').classList.add('hidden'); };
+
+document.getElementById('client-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const id = document.getElementById('client-id').value;
+  const input = {
+    name: document.getElementById('c-name').value,
+    email: document.getElementById('c-email').value,
+    phone: document.getElementById('c-phone').value,
+    company: document.getElementById('c-company').value,
+    rfc: document.getElementById('c-rfc').value,
+    segment: document.getElementById('c-segment').value,
+    city: document.getElementById('c-city').value,
+    state: document.getElementById('c-state').value,
+    address: document.getElementById('c-address').value,
+  };
+  try {
+    if (id) {
+      await window.gql(`mutation { updateClient(id: "${id}", input: {name:"${input.name}",email:"${input.email}",phone:"${input.phone}",company:"${input.company}",rfc:"${input.rfc}",segment:"${input.segment}",city:"${input.city}",state:"${input.state}",address:"${input.address}"}) { id } }`);
+    } else {
+      await window.gql(`mutation { createClient(input: {name:"${input.name}",email:"${input.email}",phone:"${input.phone}",company:"${input.company}",segment:"${input.segment}"}) { id } }`);
+    }
+    closeModal();
+    loadClients(currentPage);
+  } catch (err) { alert('Error: ' + err.message); }
+});
+
+window.deleteClient = async (id) => {
+  if (!confirm('Eliminar este cliente?')) return;
+  try {
+    await window.gql(`mutation { deleteClient(id: "${id}") }`);
+    loadClients(currentPage);
+  } catch (err) { alert('Error: ' + err.message); }
+};
+
+loadClients();
+</script>
+</Layout>

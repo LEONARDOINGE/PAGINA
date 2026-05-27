@@ -1,0 +1,176 @@
+---
+import Layout from '../../../layouts/Main.astro';
+---
+
+<Layout title="Facturas" activeModule="crm" activePage="Facturas">
+<div class="space-y-6">
+  <div class="flex items-center justify-between">
+    <div><h2 class="text-xl font-bold text-gray-900">Facturas</h2><p class="text-sm text-gray-500">CRM &bull; CFDI 4.0 Mexico</p></div>
+    <button onclick="showCreateModal()" class="btn-primary flex items-center gap-2">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+      Nueva Factura
+    </button>
+  </div>
+
+  <div class="grid grid-cols-4 gap-4">
+    <div class="card-sm text-center"><div class="text-2xl font-bold text-gray-900" id="inv-total">--</div><div class="text-xs text-gray-500">Total Emitidas</div></div>
+    <div class="card-sm text-center"><div class="text-2xl font-bold text-yellow-600" id="inv-pending">$--</div><div class="text-xs text-gray-500">Pendiente Cobro</div></div>
+    <div class="card-sm text-center"><div class="text-2xl font-bold text-green-600" id="inv-paid">$--</div><div class="text-xs text-gray-500">Pagado (Mes)</div></div>
+    <div class="card-sm text-center"><div class="text-2xl font-bold text-red-600" id="inv-overdue">$--</div><div class="text-xs text-gray-500">Vencidas</div></div>
+  </div>
+
+  <div class="card overflow-hidden p-0">
+    <div class="p-4 border-b border-gray-100 flex items-center gap-3">
+      <div class="search-bar flex-1">
+        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input type="text" class="search-input" placeholder="Buscar por folio o cliente..." id="inv-search" oninput="searchInvoices(this.value)" />
+      </div>
+      <select class="input w-auto" id="inv-status" onchange="loadInvoices()">
+        <option value="">Todos</option>
+        <option value="pendiente">Pendiente</option>
+        <option value="pagado">Pagado</option>
+        <option value="vencido">Vencido</option>
+        <option value="cancelado">Cancelado</option>
+      </select>
+    </div>
+    <table class="w-full text-sm">
+      <thead class="table-header">
+        <tr>
+          <th class="px-4 py-3 text-left">Folio</th><th class="px-4 py-3 text-left">Cliente</th>
+          <th class="px-4 py-3 text-left">RFC</th><th class="px-4 py-3 text-left">Total</th>
+          <th class="px-4 py-3 text-left">Estado</th><th class="px-4 py-3 text-left">Emision</th>
+          <th class="px-4 py-3 text-left">Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="invoices-table"><tr><td colspan="7" class="px-4 py-8 text-center text-gray-400">Cargando...</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<div id="invoice-modal" class="hidden">
+  <div class="modal-overlay" onclick="closeModal()">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <div class="p-6 border-b border-gray-100 flex items-center justify-between">
+        <h3 class="text-lg font-semibold">Nueva Factura</h3>
+        <button onclick="closeModal()" class="p-1 rounded hover:bg-gray-100"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+      </div>
+      <form id="invoice-form" class="p-6 space-y-4">
+        <div class="grid grid-cols-2 gap-4">
+          <div><label class="label">Cliente *</label><select id="inv-client" class="input" required onchange="fillClientData()"><option value="">Seleccionar...</option></select></div>
+          <div><label class="label">RFC</label><input type="text" id="inv-rfc" class="input" placeholder="XAXX010101000" /></div>
+          <div><label class="label">Nombre/Razon Social</label><input type="text" id="inv-nombre" class="input" /></div>
+          <div><label class="label">Uso CFDI</label>
+            <select id="inv-usocfdi" class="input">
+              <option value="P01">P01 - Por definir</option><option value="G01">G01 - Adquisicion de mercancias</option>
+              <option value="G03">G03 - Gastos en general</option><option value="I01">I01 - Construcciones</option>
+              <option value="D01">D01 - Honorarios medicos</option>
+            </select>
+          </div>
+          <div><label class="label">Metodo de Pago</label>
+            <select id="inv-metodo" class="input">
+              <option value="PUE">PUE - Pago una exhibicion</option>
+              <option value="PPD">PPD - Pago en parcialidades</option>
+            </select>
+          </div>
+          <div><label class="label">Numero de Cuenta</label><input type="text" id="inv-cuenta" class="input" maxlength="4" /></div>
+        </div>
+        <div><label class="label">Direccion</label><textarea id="inv-direccion" class="input" rows="2"></textarea></div>
+        <div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
+          <button type="button" onclick="closeModal()" class="btn-secondary">Cancelar</button>
+          <button type="submit" class="btn-primary">Crear y Ver Factura</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+let searchTimer;
+async function loadInvoices(status = '') {
+  const search = document.getElementById('inv-search')?.value || '';
+  try {
+    const data = await window.gql(`
+      query Invoices($status: InvoiceStatus) {
+        invoices(status: $status) {
+          id folio rfc nombre status subtotal iva total fechaEmision fechaPago
+          client { id name email }
+          items { id description quantity price subtotal }
+        }
+      }
+    `, { status });
+
+    const invs = data.invoices || [];
+    document.getElementById('inv-total').textContent = invs.length;
+    document.getElementById('inv-pending').textContent = '$' + Math.round(invs.filter(i => i.status === 'pendiente').reduce((s, i) => s + i.total, 0) / 1000) + 'k';
+    document.getElementById('inv-paid').textContent = '$' + Math.round(invs.filter(i => i.status === 'pagado').reduce((s, i) => s + i.total, 0) / 1000) + 'k';
+
+    const tbody = document.getElementById('invoices-table');
+    if (!invs.length) { tbody.innerHTML = '<tr><td colspan="7" class="px-4 py-8 text-center text-gray-400">Sin facturas</td></tr>'; return; }
+
+    tbody.innerHTML = invs.map(i => {
+      const badge = { pendiente: 'badge-warning', pagado: 'badge-success', vencido: 'badge-danger', cancelado: 'badge-danger' }[i.status] || 'badge-info';
+      return `<tr class="table-row">
+        <td class="px-4 py-3 font-mono font-bold text-primary-600">${i.folio}</td>
+        <td class="px-4 py-3">${i.client?.name || '-'}</td>
+        <td class="px-4 py-3 font-mono text-xs text-gray-500">${i.rfc || '-'}</td>
+        <td class="px-4 py-3 font-bold text-gray-900">$${Number(i.total).toLocaleString('es-MX')}</td>
+        <td class="px-4 py-3"><span class="${badge}">${i.status}</span></td>
+        <td class="px-4 py-3 text-gray-500 text-xs">${i.fechaEmision ? new Date(i.fechaEmision).toLocaleDateString('es-MX') : '-'}</td>
+        <td class="px-4 py-3">
+          <div class="flex gap-1">
+            <button onclick="viewInvoice('${i.id}')" class="btn-sm btn-secondary text-xs">Ver</button>
+            ${i.status === 'pendiente' ? `<button onclick="markPaid('${i.id}')" class="btn-sm btn-success text-xs">Marcar Pagada</button>` : ''}
+            <button onclick="downloadInvoice('${i.id}')" class="btn-sm btn-outline text-xs">TXT</button>
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+  } catch (err) { console.error(err); }
+}
+
+window.searchInvoices = (q) => { clearTimeout(searchTimer); searchTimer = setTimeout(() => loadInvoices(document.getElementById('inv-status').value), 300); };
+
+window.showCreateModal = () => document.getElementById('invoice-modal').classList.remove('hidden');
+window.closeModal = () => document.getElementById('invoice-modal').classList.add('hidden');
+
+window.markPaid = async (id) => {
+  try {
+    await window.gql(`mutation { registerPayment(invoiceId: "${id}", amount: 0, method: "transferencia") { id } }`);
+    alert('Factura marcada como pagada');
+    loadInvoices();
+  } catch (err) { alert('Error: ' + err.message); }
+};
+
+window.viewInvoice = async (id) => {
+  const data = await window.gql(`query { invoice(id: "${id}") { folio rfc nombre subtotal iva total fechaEmision client { name email } items { description quantity price subtotal } } }`);
+  const inv = data.invoice;
+  alert(`FACTURA: ${inv.folio}\nCliente: ${inv.client?.name}\nSubtotal: $${inv.subtotal}\nIVA 16%: $${inv.iva}\nTotal: $${inv.total}\nUso CFDI: ${inv.rfc || 'N/A'}`);
+};
+
+window.downloadInvoice = async (id) => {
+  const data = await window.gql(`query { invoice(id: "${id}") { folio fechaEmision rfc nombre direccion usoCfdi metodoPago subtotal iva total client { name } items { description quantity price } } }`);
+  const inv = data.invoice;
+  let txt = `FOTOTEC STUDIO\nRFC: FOT260101XXX\n${inv.fechaEmision}\n========================\n`;
+  txt += `Folio: ${inv.folio}\nCliente: ${inv.client?.name || inv.nombre}\nRFC: ${inv.rfc || 'XAXX010101000'}\n`;
+  txt += `========================\n`;
+  inv.items?.forEach(i => { txt += `${i.description}\nCant: ${i.quantity} x $${i.price} = $${i.subtotal}\n`; });
+  txt += `========================\nSubtotal: $${inv.subtotal}\nIVA 16%: $${inv.iva}\nTOTAL: $${inv.total}\n========================\n`;
+  const blob = new Blob([txt], { type: 'text/plain' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${inv.folio}.txt`; a.click();
+};
+
+document.getElementById('invoice-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const clientId = document.getElementById('inv-client').value;
+  if (!clientId) { alert('Selecciona un cliente'); return; }
+  try {
+    const data = await window.gql(`mutation { createInvoice(input: { clientId: "${clientId}", rfc: "${document.getElementById('inv-rfc').value}", nombre: "${document.getElementById('inv-nombre').value}", direccion: "${document.getElementById('inv-direccion').value}", usoCfdi: "${document.getElementById('inv-usocfdi').value}", metodoPago: "${document.getElementById('inv-metodo').value}", numeroCuenta: "${document.getElementById('inv-cuenta').value}" }) { id folio } }`);
+    closeModal();
+    alert(`Factura ${data.createInvoice.folio} creada`);
+    loadInvoices();
+  } catch (err) { alert('Error: ' + err.message); }
+});
+
+loadInvoices();
+</script>
+</Layout>

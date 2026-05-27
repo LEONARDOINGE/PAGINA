@@ -1,0 +1,99 @@
+---
+import Layout from '../../../layouts/Main.astro';
+---
+
+<Layout title="Tickets de Soporte" activeModule="crm" activePage="Tickets">
+<div class="space-y-6">
+  <div class="flex items-center justify-between">
+    <div><h2 class="text-xl font-bold text-gray-900">Tickets de Soporte</h2><p class="text-sm text-gray-500">CRM &bull; Atencion a clientes</p></div>
+    <button onclick="showCreateModal()" class="btn-primary flex items-center gap-2">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+      Nuevo Ticket
+    </button>
+  </div>
+
+  <div class="grid grid-cols-5 gap-4">
+    <div class="card-sm text-center"><div class="text-2xl font-bold text-red-600" id="tk-open">--</div><div class="text-xs text-gray-500">Abiertos</div></div>
+    <div class="card-sm text-center"><div class="text-2xl font-bold text-blue-600" id="tk-progress">--</div><div class="text-xs text-gray-500">En Progreso</div></div>
+    <div class="card-sm text-center"><div class="text-2xl font-bold text-yellow-600" id="tk-waiting">--</div><div class="text-xs text-gray-500">Esperando</div></div>
+    <div class="card-sm text-center"><div class="text-2xl font-bold text-green-600" id="tk-resolved">--</div><div class="text-xs text-gray-500">Resueltos</div></div>
+    <div class="card-sm text-center"><div class="text-2xl font-bold text-purple-600" id="tk-urgent">--</div><div class="text-xs text-gray-500">Urgentes</div></div>
+  </div>
+
+  <div class="card overflow-hidden p-0">
+    <table class="w-full text-sm">
+      <thead class="table-header">
+        <tr><th class="px-4 py-3 text-left">Asunto</th><th class="px-4 py-3 text-left">Cliente</th><th class="px-4 py-3 text-left">Prioridad</th><th class="px-4 py-3 text-left">Estado</th><th class="px-4 py-3 text-left">SLA</th><th class="px-4 py-3 text-left">Acciones</th></tr>
+      </thead>
+      <tbody id="tickets-table"><tr><td colspan="6" class="px-4 py-8 text-center text-gray-400">Cargando...</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<div id="ticket-modal" class="hidden">
+  <div class="modal-overlay" onclick="closeModal()">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <div class="p-6 border-b border-gray-100"><h3 class="text-lg font-semibold">Nuevo Ticket</h3></div>
+      <form id="ticket-form" class="p-6 space-y-4">
+        <div><label class="label">Cliente</label><select id="t-client" class="input"><option value="">Sin cliente</option></select></div>
+        <div><label class="label">Asunto *</label><input type="text" id="t-subject" class="input" required /></div>
+        <div><label class="label">Descripcion</label><textarea id="t-desc" class="input" rows="3"></textarea></div>
+        <div class="grid grid-cols-2 gap-4">
+          <div><label class="label">Prioridad</label><select id="t-priority" class="input"><option value="baja">Baja</option><option value="media" selected>Media</option><option value="alta">Alta</option><option value="urgente">Urgente</option></select></div>
+          <div><label class="label">Categoria</label><select id="t-category" class="input"><option value="soporte_tecnico">Soporte Tecnico</option><option value="ventas">Ventas</option><option value="facturacion">Facturacion</option><option value="entrega">Entrega</option><option value="reclamo">Reclamo</option></select></div>
+        </div>
+        <div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
+          <button type="button" onclick="closeModal()" class="btn-secondary">Cancelar</button>
+          <button type="submit" class="btn-primary">Crear Ticket</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+async function loadTickets() {
+  try {
+    const data = await window.gql(`query { tickets { id subject priority status category slaDeadline client { id name } assignedTo { name } } }`);
+    const tks = data.tickets || [];
+    document.getElementById('tk-open').textContent = tks.filter(t => t.status === 'abierto').length;
+    document.getElementById('tk-progress').textContent = tks.filter(t => t.status === 'en_progreso').length;
+    document.getElementById('tk-waiting').textContent = tks.filter(t => t.status === 'esperando').length;
+    document.getElementById('tk-resolved').textContent = tks.filter(t => ['resuelto', 'cerrado'].includes(t.status)).length;
+    document.getElementById('tk-urgent').textContent = tks.filter(t => t.priority === 'urgente').length;
+
+    const priBadge = { baja: 'badge-secondary', media: 'badge-info', alta: 'badge-warning', urgente: 'badge-danger' };
+    const staBadge = { abierto: 'badge-danger', en_progreso: 'badge-info', esperando: 'badge-warning', resuelto: 'badge-success', cerrado: 'badge-purple' };
+
+    document.getElementById('tickets-table').innerHTML = tks.length ? tks.map(t => `<tr class="table-row">
+      <td class="px-4 py-3 font-medium">${t.subject}</td>
+      <td class="px-4 py-3 text-gray-500">${t.client?.name || '-'}</td>
+      <td class="px-4 py-3"><span class="${priBadge[t.priority] || 'badge-info'}">${t.priority}</span></td>
+      <td class="px-4 py-3"><span class="${staBadge[t.status] || 'badge-info'}">${t.status}</span></td>
+      <td class="px-4 py-3 text-xs ${t.slaDeadline && new Date(t.slaDeadline) < new Date() ? 'text-red-600 font-bold' : 'text-gray-500'}">${t.slaDeadline ? new Date(t.slaDeadline).toLocaleString('es-MX') : '-'}</td>
+      <td class="px-4 py-3">
+        <button onclick="updateTicket('${t.id}', 'en_progreso')" class="btn-sm btn-secondary text-xs">Progreso</button>
+        <button onclick="updateTicket('${t.id}', 'resuelto')" class="btn-sm btn-success text-xs">Resolver</button>
+      </td>
+    </tr>`).join('') : '<tr><td colspan="6" class="px-4 py-8 text-center text-gray-400">Sin tickets</td></tr>';
+  } catch (err) { console.error(err); }
+}
+
+window.showCreateModal = () => document.getElementById('ticket-modal').classList.remove('hidden');
+window.closeModal = () => document.getElementById('ticket-modal').classList.add('hidden');
+
+window.updateTicket = async (id, status) => {
+  try { await window.gql(`mutation { updateTicket(id: "${id}", status: ${status}) { id } }`); loadTickets(); } catch (err) { alert('Error: ' + err.message); }
+};
+
+document.getElementById('ticket-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  try {
+    await window.gql(`mutation { createTicket(clientId: "${document.getElementById('t-client').value}", subject: "${document.getElementById('t-subject').value}", description: "${document.getElementById('t-desc').value}", priority: "${document.getElementById('t-priority').value}", category: "${document.getElementById('t-category').value}") { id } }`);
+    closeModal(); loadTickets();
+  } catch (err) { alert('Error: ' + err.message); }
+});
+
+loadTickets();
+</script>
+</Layout>
