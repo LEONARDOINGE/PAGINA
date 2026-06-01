@@ -360,6 +360,17 @@ app.get('/api/me', authMiddleware, (req, res) => {
     res.json({ user: req.user });
 });
 
+// Listar usuarios (admin)
+app.get('/api/users', async (req, res) => {
+    try {
+        const rows = await dbAll(`SELECT id, name, username, email, role, is_verified, created_at FROM users ORDER BY created_at DESC`);
+        res.json({ success: true, users: rows });
+    } catch (err) {
+        console.error('Error users:', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 // Actualizar perfil
 app.put('/api/profile/update', authMiddleware, async (req, res) => {
     const { name, email, password } = req.body;
