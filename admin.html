@@ -838,15 +838,17 @@
 
         function cargarUsuariosAdmin() {
             if (!verificarPermiso(authSystem.currentUser?.userType, 'ver_usuarios')) return;
-            fetch('/api/users', { headers: { 'Authorization': 'Bearer ' + (authSystem.token || '') } })
+            document.getElementById('usuariosListaDiv').innerHTML = '<p style="text-align:center;opacity:0.7;">Cargando usuarios...</p>';
+            fetch('/api/users')
                 .then(r => r.json())
                 .then(data => {
-                    if (!data.success || !data.users.length) { document.getElementById('usuariosListaDiv').innerHTML = '<p style="opacity:0.7;text-align:center;">Sin usuarios.</p>'; return; }
+                    if (!data.success) { document.getElementById('usuariosListaDiv').innerHTML = '<p style="color:#ff6b6b;">Error: ' + (data.error || 'Sin respuesta') + '</p>'; return; }
+                    if (!data.users || !data.users.length) { document.getElementById('usuariosListaDiv').innerHTML = '<p style="opacity:0.7;text-align:center;">Sin usuarios.</p>'; return; }
                     let html = '<table class="admin-table"><thead><tr><th>ID</th><th>Nombre</th><th>Email</th><th>Rol</th><th>Activo</th></tr></thead><tbody>';
                     data.users.forEach(u => { html += '<tr><td>' + u.id + '</td><td>' + u.name + '</td><td>' + u.email + '</td><td>' + (u.role || 'cliente') + '</td><td>' + (u.active ? 'Sí' : 'No') + '</td></tr>'; });
                     html += '</tbody></table>';
                     document.getElementById('usuariosListaDiv').innerHTML = html;
-                }).catch(e => { document.getElementById('usuariosListaDiv').innerHTML = '<p style="color:#ff6b6b;">Error de conexion</p>'; });
+                }).catch(e => { document.getElementById('usuariosListaDiv').innerHTML = '<p style="color:#ff6b6b;">Error: ' + e.message + '</p>'; });
         }
 
         function generarReporte() {
