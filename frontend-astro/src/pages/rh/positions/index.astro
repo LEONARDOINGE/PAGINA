@@ -1,0 +1,81 @@
+---
+import Layout from '../../../layouts/Main.astro';
+---
+
+<Layout title="Puestos" activeModule="rh" activePage="Puestos">
+<div class="space-y-6">
+  <div class="flex items-center justify-between">
+    <div><h2 class="text-xl font-bold text-gray-900">Puestos y Cargos</h2><p class="text-sm text-gray-500">RRHH &bull; Estructura de puestos</p></div>
+    <button onclick="showCreateModal()" class="btn-primary flex items-center gap-2">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+      Nuevo Puesto
+    </button>
+  </div>
+
+  <div class="card overflow-hidden p-0">
+    <table class="w-full text-sm">
+      <thead class="table-header">
+        <tr><th class="px-4 py-3 text-left">Puesto</th><th class="px-4 py-3 text-left">Departamento</th><th class="px-4 py-3 text-left">Nivel</th><th class="px-4 py-3 text-left">Rango Salarial</th><th class="px-4 py-3 text-left">Empleados</th></tr>
+      </thead>
+      <tbody id="positions-table"><tr><td colspan="5" class="px-4 py-8 text-center text-gray-400">Cargando...</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<div id="pos-modal" class="hidden">
+  <div class="modal-overlay" onclick="closeModal()">
+    <div class="modal-content max-w-md" onclick="event.stopPropagation()">
+      <div class="p-6 border-b border-gray-100"><h3 class="text-lg font-semibold">Nuevo Puesto</h3></div>
+      <form id="pos-form" class="p-6 space-y-4">
+        <div><label class="label">Departamento *</label><select id="pos-dept" class="input"></select></div>
+        <div><label class="label">Nombre del Puesto *</label><input type="text" id="pos-name" class="input" required /></div>
+        <div><label class="label">Nivel</label>
+          <select id="pos-level" class="input">
+            <option value="junior">Junior</option><option value="mid">Mid</option>
+            <option value="senior">Senior</option><option value="lead">Lead</option>
+            <option value="manager">Manager</option><option value="top">Director</option>
+          </select>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div><label class="label">Salario Minimo</label><input type="number" id="pos-min" class="input" step="0.01" /></div>
+          <div><label class="label">Salario Maximo</label><input type="number" id="pos-max" class="input" step="0.01" /></div>
+        </div>
+        <div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
+          <button type="button" onclick="closeModal()" class="btn-secondary">Cancelar</button>
+          <button type="submit" class="btn-primary">Crear</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+async function loadPositions() {
+  try {
+    const data = await window.gql(`query { positions { id name level minSalary maxSalary department { id name color } employees { id } } departments { id name } }`);
+    const pos = data.positions || [];
+    document.getElementById('positions-table').innerHTML = pos.map(p => `
+      <tr class="table-row">
+        <td class="px-4 py-3 font-medium">${p.name}</td>
+        <td class="px-4 py-3"><span class="badge" style="background:${p.department?.color}20;color:${p.department?.color}">${p.department?.name || '-'}</span></td>
+        <td class="px-4 py-3 capitalize">${p.level || 'mid'}</td>
+        <td class="px-4 py-3 text-gray-500">$${(p.minSalary || 0).toLocaleString()} - $${(p.maxSalary || 0).toLocaleString()}</td>
+        <td class="px-4 py-3 font-bold">${p.employees?.length || 0}</td>
+      </tr>`).join('') || '<tr><td colspan="5" class="px-4 py-8 text-center text-gray-400">Sin puestos</td></tr>';
+  } catch (err) { console.error(err); }
+}
+
+window.showCreateModal = () => document.getElementById('pos-modal').classList.remove('hidden');
+window.closeModal = () => document.getElementById('pos-modal').classList.add('hidden');
+
+document.getElementById('pos-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  try {
+    await window.gql(`mutation { createPosition(departmentId: "${document.getElementById('pos-dept').value}", name: "${document.getElementById('pos-name').value}", level: "${document.getElementById('pos-level').value}", minSalary: ${parseFloat(document.getElementById('pos-min').value) || 0}, maxSalary: ${parseFloat(document.getElementById('pos-max').value) || 0}) { id } }`);
+    closeModal(); loadPositions();
+  } catch (err) { alert('Error: ' + err.message); }
+});
+
+loadPositions();
+</script>
+</Layout>

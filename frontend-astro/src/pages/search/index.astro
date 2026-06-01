@@ -1,0 +1,99 @@
+---
+import Layout from '../../layouts/Main.astro';
+---
+
+<Layout title="Buscar" activeModule="erp" activePage="Busqueda Global">
+<div class="space-y-6">
+  <div class="card">
+    <div class="search-bar text-lg">
+      <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+      <input type="text" class="search-input text-base" placeholder="Busca en todo el sistema... clientes, productos, empleados, facturas..." id="global-search" oninput="performSearch(this.value)" autofocus />
+    </div>
+  </div>
+
+  <div id="search-results"></div>
+</div>
+
+<script>
+let searchTimer;
+
+async function performSearch(query) {
+  clearTimeout(searchTimer);
+  if (!query || query.length < 2) {
+    document.getElementById('search-results').innerHTML = '';
+    return;
+  }
+
+  searchTimer = setTimeout(async () => {
+    document.getElementById('search-results').innerHTML = '<div class="text-center py-8 text-gray-400">Buscando...</div>';
+    try {
+      const data = await window.gql(`
+        query GlobalSearch($query: String!) {
+          clients(search: $query) { id name email phone segment }
+          leads { id client { name } score stage }
+          products(search: $query) { id sku name price stock }
+          employees(page: 1, perPage: 100) { data { id name email employeeNumber department { name } } }
+        }
+      `, { query });
+
+      const clients = (data.clients || []).filter(c => c.name.toLowerCase().includes(query.toLowerCase()) || (c.email || '').toLowerCase().includes(query.toLowerCase()));
+      const products = (data.products || []).filter(p => p.name.toLowerCase().includes(query.toLowerCase()) || (p.sku || '').toLowerCase().includes(query.toLowerCase()));
+      const employees = (data.employees?.data || []).filter(e => e.name.toLowerCase().includes(query.toLowerCase()) || (e.email || '').toLowerCase().includes(query.toLowerCase()));
+      const leads = (data.leads || []).filter(l => (l.client?.name || '').toLowerCase().includes(query.toLowerCase()));
+
+      let html = '';
+
+      if (clients.length) {
+        html += `<div class="card mb-4">
+          <h3 class="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+            <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            Clientes (${clients.length})
+          </h3>
+          <div class="space-y-2">${clients.map(c => `<a href="/crm/clients" class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors">
+            <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-sm">${c.name[0]}</div>
+            <div><div class="font-medium">${c.name}</div><div class="text-xs text-gray-500">${c.email || ''} - ${c.segment || 'regular'}</div></div>
+            <span class="${c.segment === 'vip' ? 'badge-warning' : 'badge-info'} ml-auto">${c.segment || 'regular'}</span>
+          </a>`).join('')}</div>
+        </div>`;
+      }
+
+      if (products.length) {
+        html += `<div class="card mb-4">
+          <h3 class="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+            <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+            Productos (${products.length})
+          </h3>
+          <div class="space-y-2">${products.map(p => `<a href="/scm/products" class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50">
+            <div class="w-8 h-8 rounded bg-green-100 flex items-center justify-center text-green-700 font-bold text-xs">${p.name[0]}</div>
+            <div><div class="font-medium">${p.name}</div><div class="text-xs text-gray-500">${p.sku} - Stock: ${p.stock}</div></div>
+            <span class="font-semibold ml-auto">$${p.price?.toLocaleString()}</span>
+          </a>`).join('')}</div>
+        </div>`;
+      }
+
+      if (employees.length) {
+        html += `<div class="card mb-4">
+          <h3 class="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+            <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+            Empleados (${employees.length})
+          </h3>
+          <div class="space-y-2">${employees.map(e => `<a href="/rh/employees" class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50">
+            <div class="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-red-700 font-bold text-sm">${e.name[0]}</div>
+            <div><div class="font-medium">${e.name}</div><div class="text-xs text-gray-500">${e.employeeNumber} - ${e.department?.name || ''}</div></div>
+          </a>`).join('')}</div>
+        </div>`;
+      }
+
+      if (!html) {
+        html = '<div class="card text-center py-12"><div class="text-4xl mb-4">&#128269;</div><div class="text-gray-500">No se encontraron resultados para "' + query + '"</div></div>';
+      }
+
+      document.getElementById('search-results').innerHTML = html;
+
+    } catch (err) { console.error(err); }
+  }, 300);
+}
+
+document.getElementById('global-search')?.focus();
+</script>
+</Layout>

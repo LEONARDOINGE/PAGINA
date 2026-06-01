@@ -1,0 +1,165 @@
+---
+import Layout from '../../../layouts/Main.astro';
+---
+
+<Layout title="Dashboard SCM" activeModule="scm" activePage="Dashboard SCM">
+<div class="space-y-6">
+
+  <div class="flex items-center justify-between">
+    <div><h2 class="text-xl font-bold text-gray-900">Panel SCM</h2><p class="text-sm text-gray-500">SCM &bull; Cadena de suministro</p></div>
+    <button onclick="window.location.href='/scm/purchase-orders'" class="btn-primary text-sm">+ Nueva Orden</button>
+  </div>
+
+  <!-- KPIs -->
+  <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+    <div class="card-sm text-center"><div class="text-2xl font-bold text-green-600" id="scm-products">--</div><div class="text-xs text-gray-500">Productos</div><div class="text-xs text-gray-400 mt-1">catalogo</div></div>
+    <div class="card-sm text-center"><div class="text-2xl font-bold text-red-500" id="scm-lowstock">--</div><div class="text-xs text-gray-500">Bajo Stock</div><div class="text-xs text-red-400 mt-1">reordenar</div></div>
+    <div class="card-sm text-center"><div class="text-2xl font-bold text-purple-600" id="scm-value">$--</div><div class="text-xs text-gray-500">Valor Inv.</div><div class="text-xs text-gray-400 mt-1">total</div></div>
+    <div class="card-sm text-center"><div class="text-2xl font-bold text-blue-600" id="scm-pos">--</div><div class="text-xs text-gray-500">Orden Compra</div><div class="text-xs text-yellow-500 mt-1">pendientes</div></div>
+    <div class="card-sm text-center"><div class="text-2xl font-bold text-orange-600" id="scm-suppliers">--</div><div class="text-xs text-gray-500">Proveedores</div><div class="text-xs text-green-500 mt-1">activos</div></div>
+  </div>
+
+  <!-- Alerts Panel -->
+  <div id="scm-alerts" class="space-y-2"></div>
+
+  <!-- Charts -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="card">
+      <h3 class="font-semibold text-gray-900 mb-4">Stock por Categoria</h3>
+      <div class="h-64"><canvas id="stockByCategoryChart"></canvas></div>
+    </div>
+    <div class="card">
+      <h3 class="font-semibold text-gray-900 mb-4">Movimientos de Stock (30 dias)</h3>
+      <div class="h-64"><canvas id="stockMovementsChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Top Suppliers -->
+  <div class="card">
+    <h3 class="font-semibold text-gray-900 mb-4">Top Proveedores</h3>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="table-header"><tr><th class="px-4 py-3 text-left">Proveedor</th><th class="px-4 py-3 text-left">Rating</th><th class="px-4 py-3 text-left">Lead Time</th><th class="px-4 py-3 text-left">Ordenes Totales</th><th class="px-4 py-3 text-left">Monto Total</th><th class="px-4 py-3 text-left">Accion</th></tr></thead>
+        <tbody id="top-suppliers"><tr><td colspan="6" class="px-4 py-8 text-center text-gray-400">Cargando...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Low Stock Products -->
+  <div class="card">
+    <h3 class="font-semibold text-gray-900 mb-4">Productos por Reordenar</h3>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="table-header"><tr><th class="px-4 py-3 text-left">SKU</th><th class="px-4 py-3 text-left">Producto</th><th class="px-4 py-3 text-left">Stock Actual</th><th class="px-4 py-3 text-left">Minimo</th><th class="px-4 py-3 text-left">Proveedor Preferido</th><th class="px-4 py-3 text-left">Accion</th></tr></thead>
+        <tbody id="lowstock-products"><tr><td colspan="6" class="px-4 py-8 text-center text-gray-400">Cargando...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+async function loadSCMDashboard() {
+  try {
+    const data = await window.gql(`
+      query {
+        erpDashboard { productsTotal productsLowStock inventoryValue }
+        products(lowStock: true) { id sku name stock stockMin unit category { name } preferredSupplier { name id } }
+        suppliers { id name rating leadTimeDays active purchaseOrders { id total status } }
+        purchaseOrders { id folio total status supplier { name } }
+      }
+    `);
+
+    const d = data.erpDashboard;
+    document.getElementById('scm-products').textContent = d.productsTotal || 0;
+    document.getElementById('scm-lowstock').textContent = d.productsLowStock || 0;
+    document.getElementById('scm-value').textContent = '$' + Math.round((d.inventoryValue || 0) / 1000) + 'k';
+    const pos = (data.purchaseOrders || []).filter(p => p.status !== 'recibido');
+    document.getElementById('scm-pos').textContent = pos.length;
+    document.getElementById('scm-suppliers').textContent = (data.suppliers || []).filter(s => s.active).length;
+
+    // Alerts
+    const alertsEl = document.getElementById('scm-alerts');
+    const lowProds = data.products || [];
+    alertsEl.innerHTML = lowProds.map(p => `
+      <div class="card-sm border-l-4 ${p.stock === 0 ? 'border-red-500' : 'border-yellow-500'} flex items-center justify-between">
+        <div>
+          <span class="font-semibold text-sm">${p.name}</span>
+          <span class="text-xs text-gray-500 ml-2">${p.sku}</span>
+        </div>
+        <div class="flex items-center gap-4">
+          <span class="text-sm font-bold ${p.stock === 0 ? 'text-red-600' : 'text-yellow-600'}">${p.stock} / ${p.stockMin} ${p.unit}</span>
+          ${p.preferredSupplier ? `<button onclick="quickPO('${p.preferredSupplier?.id}', '${p.id}')" class="btn-sm btn-primary text-xs">Ordenar a ${p.preferredSupplier?.name}</button>` : '<span class="text-xs text-gray-400">Sin proveedor</span>'}
+        </div>
+      </div>
+    `).join('');
+
+    // Top Suppliers
+    const supps = (data.suppliers || []).sort((a, b) => (b.rating || 0) - (a.rating || 0)).slice(0, 5);
+    const stars = (r) => '\u2605'.repeat(Math.round(r || 0));
+    document.getElementById('top-suppliers').innerHTML = supps.map(s => {
+      const pos_ = (s.purchaseOrders || []).filter(p => p.status !== 'recibido');
+      const totalAmt = (s.purchaseOrders || []).reduce((sum, p) => sum + (p.total || 0), 0);
+      return `<tr class="table-row">
+        <td class="px-4 py-3 font-medium">${s.name}</td>
+        <td class="px-4 py-3 text-yellow-500">${stars(s.rating)} ${s.rating || 0}</td>
+        <td class="px-4 py-3 text-gray-500">${s.leadTimeDays || 0} dias</td>
+        <td class="px-4 py-3">${(s.purchaseOrders || []).length} (${pos_.length} pend.)</td>
+        <td class="px-4 py-3 font-semibold">$${Math.round(totalAmt / 1000)}k</td>
+        <td class="px-4 py-3"><button onclick="window.location.href='/scm/suppliers'" class="btn-sm btn-outline text-xs">Ver</button></td>
+      </tr>`;
+    }).join('');
+
+    // Low stock table
+    document.getElementById('lowstock-products').innerHTML = lowProds.map(p => `
+      <tr class="table-row ${p.stock === 0 ? 'bg-red-50' : 'bg-yellow-50'}">
+        <td class="px-4 py-3 font-mono text-xs">${p.sku}</td>
+        <td class="px-4 py-3 font-medium">${p.name}</td>
+        <td class="px-4 py-3 font-bold ${p.stock === 0 ? 'text-red-600' : 'text-yellow-600'}">${p.stock} ${p.unit}</td>
+        <td class="px-4 py-3 text-gray-500">${p.stockMin} ${p.unit}</td>
+        <td class="px-4 py-3 text-gray-500 text-xs">${p.preferredSupplier?.name || '-'}</td>
+        <td class="px-4 py-3"><button onclick="quickPO('${p.preferredSupplier?.id}', '${p.id}')" class="btn-sm btn-primary text-xs">Crear OC</button></td>
+      </tr>`).join('') || '<tr><td colspan="6" class="px-4 py-8 text-center text-gray-400">Todos los productos con stock OK</td></tr>';
+
+    // Stock by Category chart
+    const catCtx = document.getElementById('stockByCategoryChart');
+    if (catCtx) {
+      if (window.stockByCategoryChart) window.stockByCategoryChart.destroy();
+      window.stockByCategoryChart = new Chart(catCtx, {
+        type: 'bar',
+        data: {
+          labels: ['Sesiones', 'Impresiones', 'Albumes', 'Eventos', 'Insumos', 'Equipo'],
+          datasets: [{ label: 'Unidades en Stock', data: [850, 1200, 180, 0, 450, 25], backgroundColor: ['#6366f1', '#22c55e', '#eab308', '#ec4899', '#f97316', '#3b82f6'] }],
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } },
+      });
+    }
+
+    // Stock movements chart
+    const movCtx = document.getElementById('stockMovementsChart');
+    if (movCtx) {
+      if (window.stockMovementsChart) window.stockMovementsChart.destroy();
+      window.stockMovementsChart = new Chart(movCtx, {
+        type: 'line',
+        data: {
+          labels: ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4'],
+          datasets: [
+            { label: 'Entradas', data: [45, 62, 38, 70], borderColor: '#22c55e', backgroundColor: 'rgba(34,197,94,0.1)', fill: true, tension: 0.4 },
+            { label: 'Salidas', data: [30, 45, 55, 40], borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,0.1)', fill: true, tension: 0.4 },
+          ],
+        },
+        options: { responsive: true, maintainAspectRatio: false },
+      });
+    }
+
+  } catch (err) { console.error(err); }
+}
+
+window.quickPO = async (supplierId, productId) => {
+  if (!supplierId) { alert('Este producto no tiene proveedor asignado'); return; }
+  alert(`Crear orden de compra para proveedor ID: ${supplierId}\nProducto ID: ${productId}\nVe a /scm/purchase-orders`);
+  window.location.href = '/scm/purchase-orders';
+};
+
+loadSCMDashboard();
+</script>
+</Layout>

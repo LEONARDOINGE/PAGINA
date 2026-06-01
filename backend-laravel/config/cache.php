@@ -3,8 +3,14 @@
 return [
     'default' => env('CACHE_DRIVER', 'array'),
     'stores' => [
-        'array' => ['driver' => 'array', 'serialize' => false],
-        'file' => ['driver' => 'file', 'path' => storage_path('framework/cache/data')],
+        'array' => [
+            'driver' => 'array',
+            'serialize' => false,
+        ],
+        'file' => [
+            'driver' => 'file',
+            'path' => storage_path('framework/cache/data'),
+        ],
     ],
-    'prefix' => 'fototec_cache_',
+    'prefix' => env('CACHE_PREFIX', 'fototec_cache'),
 ];

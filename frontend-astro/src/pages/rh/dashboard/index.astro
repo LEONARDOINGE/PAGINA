@@ -1,0 +1,208 @@
+---
+import Layout from '../../../layouts/Main.astro';
+---
+
+<Layout title="Dashboard RRHH" activeModule="rh" activePage="Dashboard RRHH">
+<div class="space-y-6">
+
+  <div class="flex items-center justify-between">
+    <div><h2 class="text-xl font-bold text-gray-900">Panel RRHH</h2><p class="text-sm text-gray-500">RRHH &bull; Gestion de personal</p></div>
+    <div class="flex gap-2">
+      <select class="input w-auto" id="rh-period" onchange="loadRHDashboard()">
+        <option value="week">Esta Semana</option><option value="month" selected>Este Mes</option>
+        <option value="quarter">Este Trimestre</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+    <div class="card-sm text-center"><div class="text-2xl font-bold text-blue-600" id="rh-total">--</div><div class="text-xs text-gray-500">Total Empleados</div></div>
+    <div class="card-sm text-center"><div class="text-2xl font-bold text-green-600" id="rh-active">--</div><div class="text-xs text-gray-500">Activos</div></div>
+    <div class="card-sm text-center"><div class="text-2xl font-bold text-purple-600" id="rh-attendance">--%</div><div class="text-xs text-gray-500">Tasa Asistencia</div></div>
+    <div class="card-sm text-center"><div class="text-2xl font-bold text-red-500" id="rh-absences">--</div><div class="text-xs text-gray-500">Faltas</div></div>
+    <div class="card-sm text-center"><div class="text-2xl font-bold text-yellow-500" id="rh-leaves">--</div><div class="text-xs text-gray-500">Permisos Activos</div></div>
+    <div class="card-sm text-center"><div class="text-2xl font-bold text-pink-600" id="rh-nomina">$--</div><div class="text-xs text-gray-500">Nomina Mensual</div></div>
+  </div>
+
+  <!-- Charts -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="card">
+      <h3 class="font-semibold text-gray-900 mb-4">Asistencia por Depto</h3>
+      <div class="h-64"><canvas id="attByDeptChart"></canvas></div>
+    </div>
+    <div class="card">
+      <h3 class="font-semibold text-gray-900 mb-4">Distribucion por Cargo</h3>
+      <div class="h-64"><canvas id="positionChart"></canvas></div>
+    </div>
+    <div class="card">
+      <h3 class="font-semibold text-gray-900 mb-4">Asistencia Diaria (ult. 7 dias)</h3>
+      <div class="h-64"><canvas id="weeklyAttendanceChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Employees by Department -->
+  <div class="card">
+    <h3 class="font-semibold text-gray-900 mb-4">Empleados por Departamento</h3>
+    <div class="grid grid-cols-3 md:grid-cols-6 gap-4" id="dept-cards"></div>
+  </div>
+
+  <!-- Pending Approvals -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="card">
+      <h3 class="font-semibold text-gray-900 mb-4">Permisos Pendientes de Aprobacion</h3>
+      <div class="space-y-3" id="pending-leaves"></div>
+    </div>
+    <div class="card">
+      <h3 class="font-semibold text-gray-900 mb-4">Empleados con Mejor Asistencia</h3>
+      <div class="space-y-3" id="top-employees"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+async function loadRHDashboard() {
+  try {
+    const data = await window.gql(`
+      query {
+        erpDashboard { employeesTotal employeesActive attendanceToday { presentes faltas permisos total } }
+        departments { id name color employees { id name attendanceRate active } positions { id name } }
+        employees(page: 1, perPage: 100) { data { id name attendanceRate department { name color } position { name } } }
+        leaves(status: solicitado) { id type days startDate endDate employee { name } }
+      }
+    `);
+
+    const d = data.erpDashboard;
+    const total = d.employeesTotal || 0;
+    const activos = d.employeesActive || 0;
+    const att = d.attendanceToday || {};
+    const tasa = att.total > 0 ? Math.round((att.presentes / att.total) * 100) : 0;
+
+    document.getElementById('rh-total').textContent = total;
+    document.getElementById('rh-active').textContent = activos;
+    document.getElementById('rh-attendance').textContent = tasa + '%';
+    document.getElementById('rh-absences').textContent = att.faltas || 0;
+    document.getElementById('rh-leaves').textContent = data.leaves?.length || 0;
+
+    const allEmps = data.employees?.data || [];
+    const nomina = allEmps.reduce((s, e) => s + 0, 0);
+    document.getElementById('rh-nomina').textContent = '$' + Math.round(nomina / 1000) + 'k';
+
+    // Dept cards
+    const deptsEl = document.getElementById('dept-cards');
+    deptsEl.innerHTML = (data.departments || []).map(dept => {
+      const emps = dept.employees || [];
+      const activos = emps.filter(e => e.active).length;
+      const avgAtt = emps.length ? Math.round(emps.reduce((s, e) => s + (e.attendanceRate || 0), 0) / emps.length) : 0;
+      return `<div class="card-sm text-center border-t-4" style="border-top-color:${dept.color}">
+        <div class="text-xl font-bold" style="color:${dept.color}">${activos}</div>
+        <div class="text-xs font-medium text-gray-900">${dept.name}</div>
+        <div class="text-xs text-gray-400 mt-1">${dept.positions?.length || 0} puestos</div>
+        <div class="text-xs ${avgAtt >= 90 ? 'text-green-500' : avgAtt >= 75 ? 'text-yellow-500' : 'text-red-500'}">${avgAtt}% asistencia</div>
+      </div>`;
+    }).join('');
+
+    // Attendance by dept chart
+    const attCtx = document.getElementById('attByDeptChart');
+    if (attCtx) {
+      if (window.attByDeptChart) window.attByDeptChart.destroy();
+      const depts = data.departments || [];
+      window.attByDeptChart = new Chart(attCtx, {
+        type: 'bar',
+        data: {
+          labels: depts.map(d => d.name),
+          datasets: [{
+            label: 'Empleados Activos',
+            data: depts.map(d => (d.employees || []).filter(e => e.active).length),
+            backgroundColor: depts.map(d => d.color),
+            borderRadius: 6,
+          }],
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } },
+      });
+    }
+
+    // Position chart
+    const posCtx = document.getElementById('positionChart');
+    if (posCtx) {
+      if (window.positionChart) window.positionChart.destroy();
+      const allPositions = allEmps.reduce((acc, e) => {
+        const pos = e.position?.name || 'Sin cargo';
+        acc[pos] = (acc[pos] || 0) + 1;
+        return acc;
+      }, {});
+      window.positionChart = new Chart(posCtx, {
+        type: 'doughnut',
+        data: {
+          labels: Object.keys(allPositions),
+          datasets: [{ data: Object.values(allPositions), backgroundColor: ['#6366f1', '#22c55e', '#eab308', '#ec4899', '#f97316', '#3b82f6', '#8b5cf6'] }],
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } },
+      });
+    }
+
+    // Weekly attendance chart
+    const weeklyCtx = document.getElementById('weeklyAttendanceChart');
+    if (weeklyCtx) {
+      if (window.weeklyAttendanceChart) window.weeklyAttendanceChart.destroy();
+      window.weeklyAttendanceChart = new Chart(weeklyCtx, {
+        type: 'line',
+        data: {
+          labels: ['Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab'],
+          datasets: [{
+            label: 'Presentes',
+            data: [total - 1, total, total, total - 2, total, 3],
+            borderColor: '#22c55e', backgroundColor: 'rgba(34,197,94,0.1)', fill: true, tension: 0.4,
+          }, {
+            label: 'Faltas',
+            data: [1, 0, 0, 2, 0, total - 3],
+            borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,0.1)', fill: true, tension: 0.4,
+          }],
+        },
+        options: { responsive: true, maintainAspectRatio: false },
+      });
+    }
+
+    // Pending leaves
+    const leavesEl = document.getElementById('pending-leaves');
+    const leaves = data.leaves || [];
+    leavesEl.innerHTML = leaves.slice(0, 5).map(l => `
+      <div class="flex items-center gap-3 p-2 rounded-lg bg-yellow-50">
+        <div class="flex-1">
+          <div class="text-sm font-medium">${l.employee?.name || '-'}</div>
+          <div class="text-xs text-gray-500">${l.type} - ${l.days} dias</div>
+        </div>
+        <div class="flex gap-2">
+          <button onclick="approveLeave('${l.id}')" class="btn-sm btn-success text-xs px-2 py-1">Aprobar</button>
+          <button onclick="rejectLeave('${l.id}')" class="btn-sm btn-danger text-xs px-2 py-1">Rechazar</button>
+        </div>
+      </div>
+    `).join('') || '<p class="text-sm text-gray-400">No hay permisos pendientes</p>';
+
+    // Top employees
+    const topEmpsEl = document.getElementById('top-employees');
+    const topEmps = allEmps.sort((a, b) => (b.attendanceRate || 0) - (a.attendanceRate || 0)).slice(0, 5);
+    topEmpsEl.innerHTML = topEmps.map(e => `
+      <div class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50">
+        <div class="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs" style="background:${e.department?.color || '#7c3aed'}">${e.name[0]}</div>
+        <div class="flex-1 min-w-0">
+          <div class="text-sm font-medium truncate">${e.name}</div>
+          <div class="text-xs text-gray-400">${e.position?.name || '-'}</div>
+        </div>
+        <span class="text-sm font-bold text-green-600">${e.attendanceRate || 0}%</span>
+      </div>
+    `).join('') || '<p class="text-sm text-gray-400">Sin datos</p>';
+
+  } catch (err) { console.error(err); }
+}
+
+window.approveLeave = async (id) => {
+  try { await window.gql(`mutation { approveLeave(id: "${id}") { id } }`); loadRHDashboard(); } catch (err) { alert('Error: ' + err.message); }
+};
+window.rejectLeave = async (id) => {
+  try { await window.gql(`mutation { rejectLeave(id: "${id}") { id } }`); loadRHDashboard(); } catch (err) { alert('Error: ' + err.message); }
+};
+
+loadRHDashboard();
+</script>
+</Layout>

@@ -1,0 +1,83 @@
+---
+import Layout from '../../../layouts/Main.astro';
+---
+
+<Layout title="Usuarios" activeModule="erp" activePage="Usuarios">
+<div class="space-y-6">
+  <div class="flex items-center justify-between">
+    <div><h2 class="text-xl font-bold text-gray-900">Gestion de Usuarios</h2><p class="text-sm text-gray-500">ERP &bull; Roles y permisos</p></div>
+    <button onclick="showCreateModal()" class="btn-primary flex items-center gap-2">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+      Nuevo Usuario
+    </button>
+  </div>
+
+  <div class="grid grid-cols-6 gap-4">
+    <div class="card-sm text-center"><div class="text-2xl font-bold text-purple-600">6</div><div class="text-xs text-gray-500">Total Roles</div></div>
+    <div class="card-sm text-center"><div class="text-2xl font-bold text-blue-600">14</div><div class="text-xs text-gray-500">Permisos</div></div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="lg:col-span-2">
+      <div class="card overflow-hidden p-0">
+        <table class="w-full text-sm">
+          <thead class="table-header"><tr><th class="px-4 py-3 text-left">Usuario</th><th class="px-4 py-3 text-left">Email</th><th class="px-4 py-3 text-left">Rol</th><th class="px-4 py-3 text-left">Estado</th><th class="px-4 py-3 text-left">Acciones</th></tr></thead>
+          <tbody id="users-table"><tr><td colspan="5" class="px-4 py-8 text-center text-gray-400">Cargando...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="space-y-4">
+      <div class="card">
+        <h3 class="font-semibold text-gray-900 mb-3">Roles del Sistema</h3>
+        <div class="space-y-3">
+          <div class="flex items-center gap-2 p-2 rounded-lg bg-purple-50"><div class="w-3 h-3 rounded bg-purple-500"></div><span class="text-sm font-medium flex-1">Super Admin</span><span class="badge-purple">Full</span></div>
+          <div class="flex items-center gap-2 p-2 rounded-lg bg-blue-50"><div class="w-3 h-3 rounded bg-blue-500"></div><span class="text-sm font-medium flex-1">Gerente Ventas</span><span class="badge-info">CRM</span></div>
+          <div class="flex items-center gap-2 p-2 rounded-lg bg-green-50"><div class="w-3 h-3 rounded bg-green-500"></div><span class="text-sm font-medium flex-1">Coordinador SCM</span><span class="badge-success">SCM</span></div>
+          <div class="flex items-center gap-2 p-2 rounded-lg bg-red-50"><div class="w-3 h-3 rounded bg-red-500"></div><span class="text-sm font-medium flex-1">Coordinador RRHH</span><span class="badge-danger">RH</span></div>
+          <div class="flex items-center gap-2 p-2 rounded-lg bg-gray-50"><div class="w-3 h-3 rounded bg-gray-400"></div><span class="text-sm font-medium flex-1">Empleado</span><span class="badge-secondary">Basico</span></div>
+          <div class="flex items-center gap-2 p-2 rounded-lg bg-yellow-50"><div class="w-3 h-3 rounded bg-yellow-400"></div><span class="text-sm font-medium flex-1">Cliente</span><span class="badge-warning">Portal</span></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 class="font-semibold text-gray-900 mb-3">Permisos por Modulo</h3>
+        <div class="space-y-2 text-sm">
+          <div class="flex justify-between"><span class="text-gray-600">access_crm</span><span class="badge-info text-xs">4 roles</span></div>
+          <div class="flex justify-between"><span class="text-gray-600">manage_crm</span><span class="badge-info text-xs">2 roles</span></div>
+          <div class="flex justify-between"><span class="text-gray-600">access_scm</span><span class="badge-success text-xs">4 roles</span></div>
+          <div class="flex justify-between"><span class="text-gray-600">manage_scm</span><span class="badge-success text-xs">2 roles</span></div>
+          <div class="flex justify-between"><span class="text-gray-600">access_rh</span><span class="badge-danger text-xs">4 roles</span></div>
+          <div class="flex justify-between"><span class="text-gray-600">manage_rh</span><span class="badge-danger text-xs">2 roles</span></div>
+          <div class="flex justify-between"><span class="text-gray-600">view_dashboard</span><span class="badge-secondary text-xs">5 roles</span></div>
+          <div class="flex justify-between"><span class="text-gray-600">manage_users</span><span class="badge-purple text-xs">1 rol</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+async function loadUsers() {
+  try {
+    const data = await window.gql(`query { users { id name email roles active } }`);
+    const users = data.users || [];
+    document.getElementById('users-table').innerHTML = users.map(u => `
+      <tr class="table-row">
+        <td class="px-4 py-3">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-bold text-sm">${u.name[0]}</div>
+            <span class="font-medium">${u.name}</span>
+          </div>
+        </td>
+        <td class="px-4 py-3 text-gray-500">${u.email}</td>
+        <td class="px-4 py-3"><span class="badge-purple">${u.roles?.[0] || 'cliente'}</span></td>
+        <td class="px-4 py-3"><span class="${u.active ? 'badge-success' : 'badge-danger'}">${u.active ? 'Activo' : 'Inactivo'}</span></td>
+        <td class="px-4 py-3"><button class="btn-sm btn-outline text-xs">Editar</button></td>
+      </tr>`).join('') || '<tr><td colspan="5" class="px-4 py-8 text-center text-gray-400">Sin usuarios</td></tr>';
+  } catch (err) { console.error(err); }
+}
+
+window.showCreateModal = () => alert('Crear usuario desde el sistema');
+loadUsers();
+</script>
+</Layout>

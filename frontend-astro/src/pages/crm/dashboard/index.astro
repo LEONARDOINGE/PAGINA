@@ -1,0 +1,206 @@
+---
+import Layout from '../../../layouts/Main.astro';
+---
+
+<Layout title="Dashboard CRM" activeModule="crm" activePage="Dashboard CRM">
+<div class="space-y-6">
+
+  <div class="flex items-center justify-between">
+    <div><h2 class="text-xl font-bold text-gray-900">Panel CRM</h2><p class="text-sm text-gray-500">CRM &bull; Ventas y relaciones</p></div>
+    <div class="flex gap-2">
+      <select class="input w-auto" id="crm-period" onchange="loadCRMDashboard()">
+        <option value="today">Hoy</option><option value="week" selected>Esta Semana</option>
+        <option value="month">Este Mes</option><option value="year">Este Ano</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- KPI Row -->
+  <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+    <div class="card-sm text-center">
+      <div class="text-2xl font-bold text-blue-600" id="crm-clients">--</div>
+      <div class="text-xs text-gray-500">Clientes Totales</div>
+      <div class="text-xs text-green-500 mt-1" id="crm-clients-new">+0 nuevos</div>
+    </div>
+    <div class="card-sm text-center">
+      <div class="text-2xl font-bold text-purple-600" id="crm-leads">--</div>
+      <div class="text-xs text-gray-500">Leads Activos</div>
+      <div class="text-xs text-yellow-500 mt-1" id="crm-leads-conversion">0% conversion</div>
+    </div>
+    <div class="card-sm text-center">
+      <div class="text-2xl font-bold text-green-600" id="crm-quotes">--</div>
+      <div class="text-xs text-gray-500">Cotizaciones</div>
+      <div class="text-xs text-gray-400 mt-1">abiertas</div>
+    </div>
+    <div class="card-sm text-center">
+      <div class="text-2xl font-bold text-yellow-600" id="crm-invoices">--</div>
+      <div class="text-xs text-gray-500">Facturas</div>
+      <div class="text-xs text-gray-400 mt-1">pendientes</div>
+    </div>
+    <div class="card-sm text-center">
+      <div class="text-2xl font-bold text-red-500" id="crm-tickets">--</div>
+      <div class="text-xs text-gray-500">Tickets</div>
+      <div class="text-xs text-red-500 mt-1">abiertos</div>
+    </div>
+    <div class="card-sm text-center">
+      <div class="text-2xl font-bold text-pink-600" id="crm-revenue">$--</div>
+      <div class="text-xs text-gray-500">Ingresos CRM</div>
+      <div class="text-xs text-green-500 mt-1" id="crm-revenue-trend">+0%</div>
+    </div>
+  </div>
+
+  <!-- Charts & Tables -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="card lg:col-span-2">
+      <h3 class="font-semibold text-gray-900 mb-4">Leads por Etapa</h3>
+      <div class="h-64"><canvas id="crmLeadChart"></canvas></div>
+    </div>
+    <div class="card">
+      <h3 class="font-semibold text-gray-900 mb-4">Tasa de Conversion</h3>
+      <div class="h-64"><canvas id="conversionChart"></canvas></div>
+      <div class="mt-4 space-y-2" id="conversion-metrics"></div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="card">
+      <h3 class="font-semibold text-gray-900 mb-4">Ultimos Leads</h3>
+      <div class="space-y-3" id="recent-leads"></div>
+    </div>
+    <div class="card">
+      <h3 class="font-semibold text-gray-900 mb-4">Proximas Citas</h3>
+      <div class="space-y-3" id="upcoming-appointments"></div>
+    </div>
+  </div>
+
+  <!-- Client Segments -->
+  <div class="card">
+    <h3 class="font-semibold text-gray-900 mb-4">Segmentos de Clientes</h3>
+    <div class="grid grid-cols-4 gap-4 mb-6">
+      <div class="text-center"><div class="text-3xl font-bold text-yellow-500">VIP</div><div class="text-sm text-gray-500">Alto valor</div></div>
+      <div class="text-center"><div class="text-3xl font-bold text-blue-500">Corporate</div><div class="text-sm text-gray-500">Empresas</div></div>
+      <div class="text-center"><div class="text-3xl font-bold text-green-500">Regular</div><div class="text-sm text-gray-500">Estandar</div></div>
+      <div class="text-center"><div class="text-3xl font-bold text-gray-400">Inactivo</div><div class="text-sm text-gray-500">Sin actividad</div></div>
+    </div>
+    <div class="h-48"><canvas id="segmentChart"></canvas></div>
+  </div>
+</div>
+
+<script>
+async function loadCRMDashboard() {
+  try {
+    const data = await window.gql(`
+      query {
+        erpDashboard {
+          clientsTotal clientsActive clientsNewThisMonth leadsTotal pipelineValue { interesadas cotizadas apartadas entregadas totalValue }
+          invoicesPending invoicesPaidThisMonth quotesPending
+        }
+        tickets(status: abierto) { id priority }
+        appointments { id title date time client { name } }
+        leads(stage: nuevo) { id score client { name } created_at }
+      }
+    `);
+
+    const d = data.erpDashboard;
+    document.getElementById('crm-clients').textContent = d.clientsTotal || 0;
+    document.getElementById('crm-clients-new').textContent = `+${d.clientsNewThisMonth || 0} nuevos`;
+    document.getElementById('crm-leads').textContent = d.leadsTotal || 0;
+    document.getElementById('crm-leads-conversion').textContent = `${Math.round((d.pipelineValue?.entregadas || 0) / Math.max(1, d.leadsTotal || 1) * 100)}% conversion`;
+    document.getElementById('crm-quotes').textContent = d.quotesPending || 0;
+    document.getElementById('crm-invoices').textContent = d.invoicesPending ? `$${Math.round(d.invoicesPending / 1000)}k` : 0;
+    document.getElementById('crm-tickets').textContent = data.tickets?.length || 0;
+    document.getElementById('crm-revenue').textContent = `$${Math.round((d.invoicesPaidThisMonth || 0) / 1000)}k`;
+    const trend = d.invoicesPaidThisMonth > 0 ? 100 : 0;
+    document.getElementById('crm-revenue-trend').textContent = `+${trend}%`;
+
+    // Leads chart
+    const lc = document.getElementById('crmLeadChart');
+    if (lc) {
+      if (window.crmLeadChart) window.crmLeadChart.destroy();
+      window.crmLeadChart = new Chart(lc, {
+        type: 'bar',
+        data: {
+          labels: ['Interesadas', 'Cotizadas', 'Apartadas', 'Entregadas'],
+          datasets: [{
+            label: 'Leads',
+            data: [d.pipelineValue?.interesadas || 0, d.pipelineValue?.cotizadas || 0, d.pipelineValue?.apartadas || 0, d.pipelineValue?.entregadas || 0],
+            backgroundColor: ['#3b82f6', '#eab308', '#f97316', '#22c55e'],
+            borderRadius: 8,
+          }],
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } },
+      });
+    }
+
+    // Conversion chart
+    const conv = data.erpDashboard;
+    const convCtx = document.getElementById('conversionChart');
+    if (convCtx) {
+      if (window.conversionChart) window.conversionChart.destroy();
+      const converted = conv.pipelineValue?.entregadas || 0;
+      const lost = Math.max(0, (conv.leadsTotal || 0) - converted);
+      window.conversionChart = new Chart(convCtx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Ganados', 'Perdidos', 'En Proceso'],
+          datasets: [{
+            data: [converted, lost, (conv.pipelineValue?.cotizadas || 0) + (conv.pipelineValue?.apartadas || 0)],
+            backgroundColor: ['#22c55e', '#ef4444', '#6366f1'],
+          }],
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } },
+      });
+    }
+
+    // Recent leads
+    const leadsEl = document.getElementById('recent-leads');
+    const leads = data.leads || [];
+    leadsEl.innerHTML = leads.slice(0, 5).map(l => `
+      <div class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50">
+        <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-xs">${(l.client?.name || '?')[0]}</div>
+        <div class="flex-1 min-w-0">
+          <div class="text-sm font-medium truncate">${l.client?.name || 'N/A'}</div>
+          <div class="text-xs text-gray-400">${new Date(l.created_at).toLocaleDateString('es-MX')}</div>
+        </div>
+        <span class="text-xs font-bold ${l.score >= 70 ? 'text-green-600' : l.score >= 40 ? 'text-yellow-600' : 'text-red-600'}">${l.score}</span>
+      </div>
+    `).join('') || '<p class="text-sm text-gray-400">Sin leads nuevos</p>';
+
+    // Upcoming appointments
+    const apptEl = document.getElementById('upcoming-appointments');
+    const apts = (data.appointments || []).slice(0, 5);
+    apptEl.innerHTML = apts.map(a => `
+      <div class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50">
+        <div class="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center text-purple-700 font-bold text-xs">${(a.client?.name || '?')[0]}</div>
+        <div class="flex-1 min-w-0">
+          <div class="text-sm font-medium truncate">${a.title}</div>
+          <div class="text-xs text-gray-400">${a.client?.name || ''} - ${a.time}</div>
+        </div>
+        <span class="text-xs text-gray-500">${new Date(a.date).toLocaleDateString('es-MX')}</span>
+      </div>
+    `).join('') || '<p class="text-sm text-gray-400">Sin citas proximas</p>';
+
+    // Segment chart
+    const segCtx = document.getElementById('segmentChart');
+    if (segCtx) {
+      if (window.segmentChart) window.segmentChart.destroy();
+      window.segmentChart = new Chart(segCtx, {
+        type: 'bar',
+        data: {
+          labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun'],
+          datasets: [
+            { label: 'VIP', data: [12, 15, 18, 14, 20, 22], backgroundColor: '#eab308' },
+            { label: 'Corporate', data: [8, 10, 12, 15, 14, 18], backgroundColor: '#6366f1' },
+            { label: 'Regular', data: [45, 50, 48, 55, 52, 60], backgroundColor: '#22c55e' },
+          ],
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } }, scales: { y: { stacked: true }, x: { stacked: true } } },
+      });
+    }
+
+  } catch (err) { console.error(err); }
+}
+
+loadCRMDashboard();
+</script>
+</Layout>

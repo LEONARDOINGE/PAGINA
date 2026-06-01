@@ -53,6 +53,11 @@ class TursoSyncService
         }
     }
 
+    public static function make(): self
+    {
+        return new self();
+    }
+
     public function pull(): array
     {
         if (empty($this->token)) {

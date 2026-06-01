@@ -1,0 +1,116 @@
+---
+import Layout from '../../../layouts/Main.astro';
+---
+
+<Layout title="Calendario CRM" activeModule="crm" activePage="Calendario">
+<div class="space-y-6">
+  <div class="flex items-center justify-between">
+    <div><h2 class="text-xl font-bold text-gray-900">Calendario de Citas</h2><p class="text-sm text-gray-500">CRM &bull; Agenda completa</p></div>
+    <div class="flex gap-2">
+      <select class="input w-auto" id="cal-view" onchange="renderCalendar()">
+        <option value="week">Semana</option><option value="month" selected>Mes</option>
+        <option value="agenda">Agenda</option>
+      </select>
+      <button onclick="window.location.href='/crm/appointments'" class="btn-outline btn-sm">Ver Lista</button>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+    <div class="lg:col-span-3">
+      <div class="card p-0 overflow-hidden" id="crm-calendar"></div>
+    </div>
+    <div class="space-y-4">
+      <div class="card">
+        <h3 class="font-semibold text-gray-900 mb-3">Leyenda</h3>
+        <div class="space-y-2 text-sm">
+          <div class="flex items-center gap-2"><div class="w-3 h-3 rounded bg-blue-500"></div><span>Sesion Fotografica</span></div>
+          <div class="flex items-center gap-2"><div class="w-3 h-3 rounded bg-purple-500"></div><span>Consulta</span></div>
+          <div class="flex items-center gap-2"><div class="w-3 h-3 rounded bg-green-500"></div><span>Entrega</span></div>
+          <div class="flex items-center gap-2"><div class="w-3 h-3 rounded bg-orange-500"></div><span>Reunion</span></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3 class="font-semibold text-gray-900 mb-3">Hoy</h3>
+        <div id="today-appointments" class="space-y-2"></div>
+      </div>
+      <div class="card">
+        <h3 class="font-semibold text-gray-900 mb-3">Esta Semana</h3>
+        <div id="week-appointments" class="space-y-2"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const TYPE_COLORS = {
+  sesion_foto: 'blue', consulta: 'purple', entrega: 'green',
+  reunion: 'orange', otro: 'gray',
+};
+
+async function loadCRMCalendar() {
+  try {
+    const data = await window.gql(`query { appointments { id title type date time duration location status client { name } } }`);
+    const apts = data.appointments || [];
+    const today = new Date().toISOString().split('T')[0];
+
+    const todayApts = apts.filter(a => a.date === today);
+    document.getElementById('today-appointments').innerHTML = todayApts.length ? todayApts.map(a => `
+      <div class="p-2 rounded-lg bg-${TYPE_COLORS[a.type] || 'gray'}-50 border-l-4 border-${TYPE_COLORS[a.type] || 'gray'}-500">
+        <div class="text-sm font-medium">${a.title}</div>
+        <div class="text-xs text-gray-500">${a.time} - ${a.client?.name || ''}</div>
+      </div>`).join('') : '<p class="text-sm text-gray-400">Sin citas hoy</p>';
+
+    const weekStart = new Date();
+    weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1);
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekEnd.getDate() + 6);
+    const weekApts = apts.filter(a => a.date >= weekStart.toISOString().split('T')[0] && a.date <= weekEnd.toISOString().split('T')[0]);
+    document.getElementById('week-appointments').innerHTML = weekApts.slice(0, 5).map(a => `
+      <div class="flex items-center gap-2 p-2 rounded bg-gray-50">
+        <span class="text-xs font-mono text-gray-500">${a.date?.slice(5)}</span>
+        <span class="text-sm truncate">${a.title}</span>
+      </div>`).join('') || '<p class="text-sm text-gray-400">Sin citas esta semana</p>';
+
+    // Mini calendar grid
+    const calEl = document.getElementById('crm-calendar');
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const firstDay = new Date(year, month, 1).getDay();
+    const startDay = firstDay === 0 ? 6 : firstDay - 1;
+    const monthStr = `${year}-${String(month + 1).padStart(2, '0')}`;
+
+    let html = `
+      <div class="flex items-center justify-between p-4 border-b border-gray-200">
+        <button class="btn-outline btn-sm">&#8592;</button>
+        <span class="font-semibold">${now.toLocaleDateString('es-MX', { month: 'long', year: 'numeric' })}</span>
+        <button class="btn-outline btn-sm">&#8594;</button>
+      </div>
+      <div class="grid grid-cols-7 border-b border-gray-200">
+        ${['Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab', 'Dom'].map(d => `<div class="text-center py-2 text-xs font-semibold text-gray-500">${d}</div>`).join('')}
+      </div>
+      <div class="grid grid-cols-7">`;
+
+    for (let i = 0; i < startDay; i++) html += '<div class="min-h-20 border-r border-b border-gray-100 bg-gray-50"></div>';
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dateStr = `${monthStr}-${String(day).padStart(2, '0')}`;
+      const dayApts = apts.filter(a => a.date === dateStr);
+      const isToday = dateStr === today;
+      const isWeekend = new Date(year, month, day).getDay() === 0 || new Date(year, month, day).getDay() === 6;
+      html += `<div class="min-h-20 border-r border-b border-gray-100 p-1 ${isWeekend ? 'bg-gray-50' : 'bg-white hover:bg-gray-50'} ${isToday ? 'ring-2 ring-primary-500' : ''}">
+        <span class="text-xs font-semibold ${isToday ? 'bg-primary-500 text-white w-5 h-5 rounded-full flex items-center justify-center' : 'text-gray-700'}">${day}</span>
+        ${dayApts.slice(0, 2).map(a => `<div class="text-xs px-1 py-0.5 mt-1 rounded bg-${TYPE_COLORS[a.type] || 'gray'}-100 text-${TYPE_COLORS[a.type] || 'gray'}-700 truncate">${a.time} ${a.title}</div>`).join('')}
+        ${dayApts.length > 2 ? `<div class="text-xs text-gray-400 mt-1">+${dayApts.length - 2} mas</div>` : ''}
+      </div>`;
+    }
+    html += '</div>';
+    calEl.innerHTML = html;
+
+  } catch (err) { console.error(err); }
+}
+
+window.renderCalendar = () => loadCRMCalendar();
+loadCRMCalendar();
+</script>
+</Layout>

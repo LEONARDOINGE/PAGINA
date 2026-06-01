@@ -1,9 +1,8 @@
 ---
-import Layout from '../layouts/Main.astro';
+import LoginLayout from '../layouts/LoginLayout.astro';
 ---
 
-<Layout title="Login" activeModule="">
-<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-600 via-primary-700 to-purple-900">
+<LoginLayout title="Login">
   <div class="w-full max-w-md p-8">
     <div class="text-center mb-8">
       <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white/10 backdrop-blur mb-4">
@@ -60,45 +59,38 @@ import Layout from '../layouts/Main.astro';
       &copy; 2024 FotoTec Studio &bull; Reynosa, Tamaulipas
     </p>
   </div>
-</div>
 
-<script>
+  <script is:inline>
+const API_BASE = 'https://fototec-api.lm7529171.workers.dev';
+
 async function handleLogin() {
   const btn = document.getElementById('login-btn');
-  const email = (document.getElementById('email') as HTMLInputElement).value;
-  const password = (document.getElementById('password') as HTMLInputElement).value;
+  const email = document.getElementById('email').value;
+  const password = document.getElementById('password').value;
   const errorDiv = document.getElementById('error-msg');
 
-  btn.innerHTML = '<span class="animate-spin">&#8987;</span>';
-  (btn as HTMLButtonElement).disabled = true;
+  btn.innerHTML = '<span class="animate-pulse">Cargando...</span>';
+  btn.disabled = true;
 
   try {
-    const res = await fetch(window.API_URL, {
+    const res = await fetch(`${API_BASE}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        query: `mutation Login($email: String!, $password: String!) {
-          login(email: $email, password: $password) {
-            token user { id name email roles permissions }
-          }
-        }`,
-        variables: { email, password },
-      }),
+      body: JSON.stringify({ email, password }),
     });
 
-    const json = await res.json();
-    if (json.errors?.length) throw new Error(json.errors[0].message);
+    const data = await res.json();
+    if (!res.ok || data.error) throw new Error(data.error || 'Error de login');
 
-    const { token, user } = json.data.login;
-    localStorage.setItem('fototec_token', token);
-    localStorage.setItem('fototec_user', JSON.stringify({ ...user, permissions: user.permissions || [] }));
+    localStorage.setItem('fototec_token', data.token);
+    localStorage.setItem('fototec_user', JSON.stringify(data.user));
     window.location.href = '/dashboard';
-  } catch (err: any) {
+  } catch (err) {
     errorDiv.textContent = err.message;
     errorDiv.classList.remove('hidden');
-    btn.innerHTML = '<span>Iniciar Sesion</span>';
-    (btn as HTMLButtonElement).disabled = false;
+    btn.innerHTML = '<span>Iniciar Sesion</span><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>';
+    btn.disabled = false;
   }
 }
 </script>
-</Layout>
+</LoginLayout>

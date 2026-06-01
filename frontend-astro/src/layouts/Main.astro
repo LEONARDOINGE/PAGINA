@@ -7,7 +7,7 @@ interface Props {
 
 const { title = 'FotoTec ERP', activeModule = '', activePage = '' } = Astro.props;
 
-const API_URL = import.meta.env.PUBLIC_API_URL || 'http://localhost:8000/graphql';
+const API_URL = 'https://fototec-api.lm7529171.workers.dev/graphql';
 
 const modules = [
   { id: 'erp', label: 'ERP', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6', color: 'purple' },
@@ -66,11 +66,15 @@ const modules = [
             <div class="ml-4 space-y-0.5 hidden" id={`submenu-${m.id}`}>
               {m.id === 'erp' && <>
                 <a href="/dashboard" class="nav-item text-xs py-1.5">Panel Principal</a>
+                <a href="/erp/financial" class="nav-item text-xs py-1.5">Finanzas</a>
                 <a href="/erp/reports" class="nav-item text-xs py-1.5">Reportes</a>
                 <a href="/erp/audit" class="nav-item text-xs py-1.5">Auditoria</a>
+                <a href="/erp/notifications" class="nav-item text-xs py-1.5">Notificaciones</a>
+                <a href="/erp/users" class="nav-item text-xs py-1.5">Usuarios</a>
                 <a href="/erp/settings" class="nav-item text-xs py-1.5">Configuracion</a>
               </>}
               {m.id === 'crm' && <>
+                <a href="/crm/dashboard" class="nav-item text-xs py-1.5">Dashboard</a>
                 <a href="/crm/clients" class="nav-item text-xs py-1.5">Clientes</a>
                 <a href="/crm/pipeline" class="nav-item text-xs py-1.5">Pipeline</a>
                 <a href="/crm/quotes" class="nav-item text-xs py-1.5">Cotizaciones</a>
@@ -81,6 +85,7 @@ const modules = [
                 <a href="/crm/surveys" class="nav-item text-xs py-1.5">Encuestas</a>
               </>}
               {m.id === 'scm' && <>
+                <a href="/scm/dashboard" class="nav-item text-xs py-1.5">Dashboard</a>
                 <a href="/scm/products" class="nav-item text-xs py-1.5">Productos</a>
                 <a href="/scm/inventory" class="nav-item text-xs py-1.5">Inventario</a>
                 <a href="/scm/warehouses" class="nav-item text-xs py-1.5">Almacenes</a>
@@ -89,6 +94,7 @@ const modules = [
                 <a href="/scm/movements" class="nav-item text-xs py-1.5">Movimientos</a>
               </>}
               {m.id === 'rh' && <>
+                <a href="/rh/dashboard" class="nav-item text-xs py-1.5">Dashboard</a>
                 <a href="/rh/employees" class="nav-item text-xs py-1.5">Empleados</a>
                 <a href="/rh/departments" class="nav-item text-xs py-1.5">Departamentos</a>
                 <a href="/rh/attendance" class="nav-item text-xs py-1.5">Asistencia</a>
@@ -171,9 +177,14 @@ const modules = [
   <script define:vars={{ API_URL }}>
     window.API_URL = API_URL;
     window.graphql = async (query, variables = {}) => {
+      const user = JSON.parse(localStorage.getItem('fototec_user') || '{}');
       const res = await fetch(API_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'X-User-Id': user.id || '',
+          'X-User-Role': user.role || 'cliente',
+        },
         body: JSON.stringify({ query, variables }),
       });
       const json = await res.json();

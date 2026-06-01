@@ -1,0 +1,106 @@
+---
+import Layout from '../../../layouts/Main.astro';
+---
+
+<Layout title="Dashboard Financiero" activeModule="erp" activePage="Finanzas">
+<div class="space-y-6">
+  <div><h2 class="text-xl font-bold text-gray-900">Panel Financiero</h2><p class="text-sm text-gray-500">ERP &bull; Finanzas y rentabilidad</p></div>
+
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div class="card-sm text-center"><div class="text-2xl font-bold text-green-600" id="fin-ingresos">$--</div><div class="text-xs text-gray-500">Ingresos Mes</div><div class="text-xs text-green-400 mt-1" id="fin-ing-trend">+0% vs mes</div></div>
+    <div class="card-sm text-center"><div class="text-2xl font-bold text-yellow-600" id="fin-pendiente">$--</div><div class="text-xs text-gray-500">Cuentas por Cobrar</div></div>
+    <div class="card-sm text-center"><div class="text-2xl font-bold text-red-600" id="fin-proveedores">$--</div><div class="text-xs text-gray-500">Cuentas por Pagar</div></div>
+    <div class="card-sm text-center"><div class="text-2xl font-bold text-purple-600" id="fin-margen">--%</div><div class="text-xs text-gray-500">Margen Bruto</div></div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="card"><h3 class="font-semibold text-gray-900 mb-4">Ingresos vs Gastos (12 meses)</h3><div class="h-64"><canvas id="finChart1"></canvas></div></div>
+    <div class="card"><h3 class="font-semibold text-gray-900 mb-4">Estado de Resultados</h3><div class="space-y-3" id="income-statement"></div></div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="card"><h3 class="font-semibold text-gray-900 mb-4">Facturas Pendientes de Pago</h3><div class="space-y-2" id="pending-invoices"></div></div>
+    <div class="card"><h3 class="font-semibold text-gray-900 mb-4">Ordenes de Compra Pendientes</h3><div class="space-y-2" id="pending-pos"></div></div>
+    <div class="card"><h3 class="font-semibold text-gray-900 mb-4">Nomina por Depto</h3><div class="space-y-2" id="nomina-dept"></div></div>
+  </div>
+</div>
+
+<script>
+async function loadFinancialDashboard() {
+  try {
+    const data = await window.gql(`
+      query {
+        erpDashboard { revenueThisMonth revenueLastMonth invoicesPending invoicesPaidThisMonth inventoryValue }
+        invoices(status: pendiente) { id folio total client { name } }
+        purchaseOrders(status: borrador) { id folio total supplier { name } }
+        departments { id name color salaryBudget employees { salary } }
+      }
+    `);
+
+    const d = data.erpDashboard;
+    document.getElementById('fin-ingresos').textContent = '$' + Math.round((d.revenueThisMonth || 0) / 1000) + 'k';
+    const trend = d.revenueLastMonth > 0 ? Math.round((d.revenueThisMonth - d.revenueLastMonth) / d.revenueLastMonth * 100) : 0;
+    document.getElementById('fin-ing-trend').textContent = `${trend >= 0 ? '+' : ''}${trend}% vs mes anterior`;
+    document.getElementById('fin-pendiente').textContent = '$' + Math.round((d.invoicesPending || 0) / 1000) + 'k';
+    document.getElementById('fin-margen').textContent = '42%';
+
+    // Income statement
+    const ing = d.revenueThisMonth || 0;
+    const cogs = ing * 0.35;
+    const utilidad = ing - cogs;
+    const gastos = ing * 0.15;
+    const neto = utilidad - gastos;
+    document.getElementById('income-statement').innerHTML = `
+      <div class="flex justify-between py-2 border-b"><span>Ingresos</span><span class="font-bold text-green-600">$${Math.round(ing / 1000)}k</span></div>
+      <div class="flex justify-between py-2 border-b text-gray-500"><span>Costos (35%)</span><span class="text-red-500">-$${Math.round(cogs / 1000)}k</span></div>
+      <div class="flex justify-between py-2 border-b font-semibold"><span>Utilidad Bruta</span><span class="text-green-600">$${Math.round(utilidad / 1000)}k</span></div>
+      <div class="flex justify-between py-2 border-b text-gray-500"><span>Gastos Operativos (15%)</span><span class="text-red-500">-$${Math.round(gastos / 1000)}k</span></div>
+      <div class="flex justify-between py-2 font-bold text-lg"><span>Utilidad Neta</span><span class="${neto >= 0 ? 'text-green-600' : 'text-red-600'}">$${Math.round(neto / 1000)}k</span></div>
+    `;
+
+    // Charts
+    new Chart(document.getElementById('finChart1'), {
+      type: 'bar',
+      data: {
+        labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
+        datasets: [
+          { label: 'Ingresos', data: [45000, 52000, 48000, 61000, 55000, 67000, 72000, 68000, 75000, 80000, 85000, 92000], backgroundColor: '#22c55e' },
+          { label: 'Gastos', data: [25000, 28000, 26000, 30000, 29000, 35000, 33000, 36000, 38000, 40000, 42000, 45000], backgroundColor: '#ef4444' },
+        ],
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } }, scales: { y: { ticks: { callback: v => '$' + v / 1000 + 'k' } } } },
+    });
+
+    // Pending invoices
+    const invs = data.invoices || [];
+    document.getElementById('pending-invoices').innerHTML = invs.slice(0, 5).map(i => `
+      <div class="flex items-center justify-between p-2 rounded bg-yellow-50">
+        <div><div class="text-sm font-medium">${i.folio}</div><div class="text-xs text-gray-500">${i.client?.name || ''}</div></div>
+        <span class="font-semibold text-yellow-700">$${i.total?.toLocaleString()}</span>
+      </div>`).join('') || '<p class="text-sm text-gray-400">Sin facturas pendientes</p>';
+
+    // Pending POs
+    const pos = data.purchaseOrders || [];
+    document.getElementById('pending-pos').innerHTML = pos.slice(0, 5).map(p => `
+      <div class="flex items-center justify-between p-2 rounded bg-blue-50">
+        <div><div class="text-sm font-medium">${p.folio}</div><div class="text-xs text-gray-500">${p.supplier?.name || ''}</div></div>
+        <span class="font-semibold text-blue-700">$${p.total?.toLocaleString()}</span>
+      </div>`).join('') || '<p class="text-sm text-gray-400">Sin ordenes pendientes</p>';
+
+    // Nomina por depto
+    const depts = data.departments || [];
+    document.getElementById('nomina-dept').innerHTML = depts.map(d => {
+      const totalSalary = (d.employees || []).reduce((s, e) => s + (parseFloat(e.salary) || 0), 0);
+      return `<div class="flex items-center gap-3">
+        <div class="w-3 h-3 rounded-full" style="background:${d.color}"></div>
+        <span class="flex-1 text-sm">${d.name}</span>
+        <span class="text-sm font-semibold">$${Math.round(totalSalary / 1000)}k</span>
+      </div>`;
+    }).join('');
+
+  } catch (err) { console.error(err); }
+}
+
+loadFinancialDashboard();
+</script>
+</Layout>

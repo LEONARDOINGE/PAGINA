@@ -13,11 +13,10 @@ services:
       composer install --no-dev --optimize-autoloader
       php artisan config:cache
       php artisan route:cache
-      php artisan view:cache
     preDeployCommand: |
       php artisan migrate --force
-      php artisan db:seed --class=RoleSeeder --class=PermissionSeeder --class=AdminUserSeeder || true
-    startCommand: php artisan serve --host=0.0.0.0 --port=10000
+      php artisan db:seed --class=DatabaseSeeder --force || true
+    startCommand: "php -S 0.0.0.0:$PORT -t public"
     healthCheckPath: /graphql
     envVars:
       - key: APP_ENV
@@ -35,7 +34,9 @@ services:
           name: fototec-db
           property: host
       - key: DB_PORT
-        value: "5432"
+        fromDatabase:
+          name: fototec-db
+          property: port
       - key: DB_DATABASE
         fromDatabase:
           name: fototec-db
@@ -54,3 +55,9 @@ services:
         sync: false
       - key: FRONTEND_URL
         value: https://fototec-web.onrender.com
+      - key: CACHE_DRIVER
+        value: array
+      - key: SESSION_DRIVER
+        value: array
+      - key: LOG_CHANNEL
+        value: stderr

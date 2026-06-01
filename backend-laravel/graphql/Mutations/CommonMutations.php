@@ -226,7 +226,7 @@ class ExportMutation
         $data = match ($type) {
             'clients' => Client::all()->map(fn($c) => [$c->id, $c->name, $c->email, $c->phone, $c->segment, $c->lifetime_value]),
             'products' => \App\Models\Product::all()->map(fn($p) => [$p->id, $p->sku, $p->name, $p->stock, $p->price]),
-            'invoices' => Invoice::all()->map(fn($i) => [$i->folio, $i->client->name ?? '', $i->total, $i->status, $i->fecha_emision]),
+            'invoices' => \App\Models\Invoice::all()->map(fn($i) => [$i->folio, $i->client->name ?? '', $i->total, $i->status, $i->fecha_emision]),
             'employees' => \App\Models\Employee::all()->map(fn($e) => [$e->employee_number, $e->name, $e->department->name ?? '', $e->position->name ?? '', $e->active ? 'Activo' : 'Inactivo']),
             default => [],
         };
@@ -238,5 +238,18 @@ class ExportMutation
         }
 
         return json_encode($data);
+    }
+}
+
+class TursoSyncMutation
+{
+    public function syncToTurso(): bool
+    {
+        return \App\Services\TursoSyncService::make()->push()['success'] ?? false;
+    }
+
+    public function pullFromTurso(): bool
+    {
+        return \App\Services\TursoSyncService::make()->pull()['success'] ?? false;
     }
 }

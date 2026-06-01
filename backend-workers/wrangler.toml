@@ -1,0 +1,14 @@
+# Cloudflare Workers Backend
+name = "fototec-api"
+main = "src/index.ts"
+compatibility_date = "2024-11-01"
+compatibility_flags = ["nodejs_compat"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "fototec-db"
+database_id = "01945907-77dd-4280-b5f2-4737bc12c34f"
+
+[vars]
+APP_ENV = "production"
+FRONTEND_URL = "https://fototec-web.pages.dev"

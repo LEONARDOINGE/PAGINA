@@ -1,53 +1,84 @@
 # Manual Operativo - FotoTec ERP/CRM/SCM/RH
 
-Sistema integral de gestion fotografica desplegado en Render.com.
+Sistema integral de gestion fotografica desplegado en **Cloudflare Workers + Pages**.
 
 ---
 
 ## Arquitectura
 
 ```
-                    ┌─────────────────────────────┐
-                    │   Render Static Site        │
-                    │   Astro + Tailwind + TS    │
-                    │   fototec-web.onrender.com  │
-                    └────────────┬────────────────┘
-                                 │ HTTPS + GraphQL
-                    ┌────────────▼────────────────┐
-                    │   Render Web Service         │
-                    │   Laravel 11 + Lighthouse   │
-                    │   fototec-api.onrender.com  │
-                    └────────────┬────────────────┘
-                                 │ PostgreSQL 17
+                    ┌────────────────────────────────┐
+                    │   Cloudflare Pages             │
+                    │   Astro 4 + Tailwind CSS       │
+                    │   fototec.pages.dev             │
+                    └──────────────┬──────────────────┘
+                                  │ HTTPS / REST + GraphQL
               ┌───────────────────┼───────────────────┐
               │                   │                   │
-    ┌─────────▼────────┐  ┌──────▼──────┐  ┌───────▼──────┐
-    │  Render Postgres  │  │   Turso DB   │  │   D1 SQLite   │
-    │  (producci\u00f3n)  │  │   (backup)   │  │  (local dev)  │
-    └───────────────────┘  └─────────────┘  └───────────────┘
+    ┌─────────▼────────┐  ┌────────▼────────┐  ┌─────▼──────┐
+    │ Cloudflare D1   │  │ Cloudflare      │  │   Turso    │
+    │ SQLite (prod)   │  │ Workers (API)   │  │  (backup)  │
+    │ fototec-db      │  │ Hono.js + GraphQL│  │            │
+    └─────────────────┘  └─────────────────┘  └────────────┘
 ```
 
 ---
 
-## Despliegue en Render
+## Despliegue en Cloudflare
 
 ### 1. Crear repos en GitHub
 
-Sube `backend-laravel/` y `frontend-astro/` como repos separados o uno mono-repo.
+- `fototec-api` - Backend (backend-workers/)
+- `fototec-web` - Frontend (frontend-astro/)
 
-### 2. Deploy Backend (Laravel)
+### 2. Configurar Cloudflare
 
-1. Ve a [render.com](https://render.com) y crea cuenta
-2. Click **New +** → **PostgreSQL**
-   - Nombre: `fototec-db`
-   - Plan: **Free**
-   - Region: Oregon
-3. Click **New +** → **Web Service**
-   - Conecta tu repo de GitHub (backend-laravel)
-   - Region: Oregon
-   - Runtime: **PHP**
-   - Branch: `main`
-   - **Build Command:**
+1. Ve a https://dash.cloudflare.com
+2. Workers & Pages - Overview
+3. Copia tu **Account ID**
+
+### 3. Crear D1 Database
+
+```bash
+cd backend-workers
+wrangler d1 create fototec-db
+# Copia el database_id del output
+# Actualiza wrangler.toml con el database_id
+```
+
+### 4. Aplicar esquema
+
+```bash
+wrangler d1 execute fototec-db --local --file=src/db/schema.sql
+wrangler d1 execute fototec-db --remote --file=src/db/schema.sql --persist
+```
+
+### 5. Deploy Backend (Workers)
+
+```bash
+cd backend-workers
+wrangler secret put TURSO_AUTH_TOKEN
+wrangler secret put TURSO_URL
+wrangler secret put JWT_SECRET
+wrangler deploy
+```
+
+### 6. Deploy Frontend (Pages)
+
+1. Ve a https://pages.cloudflare.com
+2. Connect GitHub: `fototec-web`
+3. Build command: `npm install && npm run build`
+4. Output directory: `dist`
+5. Environment variables:
+   - `NODE_VERSION = 20`
+   - `PUBLIC_API_URL = https://fototec-api.<tu-account>.workers.dev/graphql`
+
+---
+
+## Credenciales
+
+- **Email:** `admin@fototec.com`
+- **Password:** `admin123`
      ```
      composer install --no-dev --optimize-autoloader && php artisan config:cache && php artisan route:cache
      ```

@@ -1,12 +1,15 @@
-const API_URL = import.meta.env.PUBLIC_API_URL || 'http://localhost:8000/graphql';
+const BASE_URL = 'https://fototec-api.lm7529171.workers.dev';
+const API_URL = BASE_URL + '/graphql';
+const WORKERS_API = BASE_URL;
 
 export async function gql<T = any>(query: string, variables: Record<string, any> = {}): Promise<T> {
-  const token = localStorage.getItem('fototec_token');
+  const user = getUser();
   const res = await fetch(API_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+      'X-User-Id': user?.id || '',
+      'X-User-Role': user?.role || 'cliente',
     },
     body: JSON.stringify({ query, variables }),
   });
@@ -15,6 +18,67 @@ export async function gql<T = any>(query: string, variables: Record<string, any>
   const json = await res.json();
   if (json.errors?.length) throw new Error(json.errors[0].message);
   return json.data;
+}
+
+export async function apiGet<T = any>(path: string, query?: Record<string, string>): Promise<T> {
+  const user = getUser();
+  let url = `${WORKERS_API}${path}`;
+  if (query) {
+    const params = new URLSearchParams(query);
+    url += '?' + params.toString();
+  }
+  const res = await fetch(url, {
+    headers: {
+      'X-User-Id': user?.id || '',
+      'X-User-Role': user?.role || 'cliente',
+    },
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
+export async function apiPost<T = any>(path: string, data?: Record<string, any>): Promise<T> {
+  const user = getUser();
+  const res = await fetch(`${WORKERS_API}${path}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-User-Id': user?.id || '',
+      'X-User-Role': user?.role || 'cliente',
+    },
+    body: data ? JSON.stringify(data) : undefined,
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
+export async function apiPut<T = any>(path: string, data?: Record<string, any>): Promise<T> {
+  const user = getUser();
+  const res = await fetch(`${WORKERS_API}${path}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-User-Id': user?.id || '',
+      'X-User-Role': user?.role || 'cliente',
+    },
+    body: data ? JSON.stringify(data) : undefined,
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
+export async function apiDelete<T = any>(path: string): Promise<T> {
+  const user = getUser();
+  const res = await fetch(`${WORKERS_API}${path}`, {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-User-Id': user?.id || '',
+      'X-User-Role': user?.role || 'cliente',
+    },
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
 }
 
 export function getToken(): string | null {
@@ -39,13 +103,13 @@ export function clearAuth(): void {
 export function hasPermission(perm: string): boolean {
   const user = getUser();
   if (!user) return false;
-  if (user.roles?.includes('super_admin')) return true;
+  if (user.role === 'super_admin') return true;
   return user.permissions?.includes(perm) ?? false;
 }
 
 export function hasRole(role: string): boolean {
   const user = getUser();
-  return user?.roles?.includes(role) ?? false;
+  return user?.role === role;
 }
 
 export function formatCurrency(amount: number): string {
@@ -86,7 +150,7 @@ export function statusBadge(status: string): string {
     vencido: 'badge-danger',
     abierto: 'badge-warning',
     en_progreso: 'badge-info',
-    resueltp: 'badge-success',
+    resuelto: 'badge-success',
     'en_proceso': 'badge-info',
     nuevo: 'badge-purple',
     contactado: 'badge-info',
@@ -96,7 +160,17 @@ export function statusBadge(status: string): string {
     ganado: 'badge-success',
     perdido: 'badge-danger',
     recibido: 'badge-success',
-   parcial: 'badge-warning',
+    parcial: 'badge-warning',
+    presente: 'badge-success',
+    falta: 'badge-danger',
+    retardo: 'badge-warning',
+    permiso: 'badge-info',
+    baja: 'badge-info',
+    media: 'badge-warning',
+    alta: 'badge-danger',
+    urgente: 'badge-danger',
+    planificado: 'badge-info',
+    en_curso: 'badge-warning',
   };
   return map[status] || 'badge-info';
 }

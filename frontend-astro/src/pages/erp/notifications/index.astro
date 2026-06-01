@@ -1,0 +1,56 @@
+---
+import Layout from '../../../layouts/Main.astro';
+---
+
+<Layout title="Notificaciones" activeModule="erp" activePage="Notificaciones">
+<div class="space-y-6">
+  <div class="flex items-center justify-between">
+    <div><h2 class="text-xl font-bold text-gray-900">Notificaciones</h2></div>
+    <div class="flex gap-2">
+      <button onclick="markAllRead()" class="btn-outline btn-sm">Marcar todas leidas</button>
+      <select class="input w-auto" id="notif-filter" onchange="loadNotifications()">
+        <option value="">Todas</option>
+        <option value="alta">Urgentes</option>
+        <option value="info">Informativas</option>
+      </select>
+    </div>
+  </div>
+
+  <div id="notif-list" class="space-y-2"></div>
+</div>
+
+<script>
+async function loadNotifications() {
+  const filter = document.getElementById('notif-filter')?.value || '';
+  try {
+    const data = await window.gql(`query { notifications(unreadOnly: false) { id type title message link readAt priority created_at } }`);
+    const notifs = (data.notifications || []).filter(n => !filter || n.priority === filter);
+    document.getElementById('notif-list').innerHTML = notifs.length ? notifs.map(n => `
+      <div class="card-sm ${!n.readAt ? 'border-l-4 border-yellow-500 bg-yellow-50' : ''} flex items-start gap-3">
+        <div class="w-8 h-8 rounded-full flex items-center justify-center ${n.priority === 'alta' ? 'bg-red-100 text-red-600' : n.type === 'success' ? 'bg-green-100 text-green-600' : 'bg-blue-100 text-blue-600'}">
+          ${n.type === 'warning' ? '\u26A0' : n.type === 'success' ? '\u2713' : '\u2139'}
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="font-medium text-gray-900">${n.title}</div>
+          <div class="text-sm text-gray-500 mt-0.5">${n.message}</div>
+          <div class="text-xs text-gray-400 mt-1">${new Date(n.created_at).toLocaleString('es-MX')}</div>
+        </div>
+        <div class="flex gap-2">
+          ${!n.readAt ? `<button onclick="markRead('${n.id}')" class="text-xs text-primary-600 hover:text-primary-700">Marcar leida</button>` : ''}
+          ${n.link ? `<a href="${n.link}" class="text-xs text-blue-600 hover:text-blue-700">Ir</a>` : ''}
+        </div>
+      </div>`).join('') : '<div class="card text-center py-12 text-gray-400">No hay notificaciones</div>';
+  } catch (err) { console.error(err); }
+}
+
+window.markRead = async (id) => {
+  try { await window.gql(`mutation { markNotificationRead(id: "${id}") { id } }`); loadNotifications(); } catch (err) { alert('Error: ' + err.message); }
+};
+
+window.markAllRead = async () => {
+  try { await window.gql(`mutation { markAllNotificationsRead }`); loadNotifications(); } catch (err) { alert('Error: ' + err.message); }
+};
+
+loadNotifications();
+</script>
+</Layout>
