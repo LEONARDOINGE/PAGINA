@@ -16,7 +16,7 @@ export async function onRequest({ request, env }) {
 
   try {
     const users = await env.DB.prepare(
-      'SELECT id, name, username, email, role, created_at FROM users ORDER BY created_at DESC'
+      'SELECT id, name, email, role, active, created_at FROM users ORDER BY created_at DESC'
     ).all();
 
     return new Response(JSON.stringify({
