@@ -1415,7 +1415,7 @@ async function cargarAsistencia() {
                     <td>${hours}</td>
                     <td><span class="badge ${statusBadge}">${status}</span></td>
                     <td>
-                        <button class="btn btn-sm btn-primary" onclick="abrirModalEditarAsistencia('${e.id}', '${e.name}', '${fecha}', '${status}')">Editar</button>
+                        <button class="btn btn-sm btn-primary" onclick="abrirModalEditarAsistencia('${e.id}', '${e.name}', '${fecha}', '${status}', '${clockIn}', '${clockOut}')">Editar</button>
                     </td>
                 </tr>`;
             });
@@ -1427,13 +1427,14 @@ async function cargarAsistencia() {
     }
 }
 
-function abrirModalEditarAsistencia(empId, empName, fecha, statusActual) {
+function abrirModalEditarAsistencia(empId, empName, fecha, statusActual, entradaActual, salidaActual) {
     document.getElementById('modalContent').innerHTML = `
         <div class="modal-header">
             <h3>Editar Asistencia - ${empName}</h3>
             <button class="modal-close" onclick="cerrarModal()">&times;</button>
         </div>
         <input type="hidden" id="editAsistEmpId" value="${empId}">
+        <input type="hidden" id="editAsistEmpName" value="${empName}">
         <input type="hidden" id="editAsistFecha" value="${fecha}">
         <div class="form-group">
             <label>Fecha</label>
@@ -1441,11 +1442,11 @@ function abrirModalEditarAsistencia(empId, empName, fecha, statusActual) {
         </div>
         <div class="form-group">
             <label>Hora Entrada</label>
-            <input type="time" id="editAsistEntrada" value="09:00">
+            <input type="time" id="editAsistEntrada" value="${entradaActual || '09:00'}">
         </div>
         <div class="form-group">
             <label>Hora Salida</label>
-            <input type="time" id="editAsistSalida" value="18:00">
+            <input type="time" id="editAsistSalida" value="${salidaActual || '18:00'}">
         </div>
         <div class="form-group">
             <label>Estado</label>
@@ -1467,6 +1468,7 @@ function abrirModalEditarAsistencia(empId, empName, fecha, statusActual) {
 
 function guardarAsistencia() {
     const empId = document.getElementById('editAsistEmpId').value;
+    const empName = document.getElementById('editAsistEmpName').value;
     const fecha = document.getElementById('editAsistFecha').value;
     const estado = document.getElementById('editAsistEstado').value;
     const entrada = document.getElementById('editAsistEntrada').value;
@@ -1480,15 +1482,15 @@ function guardarAsistencia() {
         if (horas < 0) horas += 24;
     }
 
-    const existente = asistenciaData.find(a => a.date === fecha && (a.employee?.id == empId || a.employee?.name === empId));
-    if (existente) {
-        existente.status = estado;
-        existente.clockIn = entrada;
-        existente.clockOut = salida;
-        existente.hoursWorked = horas.toFixed(1);
+    const idx = asistenciaData.findIndex(a => a.date === fecha && (a.employee?.id == empId || a.employee?.name === empName));
+    if (idx >= 0) {
+        asistenciaData[idx].status = estado;
+        asistenciaData[idx].clockIn = entrada;
+        asistenciaData[idx].clockOut = salida;
+        asistenciaData[idx].hoursWorked = horas.toFixed(1);
     } else {
         asistenciaData.push({
-            employee: { id: empId, name: empId },
+            employee: { id: empId, name: empName },
             date: fecha,
             status: estado,
             clockIn: entrada,
@@ -1498,8 +1500,51 @@ function guardarAsistencia() {
     }
 
     cerrarModal();
-    cargarAsistencia();
+    renderizarTablaAsistencia();
+    actualizarCalendario();
     showToast('Asistencia actualizada', 'success');
+}
+
+function renderizarTablaAsistencia() {
+    const fecha = document.getElementById('asistenciaFecha').value || new Date().toISOString().split('T')[0];
+    const registrosDelDia = asistenciaData.filter(a => a.date === fecha);
+    const totalEmpleados = empleadosData.length;
+    const presentes = registrosDelDia.filter(a => a.status === 'presente' || a.clockIn).length;
+    const retards = registrosDelDia.filter(a => a.status === 'retardo').length;
+    const faltas = totalEmpleados - presentes - retards;
+
+    document.getElementById('asistenciaPresentes').textContent = presentes;
+    document.getElementById('asistenciaFaltas').textContent = Math.max(0, faltas);
+    document.getElementById('asistenciaTotal').textContent = totalEmpleados;
+    document.getElementById('asistenciaRetardos').textContent = retards;
+
+    let html = '';
+    if (empleadosData.length === 0) {
+        document.getElementById('asistenciaTable').innerHTML = '<tr><td colspan="7" class="empty-state">No hay empleados</td></tr>';
+        return;
+    }
+
+    empleadosData.forEach(e => {
+        const reg = registrosDelDia.find(a => a.employee?.id == e.id || a.employee?.name === e.name);
+        const status = reg?.status || 'falta';
+        const clockIn = reg?.clockIn || '-';
+        const clockOut = reg?.clockOut || '-';
+        const hours = reg?.hoursWorked || '-';
+        const statusBadge = {'presente': 'badge-success', 'falta': 'badge-danger', 'retardo': 'badge-warning', 'permiso': 'badge-info', 'vacaciones': 'badge-info'}[status] || 'badge-danger';
+
+        html += `<tr>
+            <td>${e.name}</td>
+            <td>${fecha}</td>
+            <td>${clockIn}</td>
+            <td>${clockOut}</td>
+            <td>${hours}</td>
+            <td><span class="badge ${statusBadge}">${status}</span></td>
+            <td>
+                <button class="btn btn-sm btn-primary" onclick="abrirModalEditarAsistencia('${e.id}', '${e.name}', '${fecha}', '${status}', '${clockIn}', '${clockOut}')">Editar</button>
+            </td>
+        </tr>`;
+    });
+    document.getElementById('asistenciaTable').innerHTML = html || '<tr><td colspan="7" class="empty-state">Sin registros</td></tr>';
 }
 
 function cambiarMes(delta) {
