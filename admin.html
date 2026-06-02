@@ -138,11 +138,14 @@
     <div class="auth-box">
         <h2>FotoTec</h2>
         <p>Panel de Administración</p>
-        <input type="email" id="loginEmail" class="auth-input" placeholder="Email" autocomplete="email">
-        <input type="password" id="loginPass" class="auth-input" placeholder="Contraseña" autocomplete="current-password">
+        <input type="email" id="loginEmail" class="auth-input" placeholder="Email" autocomplete="email" value="admin@fototec.com">
+        <input type="password" id="loginPass" class="auth-input" placeholder="Contraseña" autocomplete="current-password" value="admin">
         <button class="auth-btn" id="btnEntrar" onclick="handleLogin()">Entrar</button>
         <div id="loginError" class="auth-error"></div>
         <div id="loginLoading" class="auth-loading" style="display:none;">Conectando...</div>
+        <div style="margin-top:15px;font-size:0.75rem;color:#999;text-align:center;">
+            <strong>Demo:</strong> admin@fototec.com / admin
+        </div>
     </div>
 </div>
 
@@ -1270,6 +1273,8 @@ document.addEventListener('keypress', function(e) {
 
 document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('welcomeScreen').style.display = 'flex';
+
+    if (typeof LocalDB !== 'undefined') LocalDB._init();
 
     if (API.isAuthenticated()) {
         const { user } = API.getAuth();
