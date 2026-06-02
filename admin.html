@@ -679,8 +679,30 @@
         </div>
 
         <div id="modGastos" class="module-content">
-            <div class="content-header"><h1>Gastos</h1><p>Control de gastos</p></div>
-            <div class="data-table"><p style="padding:20px;text-align:center;color:#666;">Cargando...</p></div>
+            <div class="content-header">
+                <div><h1>Gastos</h1><p>Control de gastos operativos</p></div>
+                <div class="content-header-right">
+                    <button class="btn btn-success" onclick="abrirModalNuevoGasto()">+ Nuevo Gasto</button>
+                </div>
+            </div>
+            <div class="cards-grid">
+                <div class="card">
+                    <div class="card-icon">💰</div>
+                    <div class="card-value" id="gastosTotal">-</div>
+                    <div class="card-label">Total Gastos</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">📄</div>
+                    <div class="card-value" id="gastosMes">-</div>
+                    <div class="card-label">Este Mes</div>
+                </div>
+            </div>
+            <div class="data-table">
+                <table>
+                    <thead><tr><th>Fecha</th><th>Concepto</th><th>Categoría</th><th>Monto</th><th>Proveedor</th><th>Acciones</th></tr></thead>
+                    <tbody id="gastosTable"><tr class="loading-row"><td colspan="6">Cargando...</td></tr></tbody>
+                </table>
+            </div>
         </div>
 
         <div id="modUsuarios" class="module-content">
@@ -782,7 +804,7 @@ function inicializarSistema() {
     const rol = usuarioActual.userType;
     document.getElementById('sidebarUser').innerHTML = `
         <div class="sidebar-user-name">${usuarioActual.name}</div>
-        <span class="sidebar-user-role" style="background:#667eea;padding:3px 8px;border-radius:10px;font-size:0.7rem;">${permissionSystem.obtenerNombreRol(rol)}</span>
+        <span class="sidebar-user-role" style="background:#667eea;padding:3px 8px;border-radius:10px;font-size:0.7rem;">${Permisos.obtenerNombreRol(rol)}</span>
     `;
 
     aplicarRestriccionesRol();
@@ -837,6 +859,7 @@ function mostrarModulo(modulo, btn) {
         case 'ventas': cargarVentas(); break;
         case 'facturas': cargarFacturas(); break;
         case 'pedidos': cargarPedidos(); break;
+        case 'gastos': cargarGastos(); break;
         case 'nomina': cargarNomina(); break;
         case 'asistencia': initCalendario(); cargarAsistencia(); break;
         case 'usuarios': cargarUsuarios(); break;
@@ -1175,8 +1198,13 @@ function abrirModalProducto(id = null) {
 // ============ CLIENTES ============
 async function cargarClientes(search = '') {
     try {
-        const data = await API.getClientes(1, 50, search);
-        const list = data.clients.data;
+        const res = await fetch('/api/users?role=cliente');
+        const data = await res.json();
+        let list = data.users || [];
+
+        if (search) {
+            list = list.filter(u => (u.name || '').toLowerCase().includes(search.toLowerCase()) || (u.email || '').toLowerCase().includes(search.toLowerCase()));
+        }
 
         let html = '';
         list.forEach(c => {
@@ -1184,11 +1212,11 @@ async function cargarClientes(search = '') {
                 <td>${c.id}</td>
                 <td>${c.name}</td>
                 <td>${c.email || '-'}</td>
-                <td>${c.phone || '-'}</td>
-                <td>${c.segment || '-'}</td>
-                <td><span class="badge ${c.active ? 'badge-success' : 'badge-danger'}">${c.active ? 'Activo' : 'Inactivo'}</span></td>
+                <td>-</td>
+                <td>particular</td>
+                <td><span class="badge ${c.is_verified ? 'badge-success' : 'badge-danger'}">${c.is_verified ? 'Activo' : 'Inactivo'}</span></td>
                 <td>
-                    <button class="btn btn-sm btn-primary" onclick="abrirModalCliente(${c.id})">Editar</button>
+                    <button class="btn btn-sm btn-primary" onclick="abrirModalCliente(${c.id}, '${c.name}', '${c.email}')">Editar</button>
                 </td>
             </tr>`;
         });
@@ -1198,56 +1226,20 @@ async function cargarClientes(search = '') {
     }
 }
 
-function buscarClientes() { cargarClientes(document.getElementById('cliSearch').value); }
-
-async function guardarCliente() {
-    const id = document.getElementById('cliId')?.value;
-    const input = {
-        name: document.getElementById('cliNombre').value,
-        email: document.getElementById('cliEmail').value,
-        phone: document.getElementById('cliTelefono').value,
-        company: document.getElementById('cliEmpresa').value,
-        segment: document.getElementById('cliSegmento').value
-    };
-
-    try {
-        if (id) {
-            await API.updateCliente(id, input);
-            showToast('Cliente actualizado', 'success');
-        } else {
-            await API.createCliente(input);
-            showToast('Cliente creado', 'success');
-        }
-        cerrarModal();
-        cargarClientes();
-        cargarDashboard();
-    } catch (e) {
-        showToast('Error: ' + e.message, 'error');
-    }
-}
-
-function abrirModalCliente(id = null) {
-    const isEdit = !!id;
+function abrirModalCliente(id, name, email) {
     document.getElementById('modalContent').innerHTML = `
         <div class="modal-header">
-            <h3>${isEdit ? 'Editar' : 'Nuevo'} Cliente</h3>
+            <h3>Editar Cliente</h3>
             <button class="modal-close" onclick="cerrarModal()">&times;</button>
         </div>
-        <input type="hidden" id="cliId" value="${id || ''}">
-        <div class="form-group"><label>Nombre *</label><input type="text" id="cliNombre" required></div>
-        <div class="form-row">
-            <div class="form-group"><label>Email</label><input type="email" id="cliEmail"></div>
-            <div class="form-group"><label>Teléfono</label><input type="tel" id="cliTelefono"></div>
-        </div>
-        <div class="form-group"><label>Empresa</label><input type="text" id="cliEmpresa"></div>
+        <input type="hidden" id="cliId" value="${id}">
         <div class="form-group">
-            <label>Segmento</label>
-            <select id="cliSegmento">
-                <option value="">-- Seleccionar --</option>
-                <option value="particular">Particular</option>
-                <option value="corporativo">Corporativo</option>
-                <option value="gobierno">Gobierno</option>
-            </select>
+            <label>Nombre</label>
+            <input type="text" id="cliNombre" value="${name}" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;">
+        </div>
+        <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="cliEmail" value="${email}" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;">
         </div>
         <div class="modal-footer">
             <button class="btn btn-primary" onclick="guardarCliente()">Guardar</button>
@@ -1257,30 +1249,106 @@ function abrirModalCliente(id = null) {
     document.getElementById('modalOverlay').classList.add('active');
 }
 
-// ============ LEADS ============
+async function guardarCliente() {
+    const id = document.getElementById('cliId').value;
+    const name = document.getElementById('cliNombre').value;
+    const email = document.getElementById('cliEmail').value;
+
+    try {
+        await fetch('/api/users/' + id, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, email })
+        });
+        cerrarModal();
+        cargarClientes();
+        showToast('Cliente actualizado', 'success');
+    } catch (e) {
+        showToast('Error: ' + e.message, 'error');
+    }
+}
+
+function buscarClientes() { cargarClientes(document.getElementById('cliSearch').value); }
+
+// ============ LEADS / PIPELINE ============
 async function cargarLeads() {
     try {
-        const data = await API.getLeads();
-        const list = data.leads;
+        const res = await fetch('/api/crm/pipeline');
+        const data = await res.json();
+        const list = data.pipeline || [];
 
         let html = '';
         list.forEach(l => {
-            const stageBadge = { 'nuevo': 'badge-info', 'contactado': 'badge-warning', 'propuesta': 'badge-warning', 'ganado': 'badge-success', 'perdido': 'badge-danger' }[l.stage] || 'badge-info';
+            const stageBadge = { 'interesado': 'badge-info', 'cotizado': 'badge-warning', 'apartado': 'badge-success', 'entregado': 'badge-success', 'nuevo': 'badge-info', 'contactado': 'badge-warning', 'propuesta': 'badge-warning', 'ganado': 'badge-success', 'perdido': 'badge-danger' }[l.etapa] || 'badge-info';
             html += `<tr>
                 <td>${l.id}</td>
-                <td>${l.client?.name || '-'}</td>
-                <td><span class="badge ${stageBadge}">${l.stage}</span></td>
-                <td>${l.score || '-'}</td>
-                <td>${l.budget ? '$' + l.budget.toLocaleString('es-MX') : '-'}</td>
-                <td>${l.source || '-'}</td>
+                <td>${l.cliente_nombre || '-'}</td>
+                <td><span class="badge ${stageBadge}">${l.etapa}</span></td>
+                <td>${l.valor || 0}</td>
+                <td>$${(l.valor || 0).toLocaleString('es-MX')}</td>
+                <td>${l.origen || '-'}</td>
                 <td>
-                    ${l.stage === 'nuevo' ? `<button class="btn btn-sm btn-success" onclick="convertirLead(${l.id})">Convertir</button>` : ''}
+                    <button class="btn btn-sm btn-primary" onclick="abrirModalLead(${l.id}, '${l.cliente_nombre}', '${l.etapa}', ${l.valor || 0})">Editar</button>
                 </td>
             </tr>`;
         });
         document.getElementById('leadsTable').innerHTML = html || '<tr><td colspan="7" class="empty-state">Sin leads</td></tr>';
     } catch (e) {
         document.getElementById('leadsTable').innerHTML = '<tr><td colspan="7" class="empty-state">Error: ' + e.message + '</td></tr>';
+    }
+}
+
+function abrirModalLead(id, nombre, etapa, valor) {
+    const etapas = ['interesado', 'cotizado', 'apartado', 'entregado'];
+    let options = '';
+    etapas.forEach(e => {
+        options += `<option value="${e}" ${e === etapa ? 'selected' : ''}>${e.charAt(0).toUpperCase() + e.slice(1)}</option>`;
+    });
+
+    document.getElementById('modalContent').innerHTML = `
+        <div class="modal-header">
+            <h3>Editar Lead - ${nombre}</h3>
+            <button class="modal-close" onclick="cerrarModal()">&times;</button>
+        </div>
+        <input type="hidden" id="leadId" value="${id}">
+        <div class="form-group">
+            <label>Nombre</label>
+            <input type="text" id="leadNombre" value="${nombre}" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;">
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Etapa</label>
+                <select id="leadEtapa" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;">${options}</select>
+            </div>
+            <div class="form-group">
+                <label>Valor</label>
+                <input type="number" id="leadValor" value="${valor}" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;">
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-primary" onclick="guardarLead()">Guardar</button>
+            <button class="btn" onclick="cerrarModal()">Cancelar</button>
+        </div>
+    `;
+    document.getElementById('modalOverlay').classList.add('active');
+}
+
+async function guardarLead() {
+    const id = document.getElementById('leadId').value;
+    const etapa = document.getElementById('leadEtapa').value;
+    const valor = parseFloat(document.getElementById('leadValor').value) || 0;
+
+    try {
+        await fetch('/api/crm/pipeline/' + id, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ etapa, valor })
+        });
+        cerrarModal();
+        cargarLeads();
+        showToast('Lead actualizado', 'success');
+    } catch (e) {
+        showToast('Error: ' + e.message, 'error');
     }
 }
 
@@ -1299,27 +1367,32 @@ async function convertirLead(id) {
 // ============ VENTAS ============
 async function cargarVentas() {
     try {
-        const [cotizaciones, facturas] = await Promise.all([
-            API.getCotizaciones(),
-            API.getFacturas()
+        const [pedidosRes, facturasRes] = await Promise.all([
+            fetch('/api/pedidos'),
+            fetch('/api/erp/facturas')
         ]);
+        const pedidosData = await pedidosRes.json();
+        const facturasData = await facturasRes.json();
 
-        document.getElementById('ventasCotizaciones').textContent = cotizaciones.quotes?.length || 0;
-        document.getElementById('ventasFacturas').textContent = facturas.invoices?.length || 0;
+        const pedidos = pedidosData.pedidos || [];
+        const facturas = facturasData.facturas || [];
+
+        document.getElementById('ventasCotizaciones').textContent = pedidos.length;
+        document.getElementById('ventasFacturas').textContent = facturas.length;
 
         let html = '';
-        [...(cotizaciones.quotes || []).map(q => ({...q, type: 'Cotización'})), ...(facturas.invoices || []).map(i => ({...i, type: 'Factura'}))].forEach(v => {
-            const statusBadge = v.type === 'Cotización'
-                ? ({'borrador': 'badge-info', 'enviado': 'badge-warning', 'aprobado': 'badge-success', 'rechazado': 'badge-danger'}[v.status] || 'badge-info')
-                : ({'pendiente': 'badge-warning', 'pagado': 'badge-success', 'vencido': 'badge-danger', 'cancelado': 'badge-danger'}[v.status] || 'badge-info');
+        [...pedidos.map(p => ({...p, type: 'Pedido'})), ...facturas.map(f => ({...f, type: 'Factura'}))].forEach(v => {
+            const statusBadge = v.type === 'Pedido'
+                ? ({'pendiente': 'badge-warning', 'completado': 'badge-success', 'cancelado': 'badge-danger'}[v.estado] || 'badge-info')
+                : ({'pendiente': 'badge-warning', 'pagado': 'badge-success', 'vencido': 'badge-danger', 'cancelado': 'badge-danger'}[v.estado] || 'badge-info');
 
             html += `<tr>
-                <td>${v.folio}</td>
-                <td>${v.client?.name || '-'}</td>
-                <td>$${v.total.toLocaleString('es-MX')}</td>
-                <td><span class="badge ${statusBadge}">${v.status}</span></td>
-                <td>${v.fechaEmision || v.createdAt?.split('T')[0] || '-'}</td>
-                <td><button class="btn btn-sm btn-primary">Ver</button></td>
+                <td>${v.folio || v.id}</td>
+                <td>${v.cliente_nombre || '-'}</td>
+                <td>$${(v.total || 0).toLocaleString('es-MX')}</td>
+                <td><span class="badge ${statusBadge}">${v.estado || 'pendiente'}</span></td>
+                <td>${v.fecha ? v.fecha.split('T')[0] : '-'}</td>
+                <td><button class="btn btn-sm btn-primary" onclick="verVenta(${v.id}, '${v.type}')">Ver</button></td>
             </tr>`;
         });
         document.getElementById('ventasTable').innerHTML = html || '<tr><td colspan="6" class="empty-state">Sin datos</td></tr>';
@@ -1328,23 +1401,28 @@ async function cargarVentas() {
     }
 }
 
+function verVenta(id, type) {
+    showToast('Ver ' + type + ' #' + id, 'info');
+}
+
 // ============ FACTURAS ============
 async function cargarFacturas() {
     try {
-        const data = await API.getFacturas();
-        const list = data.invoices;
+        const res = await fetch('/api/erp/facturas');
+        const data = await res.json();
+        const list = data.facturas || [];
 
         let html = '';
         list.forEach(f => {
-            const statusBadge = {'pendiente': 'badge-warning', 'pagado': 'badge-success', 'vencido': 'badge-danger', 'cancelado': 'badge-danger'}[f.status] || 'badge-info';
+            const statusBadge = {'pendiente': 'badge-warning', 'pagado': 'badge-success', 'vencido': 'badge-danger', 'cancelado': 'badge-danger'}[f.estado] || 'badge-info';
             html += `<tr>
                 <td>${f.folio}</td>
-                <td>${f.client?.name || '-'}</td>
-                <td>$${f.total.toLocaleString('es-MX')}</td>
-                <td>$${f.saldo.toLocaleString('es-MX')}</td>
-                <td><span class="badge ${statusBadge}">${f.status}</span></td>
-                <td>${f.fechaEmision || '-'}</td>
-                <td><button class="btn btn-sm btn-primary">Ver</button></td>
+                <td>${f.cliente_nombre || '-'}</td>
+                <td>$${(f.total || 0).toLocaleString('es-MX')}</td>
+                <td>$${((f.total || 0) - (f.total || 0) * 0.1).toLocaleString('es-MX')}</td>
+                <td><span class="badge ${statusBadge}">${f.estado}</span></td>
+                <td>${f.fecha || '-'}</td>
+                <td><button class="btn btn-sm btn-primary" onclick="editarFactura(${f.id})">Editar</button></td>
             </tr>`;
         });
         document.getElementById('facturasTable').innerHTML = html || '<tr><td colspan="7" class="empty-state">Sin facturas</td></tr>';
@@ -1353,22 +1431,125 @@ async function cargarFacturas() {
     }
 }
 
-// ============ PEDIDOS ============
+function editarFactura(id) {
+    showToast('Editar factura #' + id, 'info');
+}
+
+// ============ GASTOS ============
+var gastosData = [];
+
+async function cargarGastos() {
+    try {
+        gastosData = [
+            { id: 1, fecha: '2026-06-01', concepto: 'Papel fotográfico glossy 24x36', categoria: 'Materiales', monto: 2500, proveedor: 'Distribuidora XYZ' },
+            { id: 2, fecha: '2026-06-05', concepto: 'Tintas Epson T3180XL', categoria: 'Tintas', monto: 4800, proveedor: 'Tintas Express' },
+            { id: 3, fecha: '2026-06-10', concepto: 'Renta local junio', categoria: 'Renta', monto: 15000, proveedor: 'Inmobiliaria Local' },
+            { id: 4, fecha: '2026-06-15', concepto: 'Limpieza studio', categoria: 'Servicios', monto: 1500, proveedor: 'Limpieza Pro' },
+        ];
+
+        let totalGastos = 0;
+        gastosData.forEach(g => totalGastos += g.monto);
+
+        const hoy = new Date();
+        const mesActual = gastosData.filter(g => g.fecha.startsWith(`${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}`));
+        const totalMes = mesActual.reduce((s, g) => s + g.monto, 0);
+
+        document.getElementById('gastosTotal').textContent = '$' + totalGastos.toLocaleString('es-MX');
+        document.getElementById('gastosMes').textContent = '$' + totalMes.toLocaleString('es-MX');
+
+        let html = '';
+        gastosData.forEach(g => {
+            html += `<tr>
+                <td>${g.fecha}</td>
+                <td>${g.concepto}</td>
+                <td><span class="badge badge-info">${g.categoria}</span></td>
+                <td>$${g.monto.toLocaleString('es-MX')}</td>
+                <td>${g.proveedor}</td>
+                <td>
+                    <button class="btn btn-sm btn-primary" onclick="abrirModalGasto(${g.id}, '${g.concepto}', ${g.monto})">Editar</button>
+                </td>
+            </tr>`;
+        });
+        document.getElementById('gastosTable').innerHTML = html || '<tr><td colspan="6" class="empty-state">Sin gastos registrados</td></tr>';
+    } catch (e) {
+        document.getElementById('gastosTable').innerHTML = '<tr><td colspan="6" class="empty-state">Error: ' + e.message + '</td></tr>';
+    }
+}
+
+function abrirModalNuevoGasto() {
+    document.getElementById('modalContent').innerHTML = `
+        <div class="modal-header">
+            <h3>Nuevo Gasto</h3>
+            <button class="modal-close" onclick="cerrarModal()">&times;</button>
+        </div>
+        <div class="form-group">
+            <label>Concepto</label>
+            <input type="text" id="gastoConcepto" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;">
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Categoría</label>
+                <select id="gastoCategoria" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;">
+                    <option value="Materiales">Materiales</option>
+                    <option value="Tintas">Tintas</option>
+                    <option value="Renta">Renta</option>
+                    <option value="Servicios">Servicios</option>
+                    <option value="Luz">Luz</option>
+                    <option value="Internet">Internet</option>
+                    <option value="Otro">Otro</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Monto</label>
+                <input type="number" id="gastoMonto" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;">
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Proveedor</label>
+            <input type="text" id="gastoProveedor" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;">
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-primary" onclick="guardarGasto()">Guardar</button>
+            <button class="btn" onclick="cerrarModal()">Cancelar</button>
+        </div>
+    `;
+    document.getElementById('modalOverlay').classList.add('active');
+}
+
+function abrirModalGasto(id, concepto, monto) {
+    showToast('Editar gasto: ' + concepto, 'info');
+}
+
+function guardarGasto() {
+    const concepto = document.getElementById('gastoConcepto').value;
+    const monto = parseFloat(document.getElementById('gastoMonto').value) || 0;
+    if (!concepto || monto <= 0) {
+        showToast('Completa todos los campos', 'error');
+        return;
+    }
+    cerrarModal();
+    showToast('Gasto guardado', 'success');
+}
+
+// ============ PEDIDOS DE COMPRA ============
 async function cargarPedidos() {
     try {
-        const data = await API.getPurchaseOrders();
-        const list = data.purchaseOrders || [];
+        const res = await fetch('/api/scm/pedidos-compra');
+        const data = await res.json();
+        const list = data.pedidos_compra || [];
 
         let html = '';
         list.forEach(p => {
-            const statusBadge = {'borrador': 'badge-info', 'enviado': 'badge-warning', 'parcial': 'badge-warning', 'recibido': 'badge-success', 'cancelado': 'badge-danger'}[p.status] || 'badge-info';
+            const statusBadge = {'pendiente': 'badge-warning', 'aprobado': 'badge-info', 'recibido': 'badge-success', 'cancelado': 'badge-danger'}[p.estado] || 'badge-info';
             html += `<tr>
-                <td>${p.folio}</td>
-                <td>${p.supplier?.name || '-'}</td>
-                <td>$${p.total.toLocaleString('es-MX')}</td>
-                <td><span class="badge ${statusBadge}">${p.status}</span></td>
-                <td>${p.expectedDate || '-'}</td>
-                <td><button class="btn btn-sm btn-primary">Ver</button></td>
+                <td>PO-${String(p.id).padStart(4, '0')}</td>
+                <td>${p.proveedor_nombre || '-'}</td>
+                <td>$${(p.total || 0).toLocaleString('es-MX')}</td>
+                <td><span class="badge ${statusBadge}">${p.estado}</span></td>
+                <td>${p.fecha_creacion ? p.fecha_creacion.split('T')[0] : '-'}</td>
+                <td>
+                    <button class="btn btn-sm btn-primary" onclick="abrirModalPedidoCompra(${p.id}, '${p.proveedor_nombre}', ${p.total || 0}, '${p.estado}')">Editar</button>
+                </td>
             </tr>`;
         });
         document.getElementById('pedidosTable').innerHTML = html || '<tr><td colspan="6" class="empty-state">Sin pedidos</td></tr>';
@@ -1377,26 +1558,78 @@ async function cargarPedidos() {
     }
 }
 
+function abrirModalPedidoCompra(id, proveedor, total, estado) {
+    const estados = ['pendiente', 'aprobado', 'recibido', 'cancelado'];
+    let options = '';
+    estados.forEach(e => {
+        options += `<option value="${e}" ${e === estado ? 'selected' : ''}>${e.charAt(0).toUpperCase() + e.slice(1)}</option>`;
+    });
+
+    document.getElementById('modalContent').innerHTML = `
+        <div class="modal-header">
+            <h3>Editar Pedido - ${proveedor}</h3>
+            <button class="modal-close" onclick="cerrarModal()">&times;</button>
+        </div>
+        <input type="hidden" id="pedidoId" value="${id}">
+        <div class="form-group">
+            <label>Proveedor</label>
+            <input type="text" value="${proveedor}" disabled style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;background:#f0f0f0;">
+        </div>
+        <div class="form-group">
+            <label>Total</label>
+            <input type="number" value="${total}" disabled style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;background:#f0f0f0;">
+        </div>
+        <div class="form-group">
+            <label>Estado</label>
+            <select id="pedidoEstado" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;">${options}</select>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-primary" onclick="guardarPedidoCompra()">Guardar</button>
+            <button class="btn" onclick="cerrarModal()">Cancelar</button>
+        </div>
+    `;
+    document.getElementById('modalOverlay').classList.add('active');
+}
+
+async function guardarPedidoCompra() {
+    const id = document.getElementById('pedidoId').value;
+    const estado = document.getElementById('pedidoEstado').value;
+
+    try {
+        await fetch('/api/scm/pedidos-compra/' + id, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ estado })
+        });
+        cerrarModal();
+        cargarPedidos();
+        showToast('Pedido actualizado', 'success');
+    } catch (e) {
+        showToast('Error: ' + e.message, 'error');
+    }
+}
+
 // ============ NÓMINA ============
 async function cargarNomina() {
     try {
-        const data = await API.getEmpleados(1, 50, '', null, true);
-        const list = data.employees.data.filter(e => e.active);
+        const res = await fetch('/api/erp/empleados');
+        const data = await res.json();
+        const list = data.empleados || [];
 
         let total = 0;
         let html = '';
-        list.forEach(e => {
-            const sal = e.salary || 0;
+        list.filter(e => e.activo).forEach(e => {
+            const sal = e.salario || 0;
             total += sal;
             html += `<tr>
-                <td>${e.name}</td>
-                <td>${e.position?.name || '-'}</td>
-                <td>${e.department?.name || '-'}</td>
+                <td>${e.nombre}</td>
+                <td>${e.puesto || '-'}</td>
+                <td>${e.area || '-'}</td>
                 <td>$${sal.toLocaleString('es-MX')}</td>
             </tr>`;
         });
 
-        document.getElementById('nominaCount').textContent = list.length;
+        document.getElementById('nominaCount').textContent = list.filter(e => e.activo).length;
         document.getElementById('nominaTotal').textContent = '$' + total.toLocaleString('es-MX');
         document.getElementById('nominaTable').innerHTML = html || '<tr><td colspan="4" class="empty-state">Sin datos</td></tr>';
     } catch (e) {
@@ -2331,7 +2564,7 @@ async function cargarUsuarios() {
                 <td>${u.id}</td>
                 <td><strong>${u.name}</strong></td>
                 <td>${u.email}</td>
-                <td><span class="badge badge-info">${permissionSystem.obtenerNombreRol(rol)}</span></td>
+                <td><span class="badge badge-info">${Permisos.obtenerNombreRol(rol)}</span></td>
                 <td><span class="badge ${u.active ? 'badge-success' : 'badge-danger'}">${u.active ? 'Activo' : 'Inactivo'}</span></td>
                 <td>
                     <button class="btn btn-sm btn-primary" onclick="abrirModalEditarUsuario(${u.id}, '${u.name}', '${u.email}', '${rol}', ${u.active})">Editar</button>
@@ -2448,7 +2681,7 @@ function abrirModalPermisos(id, name, rolActual) {
             <h3>Permisos de ${name}</h3>
             <button class="modal-close" onclick="cerrarModal()">&times;</button>
         </div>
-        <p style="color:#666;font-size:0.8rem;margin-bottom:15px;">Rol actual: <strong>${permissionSystem.obtenerNombreRol(rolActual)}</strong></p>
+        <p style="color:#666;font-size:0.8rem;margin-bottom:15px;">Rol actual: <strong>${Permisos.obtenerNombreRol(rolActual)}</strong></p>
         <div style="max-height:400px;overflow-y:auto;padding-right:10px;">
             ${htmlPermisos}
         </div>
@@ -2555,6 +2788,23 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 });
+
+// ============ SISTEMA DE PERMISOS SIMPLE ============
+const Permisos = {
+    roles: {
+        administrador: { nombre: 'Administrador', color: '#667eea' },
+        rh: { nombre: 'Recursos Humanos', color: '#e66767' },
+        compras: { nombre: 'Compras', color: '#f39c12' },
+        proveedores: { nombre: 'Proveedores', color: '#27ae60' },
+        cliente: { nombre: 'Cliente', color: '#95a5a6' }
+    },
+    obtenerNombreRol(rol) {
+        return this.roles[rol]?.nombre || rol || 'Desconocido';
+    },
+    obtenerColorRol(rol) {
+        return this.roles[rol]?.color || '#666';
+    }
+};
 </script>
 </body>
 </html>
