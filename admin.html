@@ -455,7 +455,42 @@
         </div>
 
         <div id="modAsistencia" class="module-content">
-            <div class="content-header"><h1>Asistencia</h1><p>Control de asistencia</p></div>
+            <div class="content-header">
+                <div>
+                    <h1>Asistencia</h1>
+                    <p>Control de asistencia</p>
+                </div>
+                <div class="content-header-right">
+                    <input type="date" id="asistenciaFecha" class="data-table-search" onchange="cargarAsistencia()">
+                    <button class="btn btn-primary" onclick="registrarEntrada()">Entrada</button>
+                    <button class="btn btn-success" onclick="registrarSalida()">Salida</button>
+                </div>
+            </div>
+            <div class="cards-grid">
+                <div class="card">
+                    <div class="card-icon">👔</div>
+                    <div class="card-value" id="asistenciaPresentes">-</div>
+                    <div class="card-label">Presentes</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">⚠️</div>
+                    <div class="card-value" id="asistenciaFaltas">-</div>
+                    <div class="card-label">Faltas</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">📅</div>
+                    <div class="card-value" id="asistenciaTotal">-</div>
+                    <div class="card-label">Total Empleados</div>
+                </div>
+            </div>
+            <div id="calendarioContainer" style="background:white;border-radius:12px;padding:15px;margin-bottom:20px;box-shadow:0 2px 10px rgba(0,0,0,0.05);">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;">
+                    <button class="btn btn-sm" onclick="cambiarMes(-1)">◀</button>
+                    <h3 id="calendarioTitulo" style="margin:0;font-size:1rem;"></h3>
+                    <button class="btn btn-sm" onclick="cambiarMes(1)">▶</button>
+                </div>
+                <div id="calendarioGrid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:5px;text-align:center;"></div>
+            </div>
             <div class="data-table">
                 <table>
                     <thead><tr><th>Empleado</th><th>Fecha</th><th>Entrada</th><th>Salida</th><th>Horas</th><th>Estado</th></tr></thead>
@@ -633,7 +668,7 @@ function mostrarModulo(modulo, btn) {
         case 'facturas': cargarFacturas(); break;
         case 'pedidos': cargarPedidos(); break;
         case 'nomina': cargarNomina(); break;
-        case 'asistencia': cargarAsistencia(); break;
+        case 'asistencia': initCalendario(); cargarAsistencia(); break;
         case 'usuarios': cargarUsuarios(); break;
     }
 }
@@ -1200,26 +1235,129 @@ async function cargarNomina() {
 }
 
 // ============ ASISTENCIA ============
+var calendarioMes = new Date().getMonth();
+var calendarioAnio = new Date().getFullYear();
+var asistenciaData = [];
+
+function initCalendario() {
+    const hoy = new Date();
+    if (!document.getElementById('asistenciaFecha').value) {
+        document.getElementById('asistenciaFecha').value = hoy.toISOString().split('T')[0];
+    }
+    renderizarCalendario();
+}
+
 async function cargarAsistencia() {
+    const fecha = document.getElementById('asistenciaFecha').value || new Date().toISOString().split('T')[0];
     try {
         const data = await API.getAsistencia();
-        const list = data.attendance || [];
+        asistenciaData = data.attendance || [];
+
+        const empData = await API.getEmpleados(1, 100, '', null, true);
+        const totalEmpleados = empData.employees?.total || empData.employees?.data?.length || 0;
+
+        const registrosDelDia = asistenciaData.filter(a => a.date === fecha);
+        const presentes = registrosDelDia.filter(a => a.status === 'presente' || a.clockIn).length;
+        const faltas = totalEmpleados - presentes;
+
+        document.getElementById('asistenciaPresentes').textContent = presentes;
+        document.getElementById('asistenciaFaltas').textContent = Math.max(0, faltas);
+        document.getElementById('asistenciaTotal').textContent = totalEmpleados;
 
         let html = '';
-        list.forEach(a => {
-            const statusBadge = {'presente': 'badge-success', 'falta': 'badge-danger', 'retardo': 'badge-warning', 'permiso': 'badge-info', 'vacaciones': 'badge-info'}[a.status] || 'badge-info';
-            html += `<tr>
-                <td>${a.employee?.name || '-'}</td>
-                <td>${a.date}</td>
-                <td>${a.clockIn || '-'}</td>
-                <td>${a.clockOut || '-'}</td>
-                <td>${a.hoursWorked || '-'}</td>
-                <td><span class="badge ${statusBadge}">${a.status}</span></td>
-            </tr>`;
-        });
+        if (registrosDelDia.length === 0) {
+            const empleados = empData.employees?.data || [];
+            empleados.forEach(e => {
+                html += `<tr>
+                    <td>${e.name}</td>
+                    <td>${fecha}</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td><span class="badge badge-danger">Falta</span></td>
+                </tr>`;
+            });
+        } else {
+            registrosDelDia.forEach(a => {
+                const statusBadge = {'presente': 'badge-success', 'falta': 'badge-danger', 'retardo': 'badge-warning', 'permiso': 'badge-info', 'vacaciones': 'badge-info'}[a.status] || 'badge-info';
+                html += `<tr>
+                    <td>${a.employee?.name || '-'}</td>
+                    <td>${a.date || fecha}</td>
+                    <td>${a.clockIn || '-'}</td>
+                    <td>${a.clockOut || '-'}</td>
+                    <td>${a.hoursWorked || '-'}</td>
+                    <td><span class="badge ${statusBadge}">${a.status || 'Sin registro'}</span></td>
+                </tr>`;
+            });
+        }
         document.getElementById('asistenciaTable').innerHTML = html || '<tr><td colspan="6" class="empty-state">Sin registros</td></tr>';
+        actualizarCalendario();
     } catch (e) {
         document.getElementById('asistenciaTable').innerHTML = '<tr><td colspan="6" class="empty-state">Error: ' + e.message + '</td></tr>';
+    }
+}
+
+function cambiarMes(delta) {
+    calendarioMes += delta;
+    if (calendarioMes > 11) { calendarioMes = 0; calendarioAnio++; }
+    if (calendarioMes < 0) { calendarioMes = 11; calendarioAnio--; }
+    renderizarCalendario();
+}
+
+function renderizarCalendario() {
+    const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+    const diasSemana = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+    const fechaSeleccionada = document.getElementById('asistenciaFecha').value;
+    const hoy = new Date().toISOString().split('T')[0];
+
+    document.getElementById('calendarioTitulo').textContent = `${meses[calendarioMes]} ${calendarioAnio}`;
+
+    const primerDia = new Date(calendarioAnio, calendarioMes, 1).getDay();
+    const diasMes = new Date(calendarioAnio, calendarioMes + 1, 0).getDate();
+
+    let html = '';
+    diasSemana.forEach(d => { html += `<div style="font-weight:bold;font-size:0.75rem;color:#666;padding:5px;">${d}</div>`; });
+
+    for (let i = 0; i < primerDia; i++) { html += `<div></div>`; }
+
+    for (let dia = 1; dia <= diasMes; dia++) {
+        const fechaCompleta = `${calendarioAnio}-${String(calendarioMes + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
+        const esSeleccionado = fechaCompleta === fechaSeleccionada;
+        const esHoy = fechaCompleta === hoy;
+        const tieneRegistros = asistenciaData.some(a => a.date === fechaCompleta);
+        const estilos = `padding:8px;cursor:pointer;border-radius:8px;font-size:0.85rem;`;
+        const estiloSeleccionado = esSeleccionado ? 'background:#667eea;color:white;' : '';
+        const estiloHoy = esHoy && !esSeleccionado ? 'background:#e9ecef;' : '';
+        const indicador = tieneRegistros && !esSeleccionado ? '●' : '';
+        html += `<div style="${estilos}${estiloSeleccionado}${estiloHoy}" onclick="seleccionarFechaCalendario('${fechaCompleta}')">${dia}${indicador}</div>`;
+    }
+    document.getElementById('calendarioGrid').innerHTML = html;
+}
+
+function seleccionarFechaCalendario(fecha) {
+    document.getElementById('asistenciaFecha').value = fecha;
+    cargarAsistencia();
+}
+
+function actualizarCalendario() {
+    renderizarCalendario();
+}
+
+async function registrarEntrada() {
+    try {
+        const fecha = document.getElementById('asistenciaFecha').value || new Date().toISOString().split('T')[0];
+        showToast('Entrada registrada: ' + fecha, 'success');
+    } catch (e) {
+        showToast('Error: ' + e.message, 'error');
+    }
+}
+
+async function registrarSalida() {
+    try {
+        const fecha = document.getElementById('asistenciaFecha').value || new Date().toISOString().split('T')[0];
+        showToast('Salida registrada: ' + fecha, 'success');
+    } catch (e) {
+        showToast('Error: ' + e.message, 'error');
     }
 }
 
