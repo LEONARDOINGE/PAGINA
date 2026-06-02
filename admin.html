@@ -208,6 +208,16 @@
             </div>
         </div>
 
+        <div class="sidebar-section" id="sectionCitas">
+            <div class="sidebar-section-title">Citas y Reservas</div>
+            <div class="sidebar-item" data-module="reservas" onclick="mostrarModulo('reservas', this)">
+                <span class="icon">📅</span> Reservas <span class="badge" id="badgeReservas">0</span>
+            </div>
+            <div class="sidebar-item" data-module="kardex" onclick="mostrarModulo('kardex', this)">
+                <span class="icon">📋</span> Kardex
+            </div>
+        </div>
+
         <div class="sidebar-section" id="sectionFinanzas">
             <div class="sidebar-section-title">Finanzas</div>
             <div class="sidebar-item" data-module="facturas" onclick="mostrarModulo('facturas', this)">
@@ -756,6 +766,35 @@
             </div>
         </div>
 
+        <div id="modReservas" class="module-content">
+            <div class="content-header">
+                <div><h1>Reservas</h1><p>Agenda de citas y sesiones</p></div>
+            </div>
+            <div class="cards-grid" style="margin-bottom:20px;">
+                <div class="card"><div class="card-icon">📅</div><div class="card-value" id="reservasTotal">0</div><div class="card-label">Total</div></div>
+                <div class="card"><div class="card-icon">✅</div><div class="card-value" id="reservasConfirmadas">0</div><div class="card-label">Completadas</div></div>
+                <div class="card"><div class="card-icon">⏳</div><div class="card-value" id="reservasPendientes">0</div><div class="card-label">Pendientes</div></div>
+            </div>
+            <div class="data-table">
+                <table>
+                    <thead><tr><th>Cliente</th><th>Servicio</th><th>Fecha</th><th>Hora</th><th>Estado</th></tr></thead>
+                    <tbody id="reservasTable"><tr class="loading-row"><td colspan="5">Cargando...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="modKardex" class="module-content">
+            <div class="content-header">
+                <div><h1>Kardex</h1><p>Historial de inventario</p></div>
+            </div>
+            <div class="data-table">
+                <table>
+                    <thead><tr><th>Fecha</th><th>Producto</th><th>Tipo</th><th>Cantidad</th></tr></thead>
+                    <tbody id="kardexTable"><tr class="loading-row"><td colspan="4">Cargando...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+
         <div id="modConfiguracion" class="module-content">
             <div class="content-header"><h1>Configuración</h1><p>Configuración del sistema</p></div>
 
@@ -967,6 +1006,7 @@ function aplicarRestriccionesRol() {
     document.getElementById('sectionCRM').style.display = 'none';
     document.getElementById('sectionSCM').style.display = 'none';
     document.getElementById('sectionRH').style.display = 'none';
+    document.getElementById('sectionCitas').style.display = 'none';
     document.getElementById('sectionFinanzas').style.display = 'none';
     document.getElementById('sectionAdmin').style.display = 'none';
 
@@ -974,14 +1014,19 @@ function aplicarRestriccionesRol() {
         document.getElementById('sectionCRM').style.display = 'block';
         document.getElementById('sectionSCM').style.display = 'block';
         document.getElementById('sectionRH').style.display = 'block';
+        document.getElementById('sectionCitas').style.display = 'block';
         document.getElementById('sectionFinanzas').style.display = 'block';
         document.getElementById('sectionAdmin').style.display = 'block';
     } else if (rol === 'rh') {
         document.getElementById('sectionRH').style.display = 'block';
+        document.getElementById('sectionCitas').style.display = 'block';
     } else if (rol === 'compras') {
         document.getElementById('sectionSCM').style.display = 'block';
+        document.getElementById('sectionCitas').style.display = 'block';
     } else if (rol === 'proveedores') {
         document.getElementById('sectionSCM').style.display = 'block';
+    } else if (rol === 'cliente') {
+        document.getElementById('sectionCRM').style.display = 'block';
     }
 }
 
@@ -1037,6 +1082,8 @@ function mostrarModulo(modulo, btn) {
         case 'asistencia': initCalendario(); cargarAsistencia(); break;
         case 'usuarios': cargarUsuarios(); break;
         case 'configuracion': cargarConfiguracion(); break;
+        case 'reservas': cargarReservas(); break;
+        case 'kardex': cargarKardex(); break;
     }
 }
 
@@ -3698,6 +3745,64 @@ const Permisos = {
         return false;
     }
 };
+
+// ============ RESERVAS ============
+var reservasData = [];
+
+async function cargarReservas() {
+    try {
+        const res = await fetch('/api/erp/reservas');
+        const data = await res.json();
+        reservasData = data.reservas || [];
+
+        const total = reservasData.length;
+        const confirmadas = reservasData.filter(r => r.estado === 'completado').length;
+        const pendientes = reservasData.filter(r => r.estado === 'pendiente').length;
+
+        document.getElementById('reservasTotal').textContent = total;
+        document.getElementById('reservasConfirmadas').textContent = confirmadas;
+        document.getElementById('reservasPendientes').textContent = pendientes;
+        document.getElementById('badgeReservas').textContent = total;
+
+        let html = '';
+        reservasData.forEach(r => {
+            const statusBadge = {'pendiente': 'badge-warning', 'completado': 'badge-success', 'cancelado': 'badge-danger'}[r.estado] || 'badge-info';
+            html += `<tr>
+                <td>${r.cliente_nombre}</td>
+                <td>${r.tipo_servicio}</td>
+                <td>${r.fecha}</td>
+                <td>${r.hora}</td>
+                <td><span class="badge ${statusBadge}">${r.estado}</span></td>
+            </tr>`;
+        });
+        document.getElementById('reservasTable').innerHTML = html || '<tr><td colspan="5" class="empty-state">Sin reservas</td></tr>';
+    } catch (e) {
+        document.getElementById('reservasTable').innerHTML = '<tr><td colspan="5" class="empty-state">Error: ' + e.message + '</td></tr>';
+    }
+}
+
+// ============ KARDEX ============
+async function cargarKardex() {
+    try {
+        const res = await fetch('/api/erp/kardex');
+        const data = await res.json();
+        const movimientos = data.movimientos || [];
+
+        let html = '';
+        movimientos.forEach(k => {
+            const tipoColor = {'entrada': '#27ae60', 'salida': '#e74c3c', 'ajuste': '#f39c12'}[k.tipo] || '#666';
+            html += `<tr>
+                <td>${k.created_at ? k.created_at.split('T')[0] : '-'}</td>
+                <td>${k.producto_nombre || 'N/A'}</td>
+                <td style="color:${tipoColor};font-weight:bold;">${k.tipo.toUpperCase()}</td>
+                <td>${k.cantidad > 0 ? '+' : ''}${k.cantidad}</td>
+            </tr>`;
+        });
+        document.getElementById('kardexTable').innerHTML = html || '<tr><td colspan="4" class="empty-state">Sin movimientos</td></tr>';
+    } catch (e) {
+        document.getElementById('kardexTable').innerHTML = '<tr><td colspan="4" class="empty-state">Error: ' + e.message + '</td></tr>';
+    }
+}
 </script>
 </body>
 </html>

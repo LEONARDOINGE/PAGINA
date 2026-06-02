@@ -1735,6 +1735,26 @@ app.get('/api/erp/dashboard-data', async (req, res) => {
     }
 });
 
+// ============ ERP RESERVAS ============
+app.get('/api/erp/reservas', async (req, res) => {
+    try {
+        const rows = await dbAll(`SELECT * FROM reservas ORDER BY fecha DESC, hora DESC`);
+        res.json({ success: true, reservas: rows });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// ============ ERP KARDEX ============
+app.get('/api/erp/kardex', async (req, res) => {
+    try {
+        const rows = await dbAll(`SELECT k.*, p.nombre as producto_nombre FROM kardex k LEFT JOIN products p ON k.producto_id = p.id ORDER BY k.created_at DESC LIMIT 100`);
+        res.json({ success: true, movimientos: rows });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 initDB().then(() => {
     app.listen(PORT, () => {
         console.log('==================================');
