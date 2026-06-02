@@ -1547,7 +1547,7 @@ async function cargarGastos() {
                 <td>$${g.monto.toLocaleString('es-MX')}</td>
                 <td>${g.proveedor}</td>
                 <td>
-                    <button class="btn btn-sm btn-primary" onclick="abrirModalGasto(${g.id}, '${g.concepto}', ${g.monto})">Editar</button>
+                    <button class="btn btn-sm btn-primary" onclick="abrirModalGasto(${g.id}, '${g.concepto}', ${g.monto}, '${g.categoria}', '${g.proveedor}', '${g.fecha}')">Editar</button>
                 </td>
             </tr>`;
         });
@@ -1597,19 +1597,87 @@ function abrirModalNuevoGasto() {
     document.getElementById('modalOverlay').classList.add('active');
 }
 
-function abrirModalGasto(id, concepto, monto) {
-    showToast('Editar gasto: ' + concepto, 'info');
+var editingGastoId = null;
+
+function abrirModalGasto(id, concepto, monto, categoria, proveedor, fecha) {
+    editingGastoId = id;
+    document.getElementById('modalContent').innerHTML = `
+        <div class="modal-header">
+            <h3>Editar Gasto</h3>
+            <button class="modal-close" onclick="cerrarModal(); editingGastoId = null;">&times;</button>
+        </div>
+        <input type="hidden" id="gastoId" value="${id}">
+        <div class="form-group">
+            <label>Fecha</label>
+            <input type="date" id="gastoFecha" value="${fecha}" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;">
+        </div>
+        <div class="form-group">
+            <label>Concepto</label>
+            <input type="text" id="gastoConcepto" value="${concepto}" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;">
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Categoría</label>
+                <select id="gastoCategoria" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;">
+                    <option value="Materiales" ${categoria === 'Materiales' ? 'selected' : ''}>Materiales</option>
+                    <option value="Tintas" ${categoria === 'Tintas' ? 'selected' : ''}>Tintas</option>
+                    <option value="Renta" ${categoria === 'Renta' ? 'selected' : ''}>Renta</option>
+                    <option value="Servicios" ${categoria === 'Servicios' ? 'selected' : ''}>Servicios</option>
+                    <option value="Luz" ${categoria === 'Luz' ? 'selected' : ''}>Luz</option>
+                    <option value="Internet" ${categoria === 'Internet' ? 'selected' : ''}>Internet</option>
+                    <option value="Otro" ${categoria === 'Otro' ? 'selected' : ''}>Otro</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Monto</label>
+                <input type="number" id="gastoMonto" value="${monto}" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;">
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Proveedor</label>
+            <input type="text" id="gastoProveedor" value="${proveedor}" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;">
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-danger" onclick="eliminarGasto(${id})">Eliminar</button>
+            <button class="btn btn-primary" onclick="guardarGasto()">Guardar</button>
+            <button class="btn" onclick="cerrarModal(); editingGastoId = null;">Cancelar</button>
+        </div>
+    `;
+    document.getElementById('modalOverlay').classList.add('active');
 }
 
 function guardarGasto() {
+    const id = editingGastoId;
+    const fecha = document.getElementById('gastoFecha').value;
     const concepto = document.getElementById('gastoConcepto').value;
+    const categoria = document.getElementById('gastoCategoria').value;
     const monto = parseFloat(document.getElementById('gastoMonto').value) || 0;
+    const proveedor = document.getElementById('gastoProveedor').value;
+
     if (!concepto || monto <= 0) {
         showToast('Completa todos los campos', 'error');
         return;
     }
+
+    const gastoIndex = gastosData.findIndex(g => g.id === id);
+    if (gastoIndex >= 0) {
+        gastosData[gastoIndex] = { id, fecha, concepto, categoria, monto, proveedor };
+    }
+
+    editingGastoId = null;
     cerrarModal();
-    showToast('Gasto guardado', 'success');
+    cargarGastos();
+    showToast('Gasto actualizado', 'success');
+}
+
+function eliminarGasto(id) {
+    if (confirm('¿Eliminar este gasto?')) {
+        gastosData = gastosData.filter(g => g.id !== id);
+        cerrarModal();
+        editingGastoId = null;
+        cargarGastos();
+        showToast('Gasto eliminado', 'success');
+    }
 }
 
 // ============ PEDIDOS DE COMPRA ============
