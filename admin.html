@@ -2682,15 +2682,17 @@ async function guardarUsuario() {
     const active = document.getElementById('editUserActive').value;
 
     const rolMap = { 'administrador': 'admin', 'rh': 'rh', 'compras': 'compras', 'proveedores': 'proveedores', 'cliente': 'cliente' };
+    const roleDB = rolMap[rol] || rol;
 
     try {
         const res = await fetch('/api/users/' + id, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, email, role: rolMap[rol] || rol, is_verified: parseInt(active) })
+            body: JSON.stringify({ name, email, role: roleDB, is_verified: parseInt(active) })
         });
         const result = await res.json();
-        if (result.success) {
+        console.log('Update user response:', result);
+        if (res.ok && result.success) {
             cerrarModal();
             cargarUsuarios();
             showToast('Usuario actualizado', 'success');

@@ -794,11 +794,14 @@ app.put('/api/users/:id', async (req, res) => {
     const { id } = req.params;
     const { name, email, role, is_verified } = req.body;
 
+    console.log('Updating user:', id, { name, email, role, is_verified });
+
     try {
-        await db.execute({
+        const result = await db.execute({
             sql: `UPDATE users SET name = ?, email = ?, role = ?, is_verified = ? WHERE id = ?`,
             args: [name || '', email || '', role || 'cliente', is_verified !== undefined ? is_verified : 1, parseInt(id)]
         });
+        console.log('User update result:', result);
         res.json({ success: true, message: 'Usuario actualizado' });
     } catch (err) {
         console.error('Error updating user:', err);
