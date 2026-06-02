@@ -3395,12 +3395,12 @@ async function cargarUsuarios() {
             html += `<tr>
                 <td>${u.id}</td>
                 <td><strong>${u.name}</strong></td>
-                <td>${u.email}</td>
+                <td>${u.email || '-'}</td>
                 <td><span class="badge badge-info">${Permisos.obtenerNombreRol(rol)}</span></td>
                 <td><span class="badge ${u.active ? 'badge-success' : 'badge-danger'}">${u.active ? 'Activo' : 'Inactivo'}</span></td>
                 <td>
-                    <button class="btn btn-sm btn-primary" onclick="abrirModalEditarUsuario(${u.id}, '${u.name}', '${u.email}', '${rol}', ${u.active})">Editar</button>
-                    <button class="btn btn-sm btn-warning" onclick="abrirModalPermisos(${u.id}, '${u.name}', '${rol}')">Permisos</button>
+                    <button class="btn btn-sm btn-primary" onclick="abrirModalEditarUsuario(${u.id}, '${(u.name || '').replace(/'/g, "\\'")}', '${(u.email || '').replace(/'/g, "\\'")}', '${rol}', ${u.active})">Editar</button>
+                    <button class="btn btn-sm btn-warning" onclick="abrirModalPermisos(${u.id}, '${(u.name || '').replace(/'/g, "\\'")}', '${rol}')">Permisos</button>
                 </td>
             </tr>`;
         });
