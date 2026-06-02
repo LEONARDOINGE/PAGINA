@@ -522,15 +522,22 @@
         </div>
 
         <div id="modNomina" class="module-content">
-            <div class="content-header"><h1>Nómina</h1><p>Resumen de nómina</p></div>
+            <div class="content-header">
+                <div><h1>Nómina</h1><p>Gestión de nómina y pagos</p></div>
+                <div class="content-header-right">
+                    <button class="btn btn-success" onclick="generarPrenomina()">Generar Prenómina</button>
+                </div>
+            </div>
             <div class="cards-grid">
-                <div class="card"><div class="card-icon">👔</div><div class="card-value" id="nominaCount">-</div><div class="card-label">Empleados Activos</div></div>
-                <div class="card"><div class="card-icon">💵</div><div class="card-value" id="nominaTotal">-</div><div class="card-label">Total Nómina</div></div>
+                <div class="card"><div class="card-icon">👔</div><div class="card-value" id="nominaCount">0</div><div class="card-label">Empleados Activos</div></div>
+                <div class="card"><div class="card-icon">💵</div><div class="card-value" id="nominaTotal">$0</div><div class="card-label">Total Nómina</div></div>
+                <div class="card"><div class="card-icon">💰</div><div class="card-value" id="nominaPagado">$0</div><div class="card-label">Pagado</div></div>
+                <div class="card"><div class="card-icon">⏳</div><div class="card-value" id="nominaPendiente">$0</div><div class="card-label">Pendiente</div></div>
             </div>
             <div class="data-table">
                 <table>
-                    <thead><tr><th>Empleado</th><th>Puesto</th><th>Departamento</th><th>Salario</th></tr></thead>
-                    <tbody id="nominaTable"><tr class="loading-row"><td colspan="4">Cargando...</td></tr></tbody>
+                    <thead><tr><th>Empleado</th><th>Depto</th><th>Días Asist.</th><th>Salario Base</th><th>Bonos</th><th>Deducciones</th><th>Neto</th><th>Estado</th><th>Acciones</th></tr></thead>
+                    <tbody id="nominaTable"><tr class="loading-row"><td colspan="9">Cargando...</td></tr></tbody>
                 </table>
             </div>
         </div>
@@ -1896,31 +1903,142 @@ async function guardarPedidoCompra() {
 }
 
 // ============ NÓMINA ============
+var nominaData = [];
+
 async function cargarNomina() {
     try {
         const res = await fetch('/api/erp/empleados');
         const data = await res.json();
         const list = data.empleados || [];
 
+        const mesActual = new Date().toISOString().slice(0, 7);
+
+        nominaData = list.filter(e => e.activo).map(e => {
+            const asistenciaRes = asistenciaData.filter(a => a.empleado_id === e.id && a.fecha.startsWith(mesActual));
+            const diasAsistidos = asistenciaRes.filter(a => a.entrada).length;
+            const salarioBase = e.salario || 0;
+            const bonos = 0;
+            const deducciones = 0;
+            const neto = salarioBase + bonos - deducciones;
+            return {
+                ...e,
+                diasAsistidos,
+                salarioBase,
+                bonos,
+                deducciones,
+                neto,
+                estado: 'pendiente'
+            };
+        });
+
         let total = 0;
+        let totalPagado = 0;
+        let totalPendiente = 0;
+
         let html = '';
-        list.filter(e => e.activo).forEach(e => {
-            const sal = e.salario || 0;
-            total += sal;
+        nominaData.forEach((e, idx) => {
+            total += e.neto;
+            if (e.estado === 'pagado') totalPagado += e.neto;
+            if (e.estado === 'pendiente') totalPendiente += e.neto;
+
+            const statusBadge = {'pagado': 'badge-success', 'pendiente': 'badge-warning', 'no_pagado': 'badge-danger'}[e.estado] || 'badge-warning';
+            const statusText = {'pagado': 'Pagado', 'pendiente': 'Pendiente', 'no_pagado': 'No Pagado'}[e.estado] || 'Pendiente';
+
             html += `<tr>
-                <td>${e.nombre}</td>
-                <td>${e.puesto || '-'}</td>
+                <td><strong>${e.nombre}</strong></td>
                 <td>${e.area || '-'}</td>
-                <td>$${sal.toLocaleString('es-MX')}</td>
+                <td>${e.diasAsistidos}/5</td>
+                <td>$${e.salarioBase.toLocaleString('es-MX')}</td>
+                <td style="color:#28a745;">+$${e.bonos.toLocaleString('es-MX')}</td>
+                <td style="color:#dc3545;">-$${e.deducciones.toLocaleString('es-MX')}</td>
+                <td><strong>$${e.neto.toLocaleString('es-MX')}</strong></td>
+                <td><span class="badge ${statusBadge}">${statusText}</span></td>
+                <td>
+                    <button class="btn btn-sm btn-primary" onclick="abrirModalNomina(${idx})">Editar</button>
+                    ${e.estado !== 'pagado' ? `<button class="btn btn-sm btn-success" onclick="marcarPagado(${idx})" style="margin-left:4px;">Marcar</button>` : ''}
+                </td>
             </tr>`;
         });
 
-        document.getElementById('nominaCount').textContent = list.filter(e => e.activo).length;
+        document.getElementById('nominaCount').textContent = nominaData.length;
         document.getElementById('nominaTotal').textContent = '$' + total.toLocaleString('es-MX');
-        document.getElementById('nominaTable').innerHTML = html || '<tr><td colspan="4" class="empty-state">Sin datos</td></tr>';
+        document.getElementById('nominaPagado').textContent = '$' + totalPagado.toLocaleString('es-MX');
+        document.getElementById('nominaPendiente').textContent = '$' + totalPendiente.toLocaleString('es-MX');
+        document.getElementById('nominaTable').innerHTML = html || '<tr><td colspan="9" class="empty-state">Sin datos</td></tr>';
     } catch (e) {
-        document.getElementById('nominaTable').innerHTML = '<tr><td colspan="4" class="empty-state">Error: ' + e.message + '</td></tr>';
+        document.getElementById('nominaTable').innerHTML = '<tr><td colspan="9" class="empty-state">Error: ' + e.message + '</td></tr>';
     }
+}
+
+function abrirModalNomina(idx) {
+    const e = nominaData[idx];
+    if (!e) return;
+
+    document.getElementById('modalContent').innerHTML = `
+        <div class="modal-header">
+            <h3>Editar Nómina - ${e.nombre}</h3>
+            <button class="modal-close" onclick="cerrarModal()">&times;</button>
+        </div>
+        <input type="hidden" id="nominaIdx" value="${idx}">
+        <div class="form-row">
+            <div class="form-group">
+                <label>Salario Base</label>
+                <input type="number" id="nominaSalario" value="${e.salarioBase}" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;">
+            </div>
+            <div class="form-group">
+                <label>Bonos</label>
+                <input type="number" id="nominaBonos" value="${e.bonos}" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Deducciones</label>
+                <input type="number" id="nominaDed" value="${e.deducciones}" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;">
+            </div>
+            <div class="form-group">
+                <label>Estado</label>
+                <select id="nominaEstado" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;">
+                    <option value="pendiente" ${e.estado === 'pendiente' ? 'selected' : ''}>Pendiente</option>
+                    <option value="pagado" ${e.estado === 'pagado' ? 'selected' : ''}>Pagado</option>
+                    <option value="no_pagado" ${e.estado === 'no_pagado' ? 'selected' : ''}>No Pagado</option>
+                </select>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-primary" onclick="guardarNomina()">Guardar</button>
+            <button class="btn" onclick="cerrarModal()">Cancelar</button>
+        </div>
+    `;
+    document.getElementById('modalOverlay').classList.add('active');
+}
+
+function guardarNomina() {
+    const idx = parseInt(document.getElementById('nominaIdx').value);
+    const salarioBase = parseFloat(document.getElementById('nominaSalario').value) || 0;
+    const bonos = parseFloat(document.getElementById('nominaBonos').value) || 0;
+    const deducciones = parseFloat(document.getElementById('nominaDed').value) || 0;
+    const estado = document.getElementById('nominaEstado').value;
+
+    nominaData[idx].salarioBase = salarioBase;
+    nominaData[idx].bonos = bonos;
+    nominaData[idx].deducciones = deducciones;
+    nominaData[idx].neto = salarioBase + bonos - deducciones;
+    nominaData[idx].estado = estado;
+
+    cerrarModal();
+    cargarNomina();
+    showToast('Nómina actualizada', 'success');
+}
+
+function marcarPagado(idx) {
+    nominaData[idx].estado = 'pagado';
+    cargarNomina();
+    showToast('Marcado como pagado', 'success');
+}
+
+function generarPrenomina() {
+    cargarNomina();
+    showToast('Prenómina generada', 'info');
 }
 
 // ============ ASISTENCIA ============
