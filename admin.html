@@ -1688,8 +1688,21 @@ async function abrirModalNuevaFactura() {
     try {
         const res = await fetch('/api/erp/clientes');
         const data = await res.json();
-        const clientes = data.clientes || [];
+        let clientes = data.clientes || [];
         console.log('Clientes cargados:', clientes);
+
+        if (clientes.length === 0) {
+            try {
+                const seedRes = await fetch('/api/erp/clientes/seed', { method: 'POST' });
+                const seedData = await seedRes.json();
+                showToast(seedData.message || 'Clientes de prueba creados', 'success');
+                const refreshedRes = await fetch('/api/erp/clientes');
+                const refreshedData = await refreshedRes.json();
+                clientes = refreshedData.clientes || [];
+            } catch (e) {
+                console.error('Error seeding clientes:', e);
+            }
+        }
 
         let options = '<option value="">Seleccionar cliente</option>';
         clientes.forEach(c => {

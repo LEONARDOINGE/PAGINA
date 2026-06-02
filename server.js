@@ -1616,6 +1616,58 @@ app.get('/api/erp/clientes', async (req, res) => {
     }
 });
 
+app.post('/api/erp/clientes', async (req, res) => {
+    const { name, email } = req.body;
+    if (!name || !email) {
+        return res.status(400).json({ success: false, error: 'Nombre y email son requeridos' });
+    }
+    try {
+        const hashedPassword = bcrypt.hashSync('cliente123', 10);
+        const result = await db.execute({
+            sql: `INSERT INTO users (name, username, email, password, role, is_verified) VALUES (?, ?, ?, ?, 'cliente', 1)`,
+            args: [name, email.split('@')[0], email, hashedPassword]
+        });
+        res.status(201).json({ success: true, id: result.lastInsertRowid, message: 'Cliente creado' });
+    } catch (err) {
+        if (err.code === '23505') {
+            return res.status(400).json({ success: false, error: 'El email ya existe' });
+        }
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+app.post('/api/erp/clientes/seed', async (req, res) => {
+    try {
+        const clientes = [
+            { name: 'Maria Gonzalez', email: 'maria.gonzalez@email.com' },
+            { name: 'Carlos Lopez', email: 'carlos.lopez@email.com' },
+            { name: 'Ana Martinez', email: 'ana.martinez@email.com' },
+            { name: 'Jorge Ramirez', email: 'jorge.ramirez@email.com' },
+            { name: 'Laura Sanchez', email: 'laura.sanchez@email.com' },
+            { name: 'Roberto Hernandez', email: 'roberto.hernandez@email.com' },
+            { name: 'Carmen Rodriguez', email: 'carmen.rodriguez@email.com' },
+            { name: 'Miguel Torres', email: 'miguel.torres@email.com' }
+        ];
+
+        const hashedPassword = bcrypt.hashSync('cliente123', 10);
+        let creados = 0;
+
+        for (const c of clientes) {
+            try {
+                await db.execute({
+                    sql: `INSERT OR IGNORE INTO users (name, username, email, password, role, is_verified) VALUES (?, ?, ?, ?, 'cliente', 1)`,
+                    args: [c.name, c.email.split('@')[0], c.email, hashedPassword]
+                });
+                creados++;
+            } catch (e) {}
+        }
+
+        res.json({ success: true, message: `${creados} clientes de prueba creados` });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 // ============ ENDPOINTS ERP: FACTURAS ============
 app.get('/api/erp/facturas', async (req, res) => {
     try {
