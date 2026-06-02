@@ -566,22 +566,23 @@ const API = {
 // ============ MAPEO DE ROLES ============
 function mapRolAPItoLocal(roles) {
     if (!roles || !Array.isArray(roles)) return 'cliente';
-    if (roles.includes('super_admin')) return 'administrador';
-    if (roles.includes('coordinador_rrhh')) return 'rh';
-    if (roles.includes('coordinador_scm')) return 'compras';
+    if (roles.includes('admin') || roles.includes('super_admin')) return 'administrador';
+    if (roles.includes('coordinador_rrhh') || roles.includes('rh')) return 'rh';
+    if (roles.includes('coordinador_scm') || roles.includes('compras')) return 'compras';
+    if (roles.includes('proveedores')) return 'proveedores';
     if (roles.includes('gerente_ventas')) return 'administrador';
     return 'cliente';
 }
 
 function mapRolLocalToAPI(localRole) {
     const map = {
-        'administrador': 'super_admin',
-        'rh': 'coordinador_rrhh',
-        'compras': 'coordinador_scm',
-        'proveedores': 'coordinador_scm',
+        'administrador': 'admin',
+        'rh': 'rh',
+        'compras': 'compras',
+        'proveedores': 'proveedores',
         'cliente': 'cliente'
     };
-    return map[localRole] || 'empleado';
+    return map[localRole] || 'cliente';
 }
 
 // ============ REAL-TIME SUBSCRIPTIONS (polling) ============
