@@ -1466,7 +1466,7 @@ function abrirModalEditarAsistencia(empId, empName, fecha, statusActual, entrada
     document.getElementById('modalOverlay').classList.add('active');
 }
 
-function guardarAsistencia() {
+async function guardarAsistencia() {
     const empId = document.getElementById('editAsistEmpId').value;
     const empName = document.getElementById('editAsistEmpName').value;
     const fecha = document.getElementById('editAsistFecha').value;
@@ -1482,27 +1482,29 @@ function guardarAsistencia() {
         if (horas < 0) horas += 24;
     }
 
-    const idx = asistenciaData.findIndex(a => a.date === fecha && (a.employee?.id == empId || a.employee?.name === empName));
-    if (idx >= 0) {
-        asistenciaData[idx].status = estado;
-        asistenciaData[idx].clockIn = entrada;
-        asistenciaData[idx].clockOut = salida;
-        asistenciaData[idx].hoursWorked = horas.toFixed(1);
-    } else {
-        asistenciaData.push({
-            employee: { id: empId, name: empName },
-            date: fecha,
-            status: estado,
-            clockIn: entrada,
-            clockOut: salida,
-            hoursWorked: horas.toFixed(1)
+    try {
+        const res = await fetch('/api/asistencia', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                empleado_id: parseInt(empId),
+                empleado_nombre: empName,
+                fecha,
+                entrada,
+                salida,
+                horas: parseFloat(horas.toFixed(1)),
+                estado
+            })
         });
-    }
+        const result = await res.json();
+        if (!result.success) throw new Error(result.error);
 
-    cerrarModal();
-    renderizarTablaAsistencia();
-    actualizarCalendario();
-    showToast('Asistencia actualizada', 'success');
+        await cargarAsistencia();
+        cerrarModal();
+        showToast('Asistencia guardada en BD', 'success');
+    } catch (e) {
+        showToast('Error: ' + e.message, 'error');
+    }
 }
 
 function renderizarTablaAsistencia() {
@@ -1595,26 +1597,30 @@ function actualizarCalendario() {
     renderizarCalendario();
 }
 
-function aplicarAsistenciaMasiva(estado) {
+async function aplicarAsistenciaMasiva(estado) {
     if (!empleadosData.length) return;
     const fecha = document.getElementById('asistenciaFecha').value;
-    empleadosData.forEach(e => {
-        const existente = asistenciaData.find(a => a.date === fecha && (a.employee?.id == e.id || a.employee?.name === e.name));
-        if (existente) {
-            existente.status = estado;
-        } else {
-            asistenciaData.push({
-                employee: { id: e.id, name: e.name },
-                date: fecha,
-                status: estado,
-                clockIn: estado === 'presente' ? '09:00' : '-',
-                clockOut: estado === 'presente' ? '18:00' : '-',
-                hoursWorked: estado === 'presente' ? '9' : '0'
+    try {
+        for (const e of empleadosData) {
+            await fetch('/api/asistencia', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    empleado_id: e.id,
+                    empleado_nombre: e.name,
+                    fecha,
+                    entrada: estado === 'presente' ? '09:00' : null,
+                    salida: estado === 'presente' ? '18:00' : null,
+                    horas: estado === 'presente' ? 9 : 0,
+                    estado
+                })
             });
         }
-    });
-    cargarAsistencia();
-    showToast(`Marcados como ${estado}`, 'success');
+        await cargarAsistencia();
+        showToast(`Marcados como ${estado}`, 'success');
+    } catch (e) {
+        showToast('Error: ' + e.message, 'error');
+    }
 }
 
 // ============ PRENOMINA ============
@@ -1622,72 +1628,84 @@ async function cargarPrenomina() {
     try {
         const mes = document.getElementById('prenominaMes').value || `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`;
         const [year, month] = mes.split('-').map(Number);
-        const primerDia = new Date(year, month - 1, 1);
-        const ultimoDia = new Date(year, month, 0);
 
-        let diasLaborales = 0;
-        let sabados = 0;
-        for (let d = new Date(primerDia); d <= ultimoDia; d.setDate(d.getDate() + 1)) {
-            const dayOfWeek = d.getDay();
-            if (dayOfWeek !== 0) diasLaborales++;
-            if (dayOfWeek === 6) sabados++;
+        const res = await fetch(`/api/prenomina?anio=${year}&mes=${month}`);
+        const data = await res.json();
+        let prenomina = data.prenomina || [];
+
+        if (prenomina.length === 0) {
+            const empData = await API.getEmpleados(1, 100, '', null, true);
+            const empleados = empData.employees?.data || [];
+            for (const e of empleados) {
+                const salary = e.salary || 0;
+                await fetch('/api/prenomina', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        empleado_id: e.id,
+                        empleado_nombre: e.name,
+                        periodo: 'mensual',
+                        anio: year,
+                        mes: month,
+                        dias_trabajados: 22,
+                        horas_totales: 176,
+                        faltas: 0,
+                        retardos: 0,
+                        incidencias: '',
+                        salario_base: salary,
+                        percepciones: salary,
+                        deducciones: 0,
+                        total_pagar: salary
+                    })
+                });
+            }
+            const res2 = await fetch(`/api/prenomina?anio=${year}&mes=${month}`);
+            const data2 = await res2.json();
+            prenomina = data2.prenomina || [];
         }
-        const diasSemana = diasLaborales - sabados;
 
-        const empData = await API.getEmpleados(1, 100, '', null, true);
-        const empleados = empData.employees?.data || [];
         let totalHoras = 0;
         let totalIncidencias = 0;
+        let totalPagar = 0;
 
         let html = '';
-        empleados.forEach(e => {
-            const salary = e.salary || 0;
-            const diasTrabajados = Math.floor(Math.random() * 5) + 20;
-            const horasDia = 8;
-            const horasTotales = diasTrabajados * horasDia;
-            const faltas = diasSemana + sabados - diasTrabajados;
-            const retardo = Math.floor(Math.random() * 3);
-            const incidencias = faltas + retardo;
-            const pagoDia = salary / (diasSemana + sabados);
-            const percepciones = (salary).toFixed(2);
-            const deducciones = (faltas * pagoDia + retardo * pagoDia * 0.1).toFixed(2);
-            const total = (percepciones - deducciones).toFixed(2);
-
-            totalHoras += horasTotales;
-            totalIncidencias += incidencias;
+        prenomina.forEach(p => {
+            totalHoras += p.horasTotales || 0;
+            totalIncidencias += (p.faltas || 0) + (p.retardos || 0);
+            totalPagar += p.totalPagar || 0;
 
             html += `<tr>
-                <td>${e.name}</td>
+                <td>${p.empleado}</td>
                 <td>${mes}</td>
-                <td>${diasTrabajados}</td>
-                <td>${horasTotales}</td>
-                <td>${faltas}</td>
-                <td>${retardo}</td>
-                <td>${incidencias}</td>
-                <td>$${percepciones}</td>
-                <td>$${deducciones}</td>
-                <td>$${total}</td>
-                <td><button class="btn btn-sm btn-primary" onclick="abrirModalPrenomina('${e.id}', '${e.name}', ${salary}, ${diasSemana}, ${sabados})">Editar</button></td>
+                <td>${p.diasTrabajados || 0}</td>
+                <td>${p.horasTotales || 0}</td>
+                <td>${p.faltas || 0}</td>
+                <td>${p.retardos || 0}</td>
+                <td>${p.incidencias || '-'}</td>
+                <td>$${(p.percepciones || 0).toLocaleString('es-MX')}</td>
+                <td>$${(p.deducciones || 0).toLocaleString('es-MX')}</td>
+                <td>$${(p.totalPagar || 0).toLocaleString('es-MX')}</td>
+                <td><button class="btn btn-sm btn-primary" onclick="abrirModalPrenomina(${p.id}, '${p.empleado}', ${p.salarioBase || 0})">Editar</button></td>
             </tr>`;
         });
 
         document.getElementById('prenominaTable').innerHTML = html || '<tr><td colspan="11" class="empty-state">Sin datos</td></tr>';
-        document.getElementById('prenominaTotalEmp').textContent = empleados.length;
+        document.getElementById('prenominaTotalEmp').textContent = prenomina.length;
         document.getElementById('prenominaTotalHoras').textContent = totalHoras;
         document.getElementById('prenominaIncidencias').textContent = totalIncidencias;
-        document.getElementById('prenominaTotalPagar').textContent = '$' + (empleados.reduce((s, e) => s + (e.salary || 0), 0)).toLocaleString('es-MX');
+        document.getElementById('prenominaTotalPagar').textContent = '$' + totalPagar.toLocaleString('es-MX');
     } catch (e) {
         document.getElementById('prenominaTable').innerHTML = '<tr><td colspan="11" class="empty-state">Error: ' + e.message + '</td></tr>';
     }
 }
 
-function abrirModalPrenomina(empId, empName, salary, diasSemana, sabados) {
+function abrirModalPrenomina(id, empName, salary) {
     document.getElementById('modalContent').innerHTML = `
         <div class="modal-header">
             <h3>Editar Prenómina - ${empName}</h3>
             <button class="modal-close" onclick="cerrarModal()">&times;</button>
         </div>
-        <input type="hidden" id="preEmpId" value="${empId}">
+        <input type="hidden" id="preId" value="${id}">
         <div class="form-row">
             <div class="form-group">
                 <label>Salario Base</label>
@@ -1695,7 +1713,7 @@ function abrirModalPrenomina(empId, empName, salary, diasSemana, sabados) {
             </div>
             <div class="form-group">
                 <label>Días Laborados</label>
-                <input type="number" id="preDiasLab" value="22" min="0" max="${diasSemana + sabados}">
+                <input type="number" id="preDiasLab" value="22" min="0" max="31">
             </div>
         </div>
         <div class="form-row">
@@ -1709,7 +1727,7 @@ function abrirModalPrenomina(empId, empName, salary, diasSemana, sabados) {
             </div>
         </div>
         <div class="form-group">
-            <label>Incencias (justificación)</label>
+            <label>Incidencias (justificación)</label>
             <textarea id="preIncidencias" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;" rows="2" placeholder="Descripción de incidencias..."></textarea>
         </div>
         <div class="modal-footer">
@@ -1720,10 +1738,39 @@ function abrirModalPrenomina(empId, empName, salary, diasSemana, sabados) {
     document.getElementById('modalOverlay').classList.add('active');
 }
 
-function guardarPrenomina() {
-    cerrarModal();
-    cargarPrenomina();
-    showToast('Prenómina actualizada', 'success');
+async function guardarPrenomina() {
+    const id = document.getElementById('preId').value;
+    const salario = parseFloat(document.getElementById('preSalario').value) || 0;
+    const diasLab = parseInt(document.getElementById('preDiasLab').value) || 0;
+    const faltas = parseInt(document.getElementById('preFaltas').value) || 0;
+    const retardos = parseInt(document.getElementById('preRetardos').value) || 0;
+    const incidencias = document.getElementById('preIncidencias').value;
+    const horasTotales = diasLab * 8;
+    const pagoDia = salario / 30;
+    const deducciones = (faltas * pagoDia + retardos * pagoDia * 0.1);
+    const totalPagar = salario - deducciones;
+
+    try {
+        await fetch(`/api/prenomina/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                dias_trabajados: diasLab,
+                horas_totales: horasTotales,
+                faltas,
+                retardos,
+                incidencias,
+                percepciones: salario,
+                deducciones: deducciones.toFixed(2),
+                total_pagar: totalPagar.toFixed(2)
+            })
+        });
+        cerrarModal();
+        cargarPrenomina();
+        showToast('Prenómina actualizada', 'success');
+    } catch (e) {
+        showToast('Error: ' + e.message, 'error');
+    }
 }
 
 function exportarPrenomina() {
@@ -1734,11 +1781,9 @@ function exportarPrenomina() {
 async function cargarSolicitudes() {
     try {
         const filtro = document.getElementById('solicitudFiltro').value;
-        let solicitudes = JSON.parse(localStorage.getItem('fototec_solicitudes') || '[]');
-
-        if (filtro !== 'todas') {
-            solicitudes = solicitudes.filter(s => s.estado === filtro);
-        }
+        const res = await fetch(`/api/solicitudes${filtro !== 'todas' ? '?estado=' + filtro : ''}`);
+        const data = await res.json();
+        const solicitudes = data.solicitudes || [];
 
         const pendientes = solicitudes.filter(s => s.estado === 'pendiente').length;
         const aprobadas = solicitudes.filter(s => s.estado === 'aprobada').length;
@@ -1756,10 +1801,10 @@ async function cargarSolicitudes() {
                 const estadoBadge = {'pendiente': 'badge-warning', 'aprobada': 'badge-success', 'rechazada': 'badge-danger'}[s.estado] || 'badge-info';
                 const tipoBadge = {'vacaciones': 'badge-info', 'permiso': 'badge-warning', 'enfermedad': 'badge-danger', 'personal': 'badge-secondary'}[s.tipo] || 'badge-secondary';
                 html += `<tr>
-                    <td>${s.empleado}</td>
+                    <td>${s.empleado_nombre}</td>
                     <td><span class="badge ${tipoBadge}">${s.tipo}</span></td>
-                    <td>${s.fechaInicio}</td>
-                    <td>${s.fechaFin}</td>
+                    <td>${s.fecha_inicio}</td>
+                    <td>${s.fecha_fin}</td>
                     <td>${s.dias}</td>
                     <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;">${s.motivo || '-'}</td>
                     <td><span class="badge ${estadoBadge}">${s.estado}</span></td>
@@ -1821,7 +1866,7 @@ function abrirModalNuevaSolicitud() {
     document.getElementById('modalOverlay').classList.add('active');
 }
 
-function guardarSolicitud() {
+async function guardarSolicitud() {
     const tipo = document.getElementById('solTipo').value;
     const empleado = document.getElementById('solEmpleado').value;
     const fechaInicio = document.getElementById('solFechaInicio').value;
@@ -1835,46 +1880,53 @@ function guardarSolicitud() {
 
     const dias = Math.ceil((new Date(fechaFin) - new Date(fechaInicio)) / (1000 * 60 * 60 * 24)) + 1;
 
-    let solicitudes = JSON.parse(localStorage.getItem('fototec_solicitudes') || '[]');
-    solicitudes.push({
-        id: Date.now(),
-        tipo,
-        empleado,
-        fechaInicio,
-        fechaFin,
-        dias,
-        motivo,
-        estado: 'pendiente',
-        createdAt: new Date().toISOString()
-    });
-    localStorage.setItem('fototec_solicitudes', JSON.stringify(solicitudes));
-
-    cerrarModal();
-    cargarSolicitudes();
-    showToast('Solicitud enviada', 'success');
-}
-
-function aprobarSolicitud(id) {
-    let solicitudes = JSON.parse(localStorage.getItem('fototec_solicitudes') || '[]');
-    const sol = solicitudes.find(s => s.id === id);
-    if (sol) {
-        sol.estado = 'aprobada';
-        sol.aprobadoAt = new Date().toISOString();
-        localStorage.setItem('fototec_solicitudes', JSON.stringify(solicitudes));
+    try {
+        await fetch('/api/solicitudes', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                empleado_id: null,
+                empleado_nombre: empleado,
+                tipo,
+                fecha_inicio: fechaInicio,
+                fecha_fin: fechaFin,
+                dias,
+                motivo
+            })
+        });
+        cerrarModal();
         cargarSolicitudes();
-        showToast('Solicitud aprobada', 'success');
+        showToast('Solicitud enviada', 'success');
+    } catch (e) {
+        showToast('Error: ' + e.message, 'error');
     }
 }
 
-function rechazarSolicitud(id) {
-    let solicitudes = JSON.parse(localStorage.getItem('fototec_solicitudes') || '[]');
-    const sol = solicitudes.find(s => s.id === id);
-    if (sol) {
-        sol.estado = 'rechazada';
-        sol.rechazadoAt = new Date().toISOString();
-        localStorage.setItem('fototec_solicitudes', JSON.stringify(solicitudes));
+async function aprobarSolicitud(id) {
+    try {
+        await fetch(`/api/solicitudes/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ estado: 'aprobada', respuesta: 'Aprobado por el administrador' })
+        });
+        cargarSolicitudes();
+        showToast('Solicitud aprobada', 'success');
+    } catch (e) {
+        showToast('Error: ' + e.message, 'error');
+    }
+}
+
+async function rechazarSolicitud(id) {
+    try {
+        await fetch(`/api/solicitudes/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ estado: 'rechazada', respuesta: 'Rechazado por el administrador' })
+        });
         cargarSolicitudes();
         showToast('Solicitud rechazada', 'info');
+    } catch (e) {
+        showToast('Error: ' + e.message, 'error');
     }
 }
 

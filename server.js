@@ -60,6 +60,62 @@ async function initDB() {
         args: ['Admin', 'admin', 'admin@fototec.com', adminHash]
     });
 
+    // ============ TABLAS RH: ASISTENCIA ============
+    await db.execute(`
+        CREATE TABLE IF NOT EXISTS asistencia (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            empleado_id INTEGER NOT NULL,
+            empleado_nombre TEXT NOT NULL,
+            fecha TEXT NOT NULL,
+            entrada TEXT,
+            salida TEXT,
+            horas REAL DEFAULT 0,
+            estado TEXT DEFAULT 'falta',
+            created_at TEXT DEFAULT (datetime('now')),
+            UNIQUE(empleado_id, fecha)
+        )
+    `);
+
+    // ============ TABLAS RH: SOLICITUDES ============
+    await db.execute(`
+        CREATE TABLE IF NOT EXISTS solicitudes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            empleado_id INTEGER,
+            empleado_nombre TEXT NOT NULL,
+            tipo TEXT NOT NULL,
+            fecha_inicio TEXT NOT NULL,
+            fecha_fin TEXT NOT NULL,
+            dias INTEGER DEFAULT 1,
+            motivo TEXT,
+            estado TEXT DEFAULT 'pendiente',
+            respuesta TEXT,
+            responded_at TEXT,
+            created_at TEXT DEFAULT (datetime('now'))
+        )
+    `);
+
+    // ============ TABLAS RH: PRENOMINA ============
+    await db.execute(`
+        CREATE TABLE IF NOT EXISTS prenomina (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            empleado_id INTEGER NOT NULL,
+            empleado_nombre TEXT NOT NULL,
+            periodo TEXT NOT NULL,
+            anio INTEGER NOT NULL,
+            mes INTEGER NOT NULL,
+            dias_trabajados INTEGER DEFAULT 0,
+            horas_totales REAL DEFAULT 0,
+            faltas INTEGER DEFAULT 0,
+            retardos INTEGER DEFAULT 0,
+            incidencias TEXT,
+            salario_base REAL DEFAULT 0,
+            percepciones REAL DEFAULT 0,
+            deducciones REAL DEFAULT 0,
+            total_pagar REAL DEFAULT 0,
+            created_at TEXT DEFAULT (datetime('now'))
+        )
+    `);
+
     // ============ TABLAS SCM: PROVEEDORES ============
     await db.execute(`
         CREATE TABLE IF NOT EXISTS proveedores (
@@ -595,7 +651,77 @@ app.post('/graphql', async (req, res) => {
 
         // attendance query
         if (query.includes('attendance')) {
-            return res.json({ data: { attendance: [] } });
+            const fecha = variables?.date;
+            let sql = `SELECT * FROM asistencia`;
+            const args = [];
+            if (fecha) {
+                sql += ` WHERE fecha = ?`;
+                args.push(fecha);
+            }
+            sql += ` ORDER BY fecha DESC, empleado_nombre ASC`;
+            const rows = await dbAll(sql, args);
+            const formatted = rows.map(a => ({
+                id: a.id,
+                employee: { id: a.empleado_id, name: a.empleado_nombre },
+                date: a.fecha,
+                clockIn: a.entrada,
+                clockOut: a.salida,
+                hoursWorked: a.horas,
+                status: a.estado
+            }));
+            return res.json({ data: { attendance: formatted } });
+        }
+
+        // requests/solicitudes query
+        if (query.includes('requests') || query.includes('solicitudes')) {
+            const estado = variables?.estado;
+            let sql = `SELECT * FROM solicitudes`;
+            const args = [];
+            if (estado && estado !== 'todas') {
+                sql += ` WHERE estado = ?`;
+                args.push(estado);
+            }
+            sql += ` ORDER BY created_at DESC`;
+            const rows = await dbAll(sql, args);
+            const formatted = rows.map(s => ({
+                id: s.id,
+                empleadoId: s.empleado_id,
+                empleado: s.empleado_nombre,
+                tipo: s.tipo,
+                fechaInicio: s.fecha_inicio,
+                fechaFin: s.fecha_fin,
+                dias: s.dias,
+                motivo: s.motivo,
+                estado: s.estado,
+                respuesta: s.respuesta,
+                createdAt: s.created_at
+            }));
+            return res.json({ data: { requests: formatted } });
+        }
+
+        // prenomina query
+        if (query.includes('prenomina')) {
+            const anio = variables?.anio || new Date().getFullYear();
+            const mes = variables?.mes || new Date().getMonth() + 1;
+            const rows = await dbAll(`SELECT * FROM prenomina WHERE anio = ? AND mes = ? ORDER BY empleado_nombre ASC`, [anio, mes]);
+            const formatted = rows.map(p => ({
+                id: p.id,
+                empleadoId: p.empleado_id,
+                empleado: p.empleado_nombre,
+                periodo: p.periodo,
+                anio: p.anio,
+                mes: p.mes,
+                diasTrabajados: p.dias_trabajados,
+                horasTotales: p.horas_totales,
+                faltas: p.faltas,
+                retardos: p.retardos,
+                incidencias: p.incidencias,
+                salarioBase: p.salario_base,
+                percepciones: p.percepciones,
+                deducciones: p.deducciones,
+                totalPagar: p.total_pagar
+            }));
+            return res.json({ data: { prenomina: formatted } });
         }
 
         // purchaseOrders query
@@ -682,6 +808,155 @@ app.put('/api/profile/update', authMiddleware, async (req, res) => {
     } catch (err) {
         console.error('Error updating profile:', err);
         res.status(500).json({ success: false, error: 'Error al actualizar' });
+    }
+});
+
+// ============ API ASISTENCIA ============
+app.get('/api/asistencia', async (req, res) => {
+    try {
+        const { fecha, mes, anio } = req.query;
+        let sql = `SELECT * FROM asistencia WHERE 1=1`;
+        const args = [];
+
+        if (fecha) {
+            sql += ` AND fecha = ?`;
+            args.push(fecha);
+        } else if (mes && anio) {
+            sql += ` AND strftime('%Y', fecha) = ? AND strftime('%m', fecha) = ?`;
+            args.push(String(anio), String(mes).padStart(2, '0'));
+        }
+
+        sql += ` ORDER BY fecha DESC, empleado_nombre ASC`;
+        const rows = await dbAll(sql, args);
+        res.json({ success: true, attendance: rows });
+    } catch (err) {
+        console.error('Error asistencia:', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+app.post('/api/asistencia', async (req, res) => {
+    const { empleado_id, empleado_nombre, fecha, entrada, salida, horas, estado } = req.body;
+    try {
+        await db.execute({
+            sql: `INSERT INTO asistencia (empleado_id, empleado_nombre, fecha, entrada, salida, horas, estado)
+                  VALUES (?, ?, ?, ?, ?, ?, ?)
+                  ON CONFLICT(empleado_id, fecha) DO UPDATE SET
+                  entrada = excluded.entrada, salida = excluded.salida, horas = excluded.horas, estado = excluded.estado`,
+            args: [empleado_id, empleado_nombre, fecha, entrada || null, salida || null, horas || 0, estado || 'falta']
+        });
+        res.json({ success: true, message: 'Asistencia guardada' });
+    } catch (err) {
+        console.error('Error guardar asistencia:', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+app.put('/api/asistencia/:id', async (req, res) => {
+    const { id } = req.params;
+    const { entrada, salida, horas, estado } = req.body;
+    try {
+        await db.execute({
+            sql: `UPDATE asistencia SET entrada = ?, salida = ?, horas = ?, estado = ? WHERE id = ?`,
+            args: [entrada || null, salida || null, horas || 0, estado || 'falta', id]
+        });
+        res.json({ success: true, message: 'Asistencia actualizada' });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// ============ API SOLICITUDES ============
+app.get('/api/solicitudes', async (req, res) => {
+    try {
+        const { estado } = req.query;
+        let sql = `SELECT * FROM solicitudes WHERE 1=1`;
+        const args = [];
+
+        if (estado && estado !== 'todas') {
+            sql += ` AND estado = ?`;
+            args.push(estado);
+        }
+        sql += ` ORDER BY created_at DESC`;
+
+        const rows = await dbAll(sql, args);
+        res.json({ success: true, solicitudes: rows });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+app.post('/api/solicitudes', async (req, res) => {
+    const { empleado_id, empleado_nombre, tipo, fecha_inicio, fecha_fin, dias, motivo } = req.body;
+    try {
+        await db.execute({
+            sql: `INSERT INTO solicitudes (empleado_id, empleado_nombre, tipo, fecha_inicio, fecha_fin, dias, motivo) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            args: [empleado_id || null, empleado_nombre, tipo, fecha_inicio, fecha_fin, dias || 1, motivo || '']
+        });
+        res.status(201).json({ success: true, message: 'Solicitud creada' });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+app.put('/api/solicitudes/:id', async (req, res) => {
+    const { id } = req.params;
+    const { estado, respuesta } = req.body;
+    try {
+        await db.execute({
+            sql: `UPDATE solicitudes SET estado = ?, respuesta = ?, responded_at = datetime('now') WHERE id = ?`,
+            args: [estado, respuesta || '', id]
+        });
+        res.json({ success: true, message: 'Solicitud actualizada' });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// ============ API PRENOMINA ============
+app.get('/api/prenomina', async (req, res) => {
+    try {
+        const { anio, mes, periodo } = req.query;
+        let sql = `SELECT * FROM prenomina WHERE 1=1`;
+        const args = [];
+
+        if (anio) { sql += ` AND anio = ?`; args.push(anio); }
+        if (mes) { sql += ` AND mes = ?`; args.push(mes); }
+        if (periodo) { sql += ` AND periodo = ?`; args.push(periodo); }
+
+        sql += ` ORDER BY empleado_nombre ASC`;
+        const rows = await dbAll(sql, args);
+        res.json({ success: true, prenomina: rows });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+app.post('/api/prenomina', async (req, res) => {
+    const { empleado_id, empleado_nombre, periodo, anio, mes, dias_trabajados, horas_totales, faltas, retardos, incidencias, salario_base, percepciones, deducciones, total_pagar } = req.body;
+    try {
+        await db.execute({
+            sql: `INSERT INTO prenomina (empleado_id, empleado_nombre, periodo, anio, mes, dias_trabajados, horas_totales, faltas, retardos, incidencias, salario_base, percepciones, deducciones, total_pagar)
+                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            args: [empleado_id, empleado_nombre, periodo || 'mensual', anio, mes, dias_trabajados || 0, horas_totales || 0, faltas || 0, retardos || 0, incidencias || '', salario_base || 0, percepciones || 0, deducciones || 0, total_pagar || 0]
+        });
+        res.status(201).json({ success: true, message: 'Prenómina guardada' });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+app.put('/api/prenomina/:id', async (req, res) => {
+    const { id } = req.params;
+    const { dias_trabajados, horas_totales, faltas, retardos, incidencias, percepciones, deducciones, total_pagar } = req.body;
+    try {
+        await db.execute({
+            sql: `UPDATE prenomina SET dias_trabajados = ?, horas_totales = ?, faltas = ?, retardos = ?, incidencias = ?, percepciones = ?, deducciones = ?, total_pagar = ? WHERE id = ?`,
+            args: [dias_trabajados, horas_totales, faltas, retardos, incidencias || '', percepciones, deducciones, total_pagar, id]
+        });
+        res.json({ success: true, message: 'Prenómina actualizada' });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
     }
 });
 
