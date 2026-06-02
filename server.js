@@ -789,6 +789,23 @@ app.get('/api/users', async (req, res) => {
     }
 });
 
+// Actualizar usuario (admin)
+app.put('/api/users/:id', async (req, res) => {
+    const { id } = req.params;
+    const { name, email, role, is_verified } = req.body;
+
+    try {
+        await db.execute({
+            sql: `UPDATE users SET name = ?, email = ?, role = ?, is_verified = ? WHERE id = ?`,
+            args: [name || '', email || '', role || 'cliente', is_verified !== undefined ? is_verified : 1, parseInt(id)]
+        });
+        res.json({ success: true, message: 'Usuario actualizado' });
+    } catch (err) {
+        console.error('Error updating user:', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 // Actualizar perfil
 app.put('/api/profile/update', authMiddleware, async (req, res) => {
     const { name, email, password } = req.body;
