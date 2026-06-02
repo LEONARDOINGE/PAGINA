@@ -1689,11 +1689,16 @@ async function abrirModalNuevaFactura() {
         const res = await fetch('/api/erp/clientes');
         const data = await res.json();
         const clientes = data.clientes || [];
+        console.log('Clientes cargados:', clientes);
 
         let options = '<option value="">Seleccionar cliente</option>';
         clientes.forEach(c => {
-            options += `<option value="${c.id}">${c.nombre || c.name || c.email}</option>`;
+            options += `<option value="${c.id}">${c.name || c.nombre || c.email} (${c.email || 'sin email'})</option>`;
         });
+
+        if (clientes.length === 0) {
+            options = '<option value="">No hay clientes registrados</option>';
+        }
 
         const hoy = new Date().toISOString().split('T')[0];
 
@@ -1703,32 +1708,56 @@ async function abrirModalNuevaFactura() {
                 <button class="modal-close" onclick="cerrarModal()">&times;</button>
             </div>
             <div class="form-group">
-                <label>Cliente</label>
+                <label>Cliente *</label>
                 <select id="facturaCliente" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;">${options}</select>
+            </div>
+            <div class="form-group">
+                <label>Fecha *</label>
+                <input type="date" id="facturaFecha" value="${hoy}" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;">
+            </div>
+            <div class="form-group">
+                <label>Descripción / Concepto *</label>
+                <input type="text" id="facturaConcepto" placeholder="Ej: Sesión de fotos passport, Ampliación 24x36" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;">
             </div>
             <div class="form-row">
                 <div class="form-group">
-                    <label>Fecha</label>
-                    <input type="date" id="facturaFecha" value="${hoy}" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;">
+                    <label>Subtotal</label>
+                    <input type="number" id="facturaSubtotal" placeholder="0.00" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;" oninput="calcularTotalFactura()">
                 </div>
                 <div class="form-group">
-                    <label>Total</label>
-                    <input type="number" id="facturaTotal" placeholder="0.00" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;">
+                    <label>IVA (16%)</label>
+                    <input type="number" id="facturaIVA" placeholder="0.00" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;" readonly>
                 </div>
             </div>
             <div class="form-group">
-                <label>Concepto / Descripción</label>
-                <input type="text" id="facturaConcepto" placeholder="Descripción del servicio o producto" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;">
+                <label style="font-weight:bold;font-size:1.1rem;">Total</label>
+                <input type="number" id="facturaTotal" placeholder="0.00" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-weight:bold;font-size:1.2rem;" oninput="calcularIVAFromTotal()">
             </div>
             <div class="modal-footer">
-                <button class="btn btn-primary" onclick="guardarNuevaFactura()">Generar Factura</button>
+                <button class="btn btn-primary" onclick="guardarNuevaFactura()">💾 Generar Factura</button>
                 <button class="btn" onclick="cerrarModal()">Cancelar</button>
             </div>
         `;
         document.getElementById('modalOverlay').classList.add('active');
     } catch (e) {
-        showToast('Error al cargar clientes', 'error');
+        console.error('Error cargando clientes:', e);
+        showToast('Error al cargar clientes: ' + e.message, 'error');
     }
+}
+
+function calcularTotalFactura() {
+    const subtotal = parseFloat(document.getElementById('facturaSubtotal').value) || 0;
+    const iva = subtotal * 0.16;
+    document.getElementById('facturaIVA').value = iva.toFixed(2);
+    document.getElementById('facturaTotal').value = (subtotal + iva).toFixed(2);
+}
+
+function calcularIVAFromTotal() {
+    const total = parseFloat(document.getElementById('facturaTotal').value) || 0;
+    const subtotal = total / 1.16;
+    const iva = total - subtotal;
+    document.getElementById('facturaSubtotal').value = subtotal.toFixed(2);
+    document.getElementById('facturaIVA').value = iva.toFixed(2);
 }
 
 async function guardarNuevaFactura() {
@@ -1736,16 +1765,15 @@ async function guardarNuevaFactura() {
     const clienteNombre = clienteSelect.options[clienteSelect.selectedIndex].text;
     const clienteId = clienteSelect.value;
     const fecha = document.getElementById('facturaFecha').value;
-    const total = parseFloat(document.getElementById('facturaTotal').value) || 0;
     const concepto = document.getElementById('facturaConcepto').value;
+    const subtotal = parseFloat(document.getElementById('facturaSubtotal').value) || 0;
+    const iva = parseFloat(document.getElementById('facturaIVA').value) || 0;
+    const total = parseFloat(document.getElementById('facturaTotal').value) || 0;
 
-    if (!clienteId || total <= 0) {
-        showToast('Selecciona un cliente y ingresa el total', 'error');
+    if (!clienteId || !concepto || total <= 0) {
+        showToast('Completa todos los campos requeridos', 'error');
         return;
     }
-
-    const subtotal = total / 1.16;
-    const iva = total - subtotal;
 
     try {
         const res = await fetch('/api/erp/facturas', {
@@ -1754,10 +1782,10 @@ async function guardarNuevaFactura() {
             body: JSON.stringify({
                 cliente_nombre: clienteNombre,
                 cliente_email: '',
-                cliente_direccion: concepto || '',
+                cliente_direccion: concepto,
                 productos: [],
-                subtotal: subtotal.toFixed(2),
-                iva: iva.toFixed(2),
+                subtotal: subtotal,
+                iva: iva,
                 total: total
             })
         });

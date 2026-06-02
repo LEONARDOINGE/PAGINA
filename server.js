@@ -1609,7 +1609,7 @@ app.delete('/api/crm/notas/:id', async (req, res) => {
 // ============ ENDPOINTS ERP: CLIENTES ============
 app.get('/api/erp/clientes', async (req, res) => {
     try {
-        const rows = await dbAll(`SELECT * FROM users WHERE role = 'cliente' OR role = 'clientes' ORDER BY name`);
+        const rows = await dbAll(`SELECT id, name, email FROM users WHERE role IN ('cliente', 'clientes', 'Cliente') OR role IS NULL ORDER BY name`);
         res.json({ success: true, clientes: rows });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
