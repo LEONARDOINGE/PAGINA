@@ -669,7 +669,12 @@
         </div>
 
         <div id="modFacturas" class="module-content">
-            <div class="content-header"><h1>Facturas</h1><p>Gestión de facturas</p></div>
+            <div class="content-header">
+                <div><h1>Facturas</h1><p>Gestión de facturas</p></div>
+                <div class="content-header-right">
+                    <button class="btn btn-success" onclick="abrirModalNuevaFactura()">+ Nueva Factura</button>
+                </div>
+            </div>
             <div class="data-table">
                 <table>
                     <thead><tr><th>Folio</th><th>Cliente</th><th>Total</th><th>Saldo</th><th>Estado</th><th>Fecha</th><th>Acciones</th></tr></thead>
@@ -1511,6 +1516,96 @@ async function guardarFactura() {
         cerrarModal();
         cargarFacturas();
         showToast('Factura actualizada', 'success');
+    } catch (e) {
+        showToast('Error: ' + e.message, 'error');
+    }
+}
+
+async function abrirModalNuevaFactura() {
+    try {
+        const res = await fetch('/api/erp/clientes');
+        const data = await res.json();
+        const clientes = data.clientes || [];
+
+        let options = '<option value="">Seleccionar cliente</option>';
+        clientes.forEach(c => {
+            options += `<option value="${c.id}">${c.nombre || c.name || c.email}</option>`;
+        });
+
+        const hoy = new Date().toISOString().split('T')[0];
+
+        document.getElementById('modalContent').innerHTML = `
+            <div class="modal-header">
+                <h3>Nueva Factura</h3>
+                <button class="modal-close" onclick="cerrarModal()">&times;</button>
+            </div>
+            <div class="form-group">
+                <label>Cliente</label>
+                <select id="facturaCliente" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;">${options}</select>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Fecha</label>
+                    <input type="date" id="facturaFecha" value="${hoy}" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;">
+                </div>
+                <div class="form-group">
+                    <label>Total</label>
+                    <input type="number" id="facturaTotal" placeholder="0.00" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Concepto / Descripción</label>
+                <input type="text" id="facturaConcepto" placeholder="Descripción del servicio o producto" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;">
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="guardarNuevaFactura()">Generar Factura</button>
+                <button class="btn" onclick="cerrarModal()">Cancelar</button>
+            </div>
+        `;
+        document.getElementById('modalOverlay').classList.add('active');
+    } catch (e) {
+        showToast('Error al cargar clientes', 'error');
+    }
+}
+
+async function guardarNuevaFactura() {
+    const clienteSelect = document.getElementById('facturaCliente');
+    const clienteNombre = clienteSelect.options[clienteSelect.selectedIndex].text;
+    const clienteId = clienteSelect.value;
+    const fecha = document.getElementById('facturaFecha').value;
+    const total = parseFloat(document.getElementById('facturaTotal').value) || 0;
+    const concepto = document.getElementById('facturaConcepto').value;
+
+    if (!clienteId || total <= 0) {
+        showToast('Selecciona un cliente y ingresa el total', 'error');
+        return;
+    }
+
+    const subtotal = total / 1.16;
+    const iva = total - subtotal;
+
+    try {
+        const res = await fetch('/api/erp/facturas', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                cliente_nombre: clienteNombre,
+                cliente_email: '',
+                cliente_direccion: concepto || '',
+                productos: [],
+                subtotal: subtotal.toFixed(2),
+                iva: iva.toFixed(2),
+                total: total
+            })
+        });
+        const data = await res.json();
+        if (data.success || res.ok) {
+            cerrarModal();
+            cargarFacturas();
+            showToast('Factura ' + data.folio + ' generada', 'success');
+        } else {
+            showToast(data.error || 'Error al generar factura', 'error');
+        }
     } catch (e) {
         showToast('Error: ' + e.message, 'error');
     }
