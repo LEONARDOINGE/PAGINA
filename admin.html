@@ -426,8 +426,66 @@
         </div>
 
         <div id="modInventario" class="module-content">
-            <div class="content-header"><h1>Inventario</h1><p>Control de stock</p></div>
-            <div class="data-table"><p style="padding:20px;text-align:center;color:#666;">Cargando datos...</p></div>
+            <div class="content-header">
+                <div>
+                    <h1>Inventario</h1>
+                    <p>Control de stock y almacén</p>
+                </div>
+                <div class="content-header-right">
+                    <select id="invFiltroEstado" onchange="cargarInventario()" style="padding:8px 12px;border:1px solid #ddd;border-radius:6px;">
+                        <option value="todos">Todos</option>
+                        <option value="agotado">Agotados</option>
+                        <option value="bajo">Stock Bajo</option>
+                        <option value="disponible">Disponibles</option>
+                    </select>
+                    <select id="invFiltroCategoria" onchange="cargarInventario()" style="padding:8px 12px;border:1px solid #ddd;border-radius:6px;">
+                        <option value="todas">Todas las Categorías</option>
+                        <option value="papel">Papel Fotográfico</option>
+                        <option value="tintas">Tintas</option>
+                        <option value="hardware">Hardware/Cámaras</option>
+                        <option value="accesorios">Accesorios</option>
+                        <option value="marcos">Marcos/Cuadros</option>
+                        <option value="iluminacion">Iluminación</option>
+                        <option value="limpieza">Limpieza/Mantenimiento</option>
+                        <option value="otro">Otros</option>
+                    </select>
+                    <button class="btn btn-primary" onclick="abrirModalAjusteStock()">+ Ajuste Stock</button>
+                    <button class="btn btn-success" onclick="abrirModalNuevoProducto()">+ Nuevo Producto</button>
+                </div>
+            </div>
+            <div class="cards-grid">
+                <div class="card">
+                    <div class="card-icon">📦</div>
+                    <div class="card-value" id="invTotal">-</div>
+                    <div class="card-label">Total Productos</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">✅</div>
+                    <div class="card-value" id="invDisponibles">-</div>
+                    <div class="card-label">Disponibles</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">⚠️</div>
+                    <div class="card-value" id="invBajoStock">-</div>
+                    <div class="card-label">Stock Bajo</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">❌</div>
+                    <div class="card-value" id="invAgotados">-</div>
+                    <div class="card-label">Agotados</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">💰</div>
+                    <div class="card-value" id="invValorTotal">-</div>
+                    <div class="card-label">Valor Inventario</div>
+                </div>
+            </div>
+            <div class="data-table">
+                <table>
+                    <thead><tr><th>SKU</th><th>Producto</th><th>Categoría</th><th>Stock</th><th>Stock Mín</th><th>Precio</th><th>Proveedor</th><th>Estado</th><th>Acciones</th></tr></thead>
+                    <tbody id="inventarioTable"><tr class="loading-row"><td colspan="9">Cargando...</td></tr></tbody>
+                </table>
+            </div>
         </div>
 
         <div id="modPedidos" class="module-content">
@@ -773,6 +831,7 @@ function mostrarModulo(modulo, btn) {
         case 'empleados': cargarEmpleados(); break;
         case 'proveedores': cargarProveedores(); break;
         case 'productos': cargarProductos(); break;
+        case 'inventario': cargarInventario(); break;
         case 'clientes': cargarClientes(); break;
         case 'leads': cargarLeads(); break;
         case 'ventas': cargarVentas(); break;
@@ -1925,6 +1984,335 @@ async function rechazarSolicitud(id) {
         });
         cargarSolicitudes();
         showToast('Solicitud rechazada', 'info');
+    } catch (e) {
+        showToast('Error: ' + e.message, 'error');
+    }
+}
+
+// ============ INVENTARIO ============
+async function cargarInventario() {
+    try {
+        const filtroEstado = document.getElementById('invFiltroEstado').value;
+        const filtroCat = document.getElementById('invFiltroCategoria').value;
+
+        const res = await fetch('/api/products');
+        const data = await res.json();
+        let productos = data.products || [];
+
+        if (filtroCat !== 'todas') {
+            productos = productos.filter(p => (p.categoria || '').toLowerCase().includes(filtroCat));
+        }
+
+        let disponibles = 0, bajoStock = 0, agotados = 0;
+        let valorTotal = 0;
+
+        productos.forEach(p => {
+            const stock = p.stock || 0;
+            const stockMin = p.stock_minimo || 10;
+            const precio = p.precio || 0;
+
+            if (stock === 0) agotados++;
+            else if (stock <= stockMin) bajoStock++;
+            else disponibles++;
+
+            valorTotal += stock * precio;
+        });
+
+        document.getElementById('invTotal').textContent = productos.length;
+        document.getElementById('invDisponibles').textContent = disponibles;
+        document.getElementById('invBajoStock').textContent = bajoStock;
+        document.getElementById('invAgotados').textContent = agotados;
+        document.getElementById('invValorTotal').textContent = '$' + valorTotal.toLocaleString('es-MX');
+
+        let html = '';
+        productos.forEach(p => {
+            const stock = p.stock || 0;
+            const stockMin = p.stock_minimo || 10;
+            let estado, estadoClass;
+
+            if (stock === 0) {
+                estado = 'Agotado';
+                estadoClass = 'badge-danger';
+            } else if (stock <= stockMin) {
+                estado = 'Stock Bajo';
+                estadoClass = 'badge-warning';
+            } else {
+                estado = 'Disponible';
+                estadoClass = 'badge-success';
+            }
+
+            let catMostrar = p.categoria || 'General';
+            if (catMostrar === 'estudio') catMostrar = 'Servicios';
+            else if (catMostrar === 'boda') catMostrar = 'Servicios';
+            else if (catMostrar === 'impresion') catMostrar = 'Papel';
+
+            html += `<tr>
+                <td><code style="font-size:0.8rem;">${p.sku || 'N/A'}</code></td>
+                <td><strong>${p.nombre}</strong><br><small style="color:#999;">${p.descripcion || '-'}</small></td>
+                <td><span class="badge badge-info">${catMostrar}</span></td>
+                <td><strong style="font-size:1.1rem;">${stock}</strong> ${p.unit || 'pzas'}</td>
+                <td>${stockMin}</td>
+                <td>$${(p.precio || 0).toLocaleString('es-MX')}</td>
+                <td>${p.proveedor_nombre || '-'}</td>
+                <td><span class="badge ${estadoClass}">${estado}</span></td>
+                <td>
+                    <button class="btn btn-sm btn-primary" onclick="abrirModalEditarStock(${p.id}, '${p.nombre}', ${stock}, '${p.unit || 'pzas'}')">Editar Stock</button>
+                </td>
+            </tr>`;
+        });
+
+        if (filtroEstado !== 'todos') {
+            if (filtroEstado === 'agotado') productos = productos.filter(p => p.stock === 0);
+            else if (filtroEstado === 'bajo') productos = productos.filter(p => p.stock > 0 && p.stock <= (p.stock_minimo || 10));
+            else if (filtroEstado === 'disponible') productos = productos.filter(p => p.stock > (p.stock_minimo || 10));
+        }
+
+        document.getElementById('inventarioTable').innerHTML = html || '<tr><td colspan="9" class="empty-state">No hay productos</td></tr>';
+    } catch (e) {
+        document.getElementById('inventarioTable').innerHTML = '<tr><td colspan="9" class="empty-state">Error: ' + e.message + '</td></tr>';
+    }
+}
+
+function abrirModalEditarStock(id, nombre, stockActual, unidad) {
+    document.getElementById('modalContent').innerHTML = `
+        <div class="modal-header">
+            <h3>Editar Stock - ${nombre}</h3>
+            <button class="modal-close" onclick="cerrarModal()">&times;</button>
+        </div>
+        <input type="hidden" id="editStockId" value="${id}">
+        <div class="form-group">
+            <label>Stock Actual</label>
+            <input type="number" id="editStockActual" value="${stockActual}" class="form-control" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:1.2rem;font-weight:bold;">
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Ajuste (+/-)</label>
+                <input type="number" id="editStockAjuste" value="0" class="form-control" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;">
+            </div>
+            <div class="form-group">
+                <label>Nuevo Stock</label>
+                <input type="number" id="editStockNuevo" value="${stockActual}" class="form-control" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;" readonly>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Tipo de Movimiento</label>
+            <select id="editStockTipo" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;">
+                <option value="entrada">Entrada (Compra/Reabastecimiento)</option>
+                <option value="salida">Salida (Venta/Consumo)</option>
+                <option value="ajuste">Ajuste (Inventario Físico)</option>
+                <option value="devolucion">Devolución</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Notas</label>
+            <textarea id="editStockNotas" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;" rows="2" placeholder="Razón del ajuste..."></textarea>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-primary" onclick="guardarStock()">Guardar</button>
+            <button class="btn" onclick="cerrarModal()">Cancelar</button>
+        </div>
+    `;
+    document.getElementById('modalOverlay').classList.add('active');
+
+    document.getElementById('editStockAjuste').addEventListener('input', function() {
+        const actual = parseInt(document.getElementById('editStockActual').value) || 0;
+        const ajuste = parseInt(this.value) || 0;
+        document.getElementById('editStockNuevo').value = Math.max(0, actual + ajuste);
+    });
+}
+
+async function guardarStock() {
+    const id = document.getElementById('editStockId').value;
+    const nuevoStock = parseInt(document.getElementById('editStockNuevo').value) || 0;
+    const tipo = document.getElementById('editStockTipo').value;
+    const notas = document.getElementById('editStockNotas').value;
+
+    try {
+        const res = await fetch('/api/products/' + id, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ stock: nuevoStock })
+        });
+        const result = await res.json();
+
+        if (result.success) {
+            cerrarModal();
+            cargarInventario();
+            showToast('Stock actualizado a ' + nuevoStock, 'success');
+        } else {
+            showToast('Error: ' + result.error, 'error');
+        }
+    } catch (e) {
+        showToast('Error: ' + e.message, 'error');
+    }
+}
+
+function abrirModalAjusteStock() {
+    document.getElementById('modalContent').innerHTML = `
+        <div class="modal-header">
+            <h3>Ajuste Masivo de Stock</h3>
+            <button class="modal-close" onclick="cerrarModal()">&times;</button>
+        </div>
+        <div class="form-group">
+            <label>Producto</label>
+            <select id="ajusteProducto" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;">
+                <option value="">Seleccionar producto...</option>
+            </select>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Tipo</label>
+                <select id="ajusteTipo" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;">
+                    <option value="entrada">Entrada</option>
+                    <option value="salida">Salida</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Cantidad</label>
+                <input type="number" id="ajusteCantidad" value="1" min="1" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;">
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Notas</label>
+            <textarea id="ajusteNotas" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;" rows="2" placeholder="Razón del ajuste..."></textarea>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-primary" onclick="guardarAjusteStock()">Aplicar</button>
+            <button class="btn" onclick="cerrarModal()">Cancelar</button>
+        </div>
+    `;
+    document.getElementById('modalOverlay').classList.add('active');
+
+    fetch('/api/products').then(r => r.json()).then(data => {
+        const select = document.getElementById('ajusteProducto');
+        (data.products || []).forEach(p => {
+            select.innerHTML += `<option value="${p.id}">${p.nombre} (Stock: ${p.stock})</option>`;
+        });
+    });
+}
+
+async function guardarAjusteStock() {
+    const id = document.getElementById('ajusteProducto').value;
+    const tipo = document.getElementById('ajusteTipo').value;
+    const cantidad = parseInt(document.getElementById('ajusteCantidad').value) || 0;
+    const notas = document.getElementById('ajusteNotas').value;
+
+    if (!id) { showToast('Selecciona un producto', 'error'); return; }
+    if (cantidad <= 0) { showToast('Cantidad debe ser mayor a 0', 'error'); return; }
+
+    try {
+        const resProd = await fetch('/api/products');
+        const dataProd = await resProd.json();
+        const producto = (dataProd.products || []).find(p => p.id == id);
+        if (!producto) { showToast('Producto no encontrado', 'error'); return; }
+
+        let nuevoStock = producto.stock || 0;
+        if (tipo === 'entrada') nuevoStock += cantidad;
+        else if (tipo === 'salida') nuevoStock = Math.max(0, nuevoStock - cantidad);
+
+        const res = await fetch('/api/products/' + id, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ stock: nuevoStock })
+        });
+        const result = await res.json();
+
+        if (result.success) {
+            cerrarModal();
+            cargarInventario();
+            showToast(`Stock ${tipo === 'entrada' ? 'aumentado' : 'reducido'} en ${cantidad}`, 'success');
+        } else {
+            showToast('Error: ' + result.error, 'error');
+        }
+    } catch (e) {
+        showToast('Error: ' + e.message, 'error');
+    }
+}
+
+function abrirModalNuevoProducto() {
+    document.getElementById('modalContent').innerHTML = `
+        <div class="modal-header">
+            <h3>Nuevo Producto</h3>
+            <button class="modal-close" onclick="cerrarModal()">&times;</button>
+        </div>
+        <div class="form-group">
+            <label>Nombre *</label>
+            <input type="text" id="prodNombre" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;" required>
+        </div>
+        <div class="form-group">
+            <label>Descripción</label>
+            <textarea id="prodDesc" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;" rows="2"></textarea>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Precio</label>
+                <input type="number" id="prodPrecio" step="0.01" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;">
+            </div>
+            <div class="form-group">
+                <label>Stock Inicial</label>
+                <input type="number" id="prodStock" value="0" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Stock Mínimo</label>
+                <input type="number" id="prodStockMin" value="10" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;">
+            </div>
+            <div class="form-group">
+                <label>Categoría</label>
+                <select id="prodCategoria" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;">
+                    <option value="papel">Papel Fotográfico</option>
+                    <option value="tintas">Tintas</option>
+                    <option value="hardware">Hardware/Cámaras</option>
+                    <option value="accesorios">Accesorios</option>
+                    <option value="marcos">Marcos/Cuadros</option>
+                    <option value="iluminacion">Iluminación</option>
+                    <option value="limpieza">Limpieza/Mantenimiento</option>
+                    <option value="otro">Otros</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Estrategia</label>
+            <select id="prodEstrategia" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;">
+                <option value="push">PUSH (Con stock - materiales)</option>
+                <option value="pull">PULL (Bajo demanda - servicios)</option>
+            </select>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-primary" onclick="guardarNuevoProducto()">Crear Producto</button>
+            <button class="btn" onclick="cerrarModal()">Cancelar</button>
+        </div>
+    `;
+    document.getElementById('modalOverlay').classList.add('active');
+}
+
+async function guardarNuevoProducto() {
+    const nombre = document.getElementById('prodNombre').value;
+    const descripcion = document.getElementById('prodDesc').value;
+    const precio = parseFloat(document.getElementById('prodPrecio').value) || 0;
+    const stock = parseInt(document.getElementById('prodStock').value) || 0;
+    const stock_minimo = parseInt(document.getElementById('prodStockMin').value) || 10;
+    const categoria = document.getElementById('prodCategoria').value;
+    const estrategia = document.getElementById('prodEstrategia').value;
+
+    if (!nombre) { showToast('El nombre es requerido', 'error'); return; }
+
+    try {
+        const res = await fetch('/api/products', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nombre, descripcion, precio, stock, stock_minimo, categoria, estrategia })
+        });
+        const result = await res.json();
+
+        if (result.success || res.ok) {
+            cerrarModal();
+            cargarInventario();
+            showToast('Producto creado', 'success');
+        } else {
+            showToast('Error: ' + (result.error || 'Desconocido'), 'error');
+        }
     } catch (e) {
         showToast('Error: ' + e.message, 'error');
     }

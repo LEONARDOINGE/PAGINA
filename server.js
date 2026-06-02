@@ -171,6 +171,7 @@ async function initDB() {
     await db.execute(`
         CREATE TABLE IF NOT EXISTS products (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+            sku TEXT,
             nombre TEXT,
             descripcion TEXT,
             precio REAL DEFAULT 0,
@@ -179,7 +180,8 @@ async function initDB() {
             estrategia TEXT DEFAULT 'pull',
             stock_minimo INTEGER DEFAULT 10,
             proveedor_id INTEGER,
-            activo INTEGER DEFAULT 1
+            activo INTEGER DEFAULT 1,
+            created_at TEXT DEFAULT (datetime('now'))
         )
     `);
 
@@ -1331,8 +1333,13 @@ app.put('/api/scm/pedidos-compra/:id', async (req, res) => {
 // ============ ENDPOINTS CRM: PRODUCTOS ============
 app.get('/api/products', async (req, res) => {
     try {
-        const rows = await dbAll(`SELECT * FROM products ORDER BY id DESC`);
-        res.json({ success: true, productos: rows });
+        const rows = await dbAll(`
+            SELECT p.*, pr.nombre as proveedor_nombre
+            FROM products p
+            LEFT JOIN proveedores pr ON p.proveedor_id = pr.id
+            ORDER BY p.id DESC
+        `);
+        res.json({ success: true, products: rows });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
