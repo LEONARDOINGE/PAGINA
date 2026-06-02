@@ -1606,6 +1606,16 @@ app.delete('/api/crm/notas/:id', async (req, res) => {
     }
 });
 
+// ============ ENDPOINTS ERP: CLIENTES ============
+app.get('/api/erp/clientes', async (req, res) => {
+    try {
+        const rows = await dbAll(`SELECT * FROM users WHERE role = 'cliente' OR role = 'clientes' ORDER BY name`);
+        res.json({ success: true, clientes: rows });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 // ============ ENDPOINTS ERP: FACTURAS ============
 app.get('/api/erp/facturas', async (req, res) => {
     try {
@@ -1617,15 +1627,18 @@ app.get('/api/erp/facturas', async (req, res) => {
 });
 
 app.post('/api/erp/facturas', async (req, res) => {
+    console.log('POST /api/erp/facturas body:', req.body);
     const { cliente_nombre, cliente_email, cliente_direccion, productos, subtotal, iva, total } = req.body;
     const folio = 'FOT-' + String(Date.now()).slice(-6);
     try {
-        await db.execute({
+        const result = await db.execute({
             sql: "INSERT INTO invoices (folio, cliente_nombre, cliente_email, cliente_direccion, productos, subtotal, iva, total, fecha, estado) VALUES (?, ?, ?, ?, ?, ?, ?, ?, date('now'), 'pendiente')",
             args: [folio, cliente_nombre || '', cliente_email || '', cliente_direccion || '', JSON.stringify(productos || []), parseFloat(subtotal) || 0, parseFloat(iva) || 0, parseFloat(total) || 0]
         });
+        console.log('Factura created:', result);
         res.status(201).json({ success: true, folio, message: "Factura generada" });
     } catch (err) {
+        console.error('Error creating factura:', err);
         res.status(500).json({ error: "No se pudo generar factura: " + err.message });
     }
 });
