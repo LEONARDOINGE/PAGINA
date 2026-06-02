@@ -1411,6 +1411,7 @@ async function cargarFacturas() {
         const res = await fetch('/api/erp/facturas');
         const data = await res.json();
         const list = data.facturas || [];
+        facturasData = list;
 
         let html = '';
         list.forEach(f => {
@@ -1431,8 +1432,63 @@ async function cargarFacturas() {
     }
 }
 
-function editarFactura(id) {
-    showToast('Editar factura #' + id, 'info');
+async function editarFactura(id) {
+    const factura = facturasData.find(f => f.id == id);
+    if (!factura) {
+        showToast('Factura no encontrada', 'error');
+        return;
+    }
+
+    const estados = ['pendiente', 'pagado', 'vencido', 'cancelado'];
+    let options = '';
+    estados.forEach(e => {
+        options += `<option value="${e}" ${factura.estado === e ? 'selected' : ''}>${e.charAt(0).toUpperCase() + e.slice(1)}</option>`;
+    });
+
+    document.getElementById('modalContent').innerHTML = `
+        <div class="modal-header">
+            <h3>Editar Factura ${factura.folio}</h3>
+            <button class="modal-close" onclick="cerrarModal()">&times;</button>
+        </div>
+        <input type="hidden" id="editFacturaId" value="${factura.id}">
+        <div class="form-group">
+            <label>Cliente</label>
+            <input type="text" value="${factura.cliente_nombre}" disabled style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;background:#f0f0f0;">
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Total</label>
+                <input type="number" value="${factura.total}" disabled style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;background:#f0f0f0;">
+            </div>
+            <div class="form-group">
+                <label>Estado</label>
+                <select id="editFacturaEstado" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;">${options}</select>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-primary" onclick="guardarFactura()">Guardar</button>
+            <button class="btn" onclick="cerrarModal()">Cancelar</button>
+        </div>
+    `;
+    document.getElementById('modalOverlay').classList.add('active');
+}
+
+async function guardarFactura() {
+    const id = document.getElementById('editFacturaId').value;
+    const estado = document.getElementById('editFacturaEstado').value;
+
+    try {
+        await fetch('/api/erp/facturas/' + id, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ estado })
+        });
+        cerrarModal();
+        cargarFacturas();
+        showToast('Factura actualizada', 'success');
+    } catch (e) {
+        showToast('Error: ' + e.message, 'error');
+    }
 }
 
 // ============ GASTOS ============
