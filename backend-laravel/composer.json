@@ -10,7 +10,8 @@
         "mll-lab/laravel-graphiql": "^3.0",
         "spatie/laravel-permission": "^6.0",
         "symfony/http-client": "^7.0",
-        "guzzlehttp/guzzle": "^7.8"
+        "guzzlehttp/guzzle": "^7.8",
+        "tursodatabase/turso-php": "^1.0"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",

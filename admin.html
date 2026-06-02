@@ -4,50 +4,27 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FotoTec | Panel de Administración</title>
+    <script src="api.js"></script>
+    <script src="permissions.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f5f5f5; color: #333; }
 
-        .auth-modal {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.7);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 99999;
-        }
+        .auth-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 99999; }
         .auth-modal.active { display: flex; }
-        .auth-box {
-            background: white;
-            border-radius: 16px;
-            padding: 40px;
-            max-width: 400px;
-            width: 90%;
-            text-align: center;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-        }
+        .auth-box { background: white; border-radius: 16px; padding: 40px; max-width: 400px; width: 90%; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
         .auth-box h2 { color: #667eea; margin-bottom: 5px; }
         .auth-box p { color: #666; margin-bottom: 25px; }
-        .auth-input {
-            width: 100%; padding: 12px 15px; margin-bottom: 15px;
-            border: 1px solid #ddd; border-radius: 8px; font-size: 1rem;
-        }
-        .auth-btn {
-            width: 100%; padding: 12px; background: #667eea; color: white;
-            border: none; border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer;
-        }
+        .auth-input { width: 100%; padding: 12px 15px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; }
+        .auth-btn { width: 100%; padding: 12px; background: #667eea; color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer; }
         .auth-btn:hover { background: #5a6fd6; }
+        .auth-btn:disabled { opacity: 0.6; cursor: not-allowed; }
         .auth-error { color: #ff6b6b; font-size: 0.85rem; margin-top: 10px; min-height: 20px; }
+        .auth-loading { color: #667eea; font-size: 0.85rem; margin-top: 10px; }
 
         .layout { display: flex; min-height: 100vh; }
-        .sidebar {
-            width: 260px; background: #1a1a2e; color: #fff;
-            position: fixed; height: 100vh; overflow-y: auto;
-        }
-        .sidebar-header {
-            padding: 20px; background: linear-gradient(135deg, #667eea, #764ba2); text-align: center;
-        }
+        .sidebar { width: 260px; background: #1a1a2e; color: #fff; position: fixed; height: 100vh; overflow-y: auto; }
+        .sidebar-header { padding: 20px; background: linear-gradient(135deg, #667eea, #764ba2); text-align: center; }
         .sidebar-header h1 { font-size: 1.5rem; margin-bottom: 5px; }
         .sidebar-header small { opacity: 0.7; font-size: 0.75rem; }
         .sidebar-user { padding: 15px 20px; background: rgba(255,255,255,0.05); border-bottom: 1px solid rgba(255,255,255,0.1); }
@@ -73,45 +50,85 @@
         .welcome-btn { padding: 15px 40px; background: #667eea; color: white; border: none; border-radius: 8px; font-size: 1rem; cursor: pointer; }
         .welcome-btn:hover { background: #5a6fd6; }
 
-        .content-header { background: white; padding: 20px 25px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .content-header { background: white; padding: 20px 25px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; }
         .content-header h1 { font-size: 1.5rem; color: #333; margin-bottom: 5px; }
         .content-header p { color: #666; font-size: 0.9rem; }
+        .content-header-right { display: flex; gap: 10px; align-items: center; }
 
         .cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
         .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
         .card-icon { font-size: 2rem; margin-bottom: 10px; }
         .card-value { font-size: 2rem; font-weight: bold; color: #333; }
         .card-label { color: #666; font-size: 0.85rem; }
+        .card-change { font-size: 0.75rem; margin-top: 5px; }
+        .card-change.up { color: #28a745; }
+        .card-change.down { color: #dc3545; }
 
         .data-table { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-        .data-table-header { padding: 15px 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+        .data-table-header { padding: 15px 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
         .data-table-header h3 { font-size: 1rem; }
+        .data-table-header .actions { display: flex; gap: 10px; }
+        .data-table-search { padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.85rem; min-width: 200px; }
         .data-table table { width: 100%; border-collapse: collapse; }
         .data-table th { background: #f8f9fa; padding: 12px 15px; text-align: left; font-weight: 600; font-size: 0.8rem; color: #666; text-transform: uppercase; }
         .data-table td { padding: 12px 15px; border-bottom: 1px solid #eee; font-size: 0.9rem; }
         .data-table tr:hover { background: #f8f9fa; }
+        .data-table .loading-row td { text-align: center; color: #999; padding: 30px; }
 
-        .badge-success { background: #d4edda; color: #155724; padding: 3px 10px; border-radius: 10px; font-size: 0.75rem; }
-        .badge-warning { background: #fff3cd; color: #856404; padding: 3px 10px; border-radius: 10px; font-size: 0.75rem; }
+        .btn { padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 500; transition: 0.2s; }
+        .btn-primary { background: #667eea; color: white; }
+        .btn-primary:hover { background: #5a6fd6; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-success:hover { background: #218838; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-danger:hover { background: #c82333; }
+        .btn-sm { padding: 5px 10px; font-size: 0.8rem; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .badge { padding: 3px 10px; border-radius: 10px; font-size: 0.75rem; font-weight: 500; }
+        .badge-success { background: #d4edda; color: #155724; }
+        .badge-warning { background: #fff3cd; color: #856404; }
+        .badge-danger { background: #f8d7da; color: #721c24; }
+        .badge-info { background: #d1ecf1; color: #0c5460; }
 
         .form-card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        .form-card h3 { margin-bottom: 20px; font-size: 1.1rem; }
+        .form-card h3 { margin-bottom: 20px; font-size: 1.1rem; display: flex; align-items: center; gap: 10px; }
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
         .form-group { display: flex; flex-direction: column; }
         .form-group label { font-size: 0.85rem; margin-bottom: 5px; font-weight: 500; color: #555; }
-        .form-group input, .form-group select { padding: 10px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.9rem; }
-        .form-group input:focus, .form-group select:focus { outline: none; border-color: #667eea; }
-        .btn { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem; font-weight: 500; }
-        .btn-success { background: #28a745; color: white; }
-        .btn-success:hover { background: #218838; }
+        .form-group input, .form-group select, .form-group textarea { padding: 10px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.9rem; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: #667eea; }
+
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 9999; }
+        .modal-overlay.active { display: flex; }
+        .modal-box { background: white; border-radius: 12px; padding: 30px; max-width: 500px; width: 90%; max-height: 90vh; overflow-y: auto; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .modal-header h3 { font-size: 1.2rem; }
+        .modal-close { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #999; }
+        .modal-close:hover { color: #333; }
+        .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+
+        .toast { position: fixed; bottom: 20px; right: 20px; padding: 15px 25px; border-radius: 8px; color: white; font-weight: 500; z-index: 99999; transform: translateX(400px); transition: transform 0.3s ease; }
+        .toast.show { transform: translateX(0); }
+        .toast.success { background: #28a745; }
+        .toast.error { background: #dc3545; }
+        .toast.info { background: #667eea; }
+
+        .empty-state { text-align: center; padding: 40px; color: #999; }
+        .empty-state .icon { font-size: 3rem; margin-bottom: 10px; opacity: 0.5; }
 
         .module-content { display: none; }
         .module-content.active { display: block; }
+
+        .realtime-indicator { display: inline-flex; align-items: center; gap: 5px; font-size: 0.7rem; color: #28a745; }
+        .realtime-indicator::before { content: ''; width: 8px; height: 8px; background: #28a745; border-radius: 50%; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 
         @media (max-width: 768px) {
             .sidebar { width: 200px; }
             .main-content { margin-left: 200px; }
             .form-row { grid-template-columns: 1fr; }
+            .cards-grid { grid-template-columns: repeat(2, 1fr); }
         }
     </style>
 </head>
@@ -120,11 +137,12 @@
 <div id="loginModal" class="auth-modal">
     <div class="auth-box">
         <h2>FotoTec</h2>
-        <p>Iniciar Sesion</p>
-        <input type="text" id="loginUser" class="auth-input" placeholder="Usuario">
-        <input type="password" id="loginPass" class="auth-input" placeholder="Contrasena">
-        <button class="auth-btn" id="btnEntrar">Entrar</button>
+        <p>Panel de Administración</p>
+        <input type="email" id="loginEmail" class="auth-input" placeholder="Email" autocomplete="email">
+        <input type="password" id="loginPass" class="auth-input" placeholder="Contraseña" autocomplete="current-password">
+        <button class="auth-btn" id="btnEntrar" onclick="handleLogin()">Entrar</button>
         <div id="loginError" class="auth-error"></div>
+        <div id="loginLoading" class="auth-loading" style="display:none;">Conectando...</div>
     </div>
 </div>
 
@@ -132,329 +150,350 @@
     <nav class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <h1>FotoTec</h1>
-            <small>Panel de Administracion</small>
+            <small>Panel de Administración <span class="realtime-indicator">Live</span></small>
         </div>
         <div class="sidebar-user" id="sidebarUser">
-            <div class="sidebar-user-name">Invitado</div>
+            <div class="sidebar-user-name">Cargando...</div>
         </div>
 
         <div class="sidebar-section" id="sectionDashboard">
             <div class="sidebar-section-title">Dashboard</div>
-            <div class="sidebar-item active" onclick="mostrarModulo('dashboard', this)">
-                <span class="icon">D</span> Dashboard
+            <div class="sidebar-item active" data-module="dashboard" onclick="mostrarModulo('dashboard', this)">
+                <span class="icon">📊</span> Dashboard
             </div>
         </div>
 
         <div class="sidebar-section" id="sectionCRM">
             <div class="sidebar-section-title">CRM</div>
-            <div class="sidebar-item" onclick="mostrarModulo('clientes', this)">
-                <span class="icon">C</span> Clientes <span class="badge" id="badgeClientes">0</span>
+            <div class="sidebar-item" data-module="clientes" onclick="mostrarModulo('clientes', this)">
+                <span class="icon">👥</span> Clientes <span class="badge" id="badgeClientes">0</span>
             </div>
-            <div class="sidebar-item" onclick="mostrarModulo('leads', this)">
-                <span class="icon">L</span> Leads
+            <div class="sidebar-item" data-module="leads" onclick="mostrarModulo('leads', this)">
+                <span class="icon">🎯</span> Leads
             </div>
-            <div class="sidebar-item" onclick="mostrarModulo('ventas', this)">
-                <span class="icon">V</span> Ventas
+            <div class="sidebar-item" data-module="ventas" onclick="mostrarModulo('ventas', this)">
+                <span class="icon">💰</span> Ventas
             </div>
         </div>
 
         <div class="sidebar-section" id="sectionSCM">
             <div class="sidebar-section-title">Cadena Suministro</div>
-            <div class="sidebar-item" onclick="mostrarModulo('productos', this)">
-                <span class="icon">P</span> Productos <span class="badge" id="badgeProductos">0</span>
+            <div class="sidebar-item" data-module="productos" onclick="mostrarModulo('productos', this)">
+                <span class="icon">📦</span> Productos <span class="badge" id="badgeProductos">0</span>
             </div>
-            <div class="sidebar-item" onclick="mostrarModulo('inventario', this)">
-                <span class="icon">I</span> Inventario
+            <div class="sidebar-item" data-module="inventario" onclick="mostrarModulo('inventario', this)">
+                <span class="icon">🏪</span> Inventario
             </div>
-            <div class="sidebar-item" onclick="mostrarModulo('pedidos', this)">
-                <span class="icon">P</span> Pedidos
+            <div class="sidebar-item" data-module="pedidos" onclick="mostrarModulo('pedidos', this)">
+                <span class="icon">🛒</span> Pedidos
             </div>
-            <div class="sidebar-item" onclick="mostrarModulo('proveedores', this)">
-                <span class="icon">P</span> Proveedores <span class="badge" id="badgeProveedores">0</span>
+            <div class="sidebar-item" data-module="proveedores" onclick="mostrarModulo('proveedores', this)">
+                <span class="icon">🚚</span> Proveedores <span class="badge" id="badgeProveedores">0</span>
             </div>
         </div>
 
         <div class="sidebar-section" id="sectionRH">
             <div class="sidebar-section-title">Recursos Humanos</div>
-            <div class="sidebar-item" onclick="mostrarModulo('empleados', this)">
-                <span class="icon">E</span> Empleados <span class="badge" id="badgeEmpleados">0</span>
+            <div class="sidebar-item" data-module="empleados" onclick="mostrarModulo('empleados', this)">
+                <span class="icon">👔</span> Empleados <span class="badge" id="badgeEmpleados">0</span>
             </div>
-            <div class="sidebar-item" onclick="mostrarModulo('nomina', this)">
-                <span class="icon">N</span> Nomina
+            <div class="sidebar-item" data-module="nomina" onclick="mostrarModulo('nomina', this)">
+                <span class="icon">💵</span> Nómina
             </div>
-            <div class="sidebar-item" onclick="mostrarModulo('asistencia', this)">
-                <span class="icon">A</span> Asistencia
+            <div class="sidebar-item" data-module="asistencia" onclick="mostrarModulo('asistencia', this)">
+                <span class="icon">📅</span> Asistencia
             </div>
         </div>
 
         <div class="sidebar-section" id="sectionFinanzas">
             <div class="sidebar-section-title">Finanzas</div>
-            <div class="sidebar-item" onclick="mostrarModulo('facturas', this)">
-                <span class="icon">F</span> Facturas
+            <div class="sidebar-item" data-module="facturas" onclick="mostrarModulo('facturas', this)">
+                <span class="icon">📄</span> Facturas
             </div>
-            <div class="sidebar-item" onclick="mostrarModulo('gastos', this)">
-                <span class="icon">G</span> Gastos
+            <div class="sidebar-item" data-module="gastos" onclick="mostrarModulo('gastos', this)">
+                <span class="icon">💸</span> Gastos
             </div>
         </div>
 
         <div class="sidebar-section" id="sectionAdmin">
-            <div class="sidebar-section-title">Administracion</div>
-            <div class="sidebar-item" onclick="mostrarModulo('usuarios', this)">
-                <span class="icon">U</span> Usuarios
+            <div class="sidebar-section-title">Administración</div>
+            <div class="sidebar-item" data-module="usuarios" onclick="mostrarModulo('usuarios', this)">
+                <span class="icon">⚙️</span> Usuarios
             </div>
-            <div class="sidebar-item" onclick="mostrarModulo('configuracion', this)">
-                <span class="icon">C</span> Configuracion
+            <div class="sidebar-item" data-module="configuracion" onclick="mostrarModulo('configuracion', this)">
+                <span class="icon">🔧</span> Configuración
             </div>
         </div>
 
         <div class="sidebar-footer">
-            <button class="sidebar-logout" onclick="handleLogout()">Cerrar Sesion</button>
+            <button class="sidebar-logout" onclick="handleLogout()">Cerrar Sesión</button>
         </div>
     </nav>
 
     <main class="main-content">
         <div id="modDashboard" class="module-content active">
             <div class="content-header">
-                <h1>Dashboard</h1>
-                <p>Resumen general del sistema</p>
+                <div>
+                    <h1>Dashboard</h1>
+                    <p>Resumen general del sistema</p>
+                </div>
+                <div class="content-header-right">
+                    <span class="realtime-indicator">Actualización en vivo</span>
+                </div>
             </div>
-            <div class="cards-grid">
+            <div class="cards-grid" id="dashboardCards">
                 <div class="card">
-                    <div class="card-icon">C</div>
-                    <div class="card-value" id="cardClientes">0</div>
+                    <div class="card-icon">👥</div>
+                    <div class="card-value" id="cardClientes">-</div>
                     <div class="card-label">Clientes</div>
+                    <div class="card-change up" id="cardClientesChange"></div>
                 </div>
                 <div class="card">
-                    <div class="card-icon">P</div>
-                    <div class="card-value" id="cardProductos">0</div>
+                    <div class="card-icon">📦</div>
+                    <div class="card-value" id="cardProductos">-</div>
                     <div class="card-label">Productos</div>
                 </div>
                 <div class="card">
-                    <div class="card-icon">E</div>
-                    <div class="card-value" id="cardEmpleados">0</div>
+                    <div class="card-icon">👔</div>
+                    <div class="card-value" id="cardEmpleados">-</div>
                     <div class="card-label">Empleados</div>
                 </div>
                 <div class="card">
-                    <div class="card-icon">$</div>
-                    <div class="card-value" id="cardIngresos">$0</div>
-                    <div class="card-label">Ingresos</div>
+                    <div class="card-icon">💰</div>
+                    <div class="card-value" id="cardIngresos">-</div>
+                    <div class="card-label">Ingresos del Mes</div>
+                    <div class="card-change up" id="cardIngresosChange"></div>
                 </div>
+                <div class="card">
+                    <div class="card-icon">📄</div>
+                    <div class="card-value" id="cardFacturas">-</div>
+                    <div class="card-label">Facturas Pendientes</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">🎯</div>
+                    <div class="card-value" id="cardLeads">-</div>
+                    <div class="card-label">Leads Activos</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">📅</div>
+                    <div class="card-value" id="cardAsistencia">-</div>
+                    <div class="card-label">Asistencia Hoy</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">⚠️</div>
+                    <div class="card-value" id="cardLowStock">-</div>
+                    <div class="card-label">Stock Bajo</div>
+                </div>
+            </div>
+            <div class="data-table">
+                <div class="data-table-header">
+                    <h3>Top Productos del Mes</h3>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th>Vendidos</th>
+                            <th>Ingresos</th>
+                        </tr>
+                    </thead>
+                    <tbody id="topProductosTable">
+                        <tr class="loading-row"><td colspan="3">Cargando...</td></tr>
+                    </tbody>
+                </table>
             </div>
         </div>
 
         <div id="modEmpleados" class="module-content">
             <div class="content-header">
-                <h1>Empleados</h1>
-                <p>Gestion de empleados</p>
-            </div>
-            <div class="form-card">
-                <h3>Nuevo Empleado</h3>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Nombre</label>
-                        <input type="text" id="empNombre" placeholder="Nombre completo">
-                    </div>
-                    <div class="form-group">
-                        <label>Puesto</label>
-                        <input type="text" id="empPuesto" placeholder="Puesto">
-                    </div>
+                <div>
+                    <h1>Empleados</h1>
+                    <p>Gestión de empleados</p>
                 </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Departamento</label>
-                        <select id="empDepto">
-                            <option value="Produccion">Produccion</option>
-                            <option value="Post-produccion">Post-produccion</option>
-                            <option value="Administracion">Administracion</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Salario</label>
-                        <input type="number" id="empSalario" placeholder="10000">
-                    </div>
+                <div class="content-header-right">
+                    <input type="text" class="data-table-search" placeholder="Buscar empleado..." id="empSearch" oninput="buscarEmpleados()">
+                    <button class="btn btn-success" onclick="abrirModalEmpleado()">+ Nuevo Empleado</button>
                 </div>
-                <button class="btn btn-success" onclick="crearEmpleado()">Registrar</button>
             </div>
             <div class="data-table">
                 <table>
                     <thead>
                         <tr>
-                            <th>ID</th><th>Nombre</th><th>Puesto</th><th>Depto</th><th>Salario</th><th>Estado</th>
+                            <th>ID</th><th>Nombre</th><th>Puesto</th><th>Departamento</th><th>Salario</th><th>Estado</th><th>Acciones</th>
                         </tr>
                     </thead>
-                    <tbody id="empleadosTable"></tbody>
+                    <tbody id="empleadosTable">
+                        <tr class="loading-row"><td colspan="7">Cargando...</td></tr>
+                    </tbody>
                 </table>
             </div>
         </div>
 
         <div id="modProveedores" class="module-content">
             <div class="content-header">
-                <h1>Proveedores</h1>
-                <p>Gestion de proveedores</p>
-            </div>
-            <div class="form-card">
-                <h3>Nuevo Proveedor</h3>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Nombre</label>
-                        <input type="text" id="provNombre" placeholder="Nombre empresa">
-                    </div>
-                    <div class="form-group">
-                        <label>Contacto</label>
-                        <input type="text" id="provContacto" placeholder="Nombre contacto">
-                    </div>
+                <div>
+                    <h1>Proveedores</h1>
+                    <p>Gestión de proveedores</p>
                 </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Telefono</label>
-                        <input type="text" id="provTelefono" placeholder="8991234567">
-                    </div>
-                    <div class="form-group">
-                        <label>Tipo Insumo</label>
-                        <select id="provTipo">
-                            <option value="papel">Papel Fotografico</option>
-                            <option value="equipo">Equipo</option>
-                            <option value="tintas">Tintas</option>
-                        </select>
-                    </div>
+                <div class="content-header-right">
+                    <input type="text" class="data-table-search" placeholder="Buscar proveedor..." id="provSearch" oninput="buscarProveedores()">
+                    <button class="btn btn-success" onclick="abrirModalProveedor()">+ Nuevo Proveedor</button>
                 </div>
-                <button class="btn btn-success" onclick="crearProveedor()">Registrar</button>
             </div>
             <div class="data-table">
                 <table>
                     <thead>
                         <tr>
-                            <th>ID</th><th>Empresa</th><th>Contacto</th><th>Telefono</th><th>Tipo</th><th>Estado</th>
+                            <th>ID</th><th>Empresa</th><th>Contacto</th><th>Teléfono</th><th>Categoría</th><th>Estado</th><th>Acciones</th>
                         </tr>
                     </thead>
-                    <tbody id="proveedoresTable"></tbody>
+                    <tbody id="proveedoresTable">
+                        <tr class="loading-row"><td colspan="7">Cargando...</td></tr>
+                    </tbody>
                 </table>
             </div>
         </div>
 
         <div id="modProductos" class="module-content">
             <div class="content-header">
-                <h1>Productos</h1>
-                <p>Gestion de productos y servicios</p>
-            </div>
-            <div class="form-card">
-                <h3>Nuevo Producto</h3>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Nombre</label>
-                        <input type="text" id="prodNombre" placeholder="Nombre">
-                    </div>
-                    <div class="form-group">
-                        <label>Categoria</label>
-                        <select id="prodCategoria">
-                            <option value="estudio">Sesion Estudio</option>
-                            <option value="boda">Boda</option>
-                            <option value="impresion">Impresion</option>
-                        </select>
-                    </div>
+                <div>
+                    <h1>Productos</h1>
+                    <p>Gestión de productos y servicios</p>
                 </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Precio</label>
-                        <input type="number" id="prodPrecio" placeholder="0">
-                    </div>
-                    <div class="form-group">
-                        <label>Estrategia</label>
-                        <select id="prodEstrategia">
-                            <option value="pull">PULL - Bajo demanda</option>
-                            <option value="push">PUSH - Reabastecimiento</option>
-                        </select>
-                    </div>
+                <div class="content-header-right">
+                    <input type="text" class="data-table-search" placeholder="Buscar producto..." id="prodSearch" oninput="buscarProductos()">
+                    <button class="btn btn-success" onclick="abrirModalProducto()">+ Nuevo Producto</button>
                 </div>
-                <button class="btn btn-success" onclick="crearProducto()">Crear</button>
             </div>
             <div class="data-table">
                 <table>
                     <thead>
                         <tr>
-                            <th>ID</th><th>Nombre</th><th>Categoria</th><th>Precio</th><th>Estrategia</th>
+                            <th>ID</th><th>Nombre</th><th>Categoría</th><th>Precio</th><th>Stock</th><th>Estrategia</th><th>Acciones</th>
                         </tr>
                     </thead>
-                    <tbody id="productosTable"></tbody>
+                    <tbody id="productosTable">
+                        <tr class="loading-row"><td colspan="7">Cargando...</td></tr>
+                    </tbody>
                 </table>
             </div>
         </div>
 
         <div id="modClientes" class="module-content">
-            <div class="content-header"><h1>Clientes</h1><p>Gestion de clientes</p></div>
+            <div class="content-header">
+                <div>
+                    <h1>Clientes</h1>
+                    <p>Gestión de clientes</p>
+                </div>
+                <div class="content-header-right">
+                    <input type="text" class="data-table-search" placeholder="Buscar cliente..." id="cliSearch" oninput="buscarClientes()">
+                    <button class="btn btn-success" onclick="abrirModalCliente()">+ Nuevo Cliente</button>
+                </div>
+            </div>
             <div class="data-table">
                 <table>
-                    <thead><tr><th>ID</th><th>Nombre</th><th>Email</th><th>Telefono</th><th>Estado</th></tr></thead>
-                    <tbody id="clientesTable"><tr><td colspan="5" style="text-align:center;color:#666;">Sin datos</td></tr></tbody>
+                    <thead><tr><th>ID</th><th>Nombre</th><th>Email</th><th>Teléfono</th><th>Segmento</th><th>Estado</th><th>Acciones</th></tr></thead>
+                    <tbody id="clientesTable"><tr class="loading-row"><td colspan="7">Cargando...</td></tr></tbody>
                 </table>
             </div>
         </div>
 
         <div id="modLeads" class="module-content">
             <div class="content-header"><h1>Leads</h1><p>Prospectos de venta</p></div>
-            <div class="data-table"><p style="padding:20px;text-align:center;color:#666;">Sin datos</p></div>
+            <div class="data-table">
+                <table>
+                    <thead><tr><th>ID</th><th>Cliente</th><th>Etapa</th><th>Puntuación</th><th>Presupuesto</th><th>Fuente</th><th>Acciones</th></tr></thead>
+                    <tbody id="leadsTable"><tr class="loading-row"><td colspan="7">Cargando...</td></tr></tbody>
+                </table>
+            </div>
         </div>
 
         <div id="modVentas" class="module-content">
-            <div class="content-header"><h1>Ventas</h1><p>Modulo de ventas</p></div>
-            <div class="data-table"><p style="padding:20px;text-align:center;color:#666;">Sin datos</p></div>
+            <div class="content-header"><h1>Ventas</h1><p>Cotizaciones y facturas</p></div>
+            <div class="cards-grid">
+                <div class="card"><div class="card-icon">📋</div><div class="card-value" id="ventasCotizaciones">-</div><div class="card-label">Cotizaciones</div></div>
+                <div class="card"><div class="card-icon">💵</div><div class="card-value" id="ventasFacturas">-</div><div class="card-label">Facturas</div></div>
+            </div>
+            <div class="data-table">
+                <table>
+                    <thead><tr><th>Folio</th><th>Cliente</th><th>Total</th><th>Estado</th><th>Fecha</th><th>Acciones</th></tr></thead>
+                    <tbody id="ventasTable"><tr class="loading-row"><td colspan="6">Cargando...</td></tr></tbody>
+                </table>
+            </div>
         </div>
 
         <div id="modInventario" class="module-content">
             <div class="content-header"><h1>Inventario</h1><p>Control de stock</p></div>
-            <div class="data-table"><p style="padding:20px;text-align:center;color:#666;">Sin datos</p></div>
+            <div class="data-table"><p style="padding:20px;text-align:center;color:#666;">Cargando datos...</p></div>
         </div>
 
         <div id="modPedidos" class="module-content">
-            <div class="content-header"><h1>Pedidos</h1><p>Gestion de pedidos</p></div>
-            <div class="data-table"><p style="padding:20px;text-align:center;color:#666;">Sin datos</p></div>
+            <div class="content-header"><h1>Pedidos de Compra</h1><p>Órdenes a proveedores</p></div>
+            <div class="data-table">
+                <table>
+                    <thead><tr><th>Folio</th><th>Proveedor</th><th>Total</th><th>Estado</th><th>Fecha Esperada</th><th>Acciones</th></tr></thead>
+                    <tbody id="pedidosTable"><tr class="loading-row"><td colspan="6">Cargando...</td></tr></tbody>
+                </table>
+            </div>
         </div>
 
         <div id="modNomina" class="module-content">
-            <div class="content-header"><h1>Nomina</h1><p>Resumen de nomina</p></div>
+            <div class="content-header"><h1>Nómina</h1><p>Resumen de nómina</p></div>
             <div class="cards-grid">
-                <div class="card">
-                    <div class="card-icon">E</div>
-                    <div class="card-value" id="nominaCount">0</div>
-                    <div class="card-label">Empleados</div>
-                </div>
-                <div class="card">
-                    <div class="card-icon">$</div>
-                    <div class="card-value" id="nominaTotal">$0</div>
-                    <div class="card-label">Total Nomina</div>
-                </div>
+                <div class="card"><div class="card-icon">👔</div><div class="card-value" id="nominaCount">-</div><div class="card-label">Empleados Activos</div></div>
+                <div class="card"><div class="card-icon">💵</div><div class="card-value" id="nominaTotal">-</div><div class="card-label">Total Nómina</div></div>
             </div>
             <div class="data-table">
                 <table>
-                    <thead><tr><th>Empleado</th><th>Puesto</th><th>Salario</th></tr></thead>
-                    <tbody id="nominaTable"><tr><td colspan="3" style="text-align:center;color:#666;">Sin datos</td></tr></tbody>
+                    <thead><tr><th>Empleado</th><th>Puesto</th><th>Departamento</th><th>Salario</th></tr></thead>
+                    <tbody id="nominaTable"><tr class="loading-row"><td colspan="4">Cargando...</td></tr></tbody>
                 </table>
             </div>
         </div>
 
         <div id="modAsistencia" class="module-content">
             <div class="content-header"><h1>Asistencia</h1><p>Control de asistencia</p></div>
-            <div class="data-table"><p style="padding:20px;text-align:center;color:#666;">Sin datos</p></div>
+            <div class="data-table">
+                <table>
+                    <thead><tr><th>Empleado</th><th>Fecha</th><th>Entrada</th><th>Salida</th><th>Horas</th><th>Estado</th></tr></thead>
+                    <tbody id="asistenciaTable"><tr class="loading-row"><td colspan="6">Cargando...</td></tr></tbody>
+                </table>
+            </div>
         </div>
 
         <div id="modFacturas" class="module-content">
-            <div class="content-header"><h1>Facturas</h1><p>Gestion de facturas</p></div>
-            <div class="data-table"><p style="padding:20px;text-align:center;color:#666;">Sin datos</p></div>
+            <div class="content-header"><h1>Facturas</h1><p>Gestión de facturas</p></div>
+            <div class="data-table">
+                <table>
+                    <thead><tr><th>Folio</th><th>Cliente</th><th>Total</th><th>Saldo</th><th>Estado</th><th>Fecha</th><th>Acciones</th></tr></thead>
+                    <tbody id="facturasTable"><tr class="loading-row"><td colspan="7">Cargando...</td></tr></tbody>
+                </table>
+            </div>
         </div>
 
         <div id="modGastos" class="module-content">
             <div class="content-header"><h1>Gastos</h1><p>Control de gastos</p></div>
-            <div class="data-table"><p style="padding:20px;text-align:center;color:#666;">Sin datos</p></div>
+            <div class="data-table"><p style="padding:20px;text-align:center;color:#666;">Cargando...</p></div>
         </div>
 
         <div id="modUsuarios" class="module-content">
-            <div class="content-header"><h1>Usuarios</h1><p>Gestion de usuarios</p></div>
-            <div class="data-table"><p style="padding:20px;text-align:center;color:#666;">Sin datos</p></div>
+            <div class="content-header">
+                <div><h1>Usuarios</h1><p>Gestión de usuarios del sistema</p></div>
+                <div class="content-header-right">
+                    <button class="btn btn-success" onclick="abrirModalUsuario()">+ Nuevo Usuario</button>
+                </div>
+            </div>
+            <div class="data-table">
+                <table>
+                    <thead><tr><th>ID</th><th>Nombre</th><th>Email</th><th>Rol</th><th>Estado</th><th>Acciones</th></tr></thead>
+                    <tbody id="usuariosTable"><tr class="loading-row"><td colspan="6">Cargando...</td></tr></tbody>
+                </table>
+            </div>
         </div>
 
         <div id="modConfiguracion" class="module-content">
-            <div class="content-header"><h1>Configuracion</h1><p>Configuracion del sistema</p></div>
-            <div class="form-card"><p style="text-align:center;color:#666;">Modulo en desarrollo</p></div>
+            <div class="content-header"><h1>Configuración</h1><p>Configuración del sistema</p></div>
+            <div class="form-card"><p style="text-align:center;color:#666;">Módulo en desarrollo</p></div>
         </div>
     </main>
 </div>
@@ -462,58 +501,69 @@
 <div id="welcomeScreen" class="welcome-screen" style="display:none;">
     <div class="welcome-box">
         <h2>FotoTec</h2>
-        <p>Sistema de gestion integral para tu estudio fotografico</p>
-        <button class="welcome-btn" onclick="abrirLogin()">Iniciar Sesion</button>
+        <p>Sistema de gestión integral para tu estudio fotográfico</p>
+        <button class="welcome-btn" onclick="abrirLogin()">Iniciar Sesión</button>
     </div>
 </div>
 
-<script>
-var demoUsers = [
-    { username: 'admin', password: 'admin123', name: 'Administrador', role: 'administrador' },
-    { username: 'rh', password: 'rh123', name: 'Recursos Humanos', role: 'rh' },
-    { username: 'compras', password: 'compras123', name: 'Compras', role: 'compras' },
-    { username: 'proveedores', password: 'prov123', name: 'Proveedores', role: 'proveedores' }
-];
+<div id="modalOverlay" class="modal-overlay">
+    <div class="modal-box" id="modalContent"></div>
+</div>
 
+<div id="toast" class="toast"></div>
+
+<script>
 var usuarioActual = null;
 
-var datosLocales = {
-    empleados: [],
-    proveedores: [],
-    productos: []
-};
+function showToast(message, type = 'info') {
+    const toast = document.getElementById('toast');
+    toast.textContent = message;
+    toast.className = 'toast ' + type + ' show';
+    setTimeout(() => toast.classList.remove('show'), 3000);
+}
 
 function abrirLogin() {
     document.getElementById('loginModal').style.display = 'flex';
-    document.getElementById('loginUser').focus();
+    document.getElementById('loginEmail').focus();
 }
 
 function cerrarLogin() {
     document.getElementById('loginModal').style.display = 'none';
     document.getElementById('loginError').textContent = '';
+    document.getElementById('loginLoading').style.display = 'none';
+    document.getElementById('btnEntrar').disabled = false;
 }
 
-function handleLogin() {
-    var user = document.getElementById('loginUser').value;
-    var pass = document.getElementById('loginPass').value;
-    var usuario = null;
-    for (var i = 0; i < demoUsers.length; i++) {
-        if (demoUsers[i].username === user && demoUsers[i].password === pass) {
-            usuario = demoUsers[i];
-            break;
-        }
+async function handleLogin() {
+    const email = document.getElementById('loginEmail').value.trim();
+    const pass = document.getElementById('loginPass').value;
+
+    if (!email || !pass) {
+        document.getElementById('loginError').textContent = 'Completa todos los campos';
+        return;
     }
-    if (usuario) {
-        usuarioActual = usuario;
+
+    document.getElementById('btnEntrar').disabled = true;
+    document.getElementById('loginLoading').style.display = 'block';
+    document.getElementById('loginError').textContent = '';
+
+    try {
+        const { user } = await API.login(email, pass);
+        usuarioActual = user;
         cerrarLogin();
         inicializarSistema();
-    } else {
-        document.getElementById('loginError').textContent = 'Usuario o contrasena incorrectos';
+        showToast('Bienvenido, ' + user.name, 'success');
+    } catch (e) {
+        document.getElementById('loginError').textContent = e.message || 'Error de conexión';
+        document.getElementById('btnEntrar').disabled = false;
+        document.getElementById('loginLoading').style.display = 'none';
     }
 }
 
 function handleLogout() {
+    API.logout();
     usuarioActual = null;
+    Realtime.stopAll();
     document.getElementById('welcomeScreen').style.display = 'flex';
     document.getElementById('mainLayout').style.display = 'none';
 }
@@ -521,14 +571,21 @@ function handleLogout() {
 function inicializarSistema() {
     document.getElementById('welcomeScreen').style.display = 'none';
     document.getElementById('mainLayout').style.display = 'flex';
-    document.getElementById('sidebarUser').innerHTML = '<div class="sidebar-user-name">' + usuarioActual.name + '</div><span class="sidebar-user-role" style="background:#667eea;padding:3px 8px;border-radius:10px;font-size:0.7rem;">' + usuarioActual.role + '</span>';
+
+    const rol = usuarioActual.userType;
+    document.getElementById('sidebarUser').innerHTML = `
+        <div class="sidebar-user-name">${usuarioActual.name}</div>
+        <span class="sidebar-user-role" style="background:#667eea;padding:3px 8px;border-radius:10px;font-size:0.7rem;">${permissionSystem.obtenerNombreRol(rol)}</span>
+    `;
+
     aplicarRestriccionesRol();
-    cargarDatos();
     mostrarModulo('dashboard');
+
+    Realtime.start('dashboard', cargarDashboard, 15000);
 }
 
 function aplicarRestriccionesRol() {
-    var rol = usuarioActual.role;
+    const rol = usuarioActual?.userType;
     document.getElementById('sectionCRM').style.display = 'none';
     document.getElementById('sectionSCM').style.display = 'none';
     document.getElementById('sectionRH').style.display = 'none';
@@ -550,132 +607,660 @@ function aplicarRestriccionesRol() {
     }
 }
 
+var moduloActual = 'dashboard';
+
 function mostrarModulo(modulo, btn) {
+    moduloActual = modulo;
     var modulos = document.querySelectorAll('.module-content');
-    for (var i = 0; i < modulos.length; i++) {
-        modulos[i].classList.remove('active');
-    }
+    modulos.forEach(m => m.classList.remove('active'));
     var mod = document.getElementById('mod' + modulo.charAt(0).toUpperCase() + modulo.slice(1));
     if (mod) mod.classList.add('active');
 
-    var items = document.querySelectorAll('.sidebar-item');
-    for (var i = 0; i < items.length; i++) {
-        items[i].classList.remove('active');
-    }
+    document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
     if (btn) btn.classList.add('active');
-}
 
-function cargarDatos() {
-    var empGuardados = localStorage.getItem('fototec_empleados');
-    if (empGuardados) datosLocales.empleados = JSON.parse(empGuardados);
-    var provGuardados = localStorage.getItem('fototec_proveedores');
-    if (provGuardados) datosLocales.proveedores = JSON.parse(provGuardados);
-    var prodGuardados = localStorage.getItem('fototec_productos');
-    if (prodGuardados) datosLocales.productos = JSON.parse(prodGuardados);
-
-    document.getElementById('badgeEmpleados').textContent = datosLocales.empleados.length;
-    document.getElementById('badgeProveedores').textContent = datosLocales.proveedores.length;
-    document.getElementById('badgeProductos').textContent = datosLocales.productos.length;
-    document.getElementById('cardEmpleados').textContent = datosLocales.empleados.length;
-    document.getElementById('cardProveedores').textContent = datosLocales.proveedores.length;
-    document.getElementById('cardProductos').textContent = datosLocales.productos.length;
-
-    var nominaTotal = 0;
-    for (var i = 0; i < datosLocales.empleados.length; i++) {
-        nominaTotal += parseFloat(datosLocales.empleados[i].salario) || 0;
+    switch(modulo) {
+        case 'dashboard': cargarDashboard(); break;
+        case 'empleados': cargarEmpleados(); break;
+        case 'proveedores': cargarProveedores(); break;
+        case 'productos': cargarProductos(); break;
+        case 'clientes': cargarClientes(); break;
+        case 'leads': cargarLeads(); break;
+        case 'ventas': cargarVentas(); break;
+        case 'facturas': cargarFacturas(); break;
+        case 'pedidos': cargarPedidos(); break;
+        case 'nomina': cargarNomina(); break;
+        case 'asistencia': cargarAsistencia(); break;
+        case 'usuarios': cargarUsuarios(); break;
     }
-    document.getElementById('nominaTotal').textContent = '$' + nominaTotal.toFixed(0);
-    document.getElementById('nominaCount').textContent = datosLocales.empleados.length;
-
-    renderizarTablas();
 }
 
-function guardarEmpleados() {
-    localStorage.setItem('fototec_empleados', JSON.stringify(datosLocales.empleados));
-}
-function guardarProveedores() {
-    localStorage.setItem('fototec_proveedores', JSON.stringify(datosLocales.proveedores));
-}
-function guardarProductos() {
-    localStorage.setItem('fototec_productos', JSON.stringify(datosLocales.productos));
-}
+// ============ DASHBOARD ============
+async function cargarDashboard() {
+    try {
+        const data = await API.getDashboard();
+        const d = data.erpDashboard;
 
-function renderizarTablas() {
-    var htmlEmp = '';
-    for (var i = 0; i < datosLocales.empleados.length; i++) {
-        var e = datosLocales.empleados[i];
-        htmlEmp += '<tr><td>' + e.id + '</td><td>' + e.nombre + '</td><td>' + e.puesto + '</td><td>' + e.departamento + '</td><td>$' + parseFloat(e.salario).toFixed(2) + '</td><td><span class="badge-success">Activo</span></td></tr>';
+        document.getElementById('cardClientes').textContent = d.clientsTotal;
+        document.getElementById('cardProductos').textContent = d.productsTotal;
+        document.getElementById('cardEmpleados').textContent = d.employeesTotal;
+        document.getElementById('cardIngresos').textContent = '$' + (d.revenueThisMonth || 0).toLocaleString('es-MX');
+        document.getElementById('cardFacturas').textContent = '$' + (d.invoicesPending || 0).toLocaleString('es-MX');
+        document.getElementById('cardLeads').textContent = d.leadsTotal;
+        document.getElementById('cardLowStock').textContent = d.productsLowStock || 0;
+
+        const asistencia = d.attendanceToday || {};
+        document.getElementById('cardAsistencia').textContent = (asistencia.presentes || 0) + '/' + (asistencia.total || 0);
+
+        if (d.revenueLastMonth > 0) {
+            const cambio = ((d.revenueThisMonth - d.revenueLastMonth) / d.revenueLastMonth * 100).toFixed(1);
+            const el = document.getElementById('cardIngresosChange');
+            el.textContent = (cambio >= 0 ? '+' : '') + cambio + '% vs mes anterior';
+            el.className = 'card-change ' + (cambio >= 0 ? 'up' : 'down');
+        }
+
+        document.getElementById('badgeClientes').textContent = d.clientsTotal;
+        document.getElementById('badgeProductos').textContent = d.productsTotal;
+        document.getElementById('badgeEmpleados').textContent = d.employeesTotal;
+        document.getElementById('badgeProveedores').textContent = '-';
+
+        let htmlTop = '';
+        (d.topProducts || []).forEach(p => {
+            htmlTop += `<tr>
+                <td>${p.product?.name || 'N/A'}</td>
+                <td>${p.totalSold}</td>
+                <td>$${p.revenue.toLocaleString('es-MX')}</td>
+            </tr>`;
+        });
+        document.getElementById('topProductosTable').innerHTML = htmlTop || '<tr><td colspan="3" class="empty-state">Sin datos</td></tr>';
+
+    } catch (e) {
+        console.error('Dashboard error:', e);
+        showToast('Error al cargar dashboard', 'error');
     }
-    if (htmlEmp === '') htmlEmp = '<tr><td colspan="6" style="text-align:center;color:#666;">Sin empleados</td></tr>';
-    document.getElementById('empleadosTable').innerHTML = htmlEmp;
+}
 
-    var htmlProv = '';
-    for (var i = 0; i < datosLocales.proveedores.length; i++) {
-        var p = datosLocales.proveedores[i];
-        htmlProv += '<tr><td>' + p.id + '</td><td>' + p.nombre + '</td><td>' + p.contacto + '</td><td>' + p.telefono + '</td><td>' + p.tipo + '</td><td><span class="badge-success">Activo</span></td></tr>';
+// ============ EMPLEADOS ============
+async function cargarEmpleados(search = '') {
+    try {
+        const data = await API.getEmpleados(1, 50, search);
+        const list = data.employees.data;
+
+        let html = '';
+        list.forEach(e => {
+            html += `<tr>
+                <td>${e.employeeNumber}</td>
+                <td>${e.name}</td>
+                <td>${e.position?.name || '-'}</td>
+                <td>${e.department?.name || '-'}</td>
+                <td>$${(e.salary || 0).toLocaleString('es-MX')}</td>
+                <td><span class="badge ${e.active ? 'badge-success' : 'badge-danger'}">${e.active ? 'Activo' : 'Inactivo'}</span></td>
+                <td>
+                    <button class="btn btn-sm btn-primary" onclick="abrirModalEmpleado(${e.id})">Editar</button>
+                </td>
+            </tr>`;
+        });
+        document.getElementById('empleadosTable').innerHTML = html || '<tr><td colspan="7" class="empty-state">Sin empleados</td></tr>';
+        document.getElementById('badgeEmpleados').textContent = data.employees.total;
+    } catch (e) {
+        document.getElementById('empleadosTable').innerHTML = '<tr><td colspan="7" class="empty-state">Error: ' + e.message + '</td></tr>';
     }
-    if (htmlProv === '') htmlProv = '<tr><td colspan="6" style="text-align:center;color:#666;">Sin proveedores</td></tr>';
-    document.getElementById('proveedoresTable').innerHTML = htmlProv;
+}
 
-    var htmlProd = '';
-    for (var i = 0; i < datosLocales.productos.length; i++) {
-        var p = datosLocales.productos[i];
-        var badge = p.estrategia === 'push' ? '<span class="badge-warning">PUSH</span>' : 'PULL';
-        htmlProd += '<tr><td>' + p.id + '</td><td>' + p.nombre + '</td><td>' + p.categoria + '</td><td>$' + parseFloat(p.precio).toFixed(2) + '</td><td>' + badge + '</td></tr>';
+function buscarEmpleados() {
+    cargarEmpleados(document.getElementById('empSearch').value);
+}
+
+async function guardarEmpleado() {
+    const id = document.getElementById('empId')?.value;
+    const input = {
+        name: document.getElementById('empNombre').value,
+        email: document.getElementById('empEmail').value,
+        phone: document.getElementById('empTelefono').value,
+        positionId: document.getElementById('empPuesto').value || undefined,
+        departmentId: document.getElementById('empDepto').value || undefined,
+        salary: parseFloat(document.getElementById('empSalario').value) || undefined,
+        hireDate: document.getElementById('empFecha').value || undefined
+    };
+
+    try {
+        if (id) {
+            await API.updateEmpleado(id, input);
+            showToast('Empleado actualizado', 'success');
+        } else {
+            await API.createEmpleado(input);
+            showToast('Empleado creado', 'success');
+        }
+        cerrarModal();
+        cargarEmpleados();
+        cargarDashboard();
+    } catch (e) {
+        showToast('Error: ' + e.message, 'error');
     }
-    if (htmlProd === '') htmlProd = '<tr><td colspan="5" style="text-align:center;color:#666;">Sin productos</td></tr>';
-    document.getElementById('productosTable').innerHTML = htmlProd;
+}
 
-    var htmlNomina = '';
-    for (var i = 0; i < datosLocales.empleados.length; i++) {
-        var e = datosLocales.empleados[i];
-        htmlNomina += '<tr><td>' + e.nombre + '</td><td>' + e.puesto + '</td><td>$' + parseFloat(e.salario).toFixed(2) + '</td></tr>';
+function abrirModalEmpleado(id = null) {
+    const isEdit = !!id;
+    document.getElementById('modalContent').innerHTML = `
+        <div class="modal-header">
+            <h3>${isEdit ? 'Editar' : 'Nuevo'} Empleado</h3>
+            <button class="modal-close" onclick="cerrarModal()">&times;</button>
+        </div>
+        <input type="hidden" id="empId" value="${id || ''}">
+        <div class="form-group"><label>Nombre *</label><input type="text" id="empNombre" required></div>
+        <div class="form-group"><label>Email</label><input type="email" id="empEmail"></div>
+        <div class="form-group"><label>Teléfono</label><input type="tel" id="empTelefono"></div>
+        <div class="form-row">
+            <div class="form-group"><label>Puesto</label><input type="text" id="empPuesto"></div>
+            <div class="form-group"><label>Departamento</label><input type="text" id="empDepto"></div>
+        </div>
+        <div class="form-row">
+            <div class="form-group"><label>Salario</label><input type="number" id="empSalario" step="0.01"></div>
+            <div class="form-group"><label>Fecha Ingreso</label><input type="date" id="empFecha"></div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-primary" onclick="guardarEmpleado()">Guardar</button>
+            <button class="btn" onclick="cerrarModal()">Cancelar</button>
+        </div>
+    `;
+    document.getElementById('modalOverlay').classList.add('active');
+
+    if (isEdit) {
+        API.getEmpleados(1, 1, '', null, true).then(data => {
+            const emp = data.employees.data.find(e => e.id == id);
+            if (emp) {
+                document.getElementById('empNombre').value = emp.name;
+                document.getElementById('empEmail').value = emp.email || '';
+                document.getElementById('empTelefono').value = emp.phone || '';
+                document.getElementById('empSalario').value = emp.salary || '';
+            }
+        });
     }
-    if (htmlNomina === '') htmlNomina = '<tr><td colspan="3" style="text-align:center;color:#666;">Sin datos</td></tr>';
-    document.getElementById('nominaTable').innerHTML = htmlNomina;
 }
 
-function crearEmpleado() {
-    var nombre = document.getElementById('empNombre').value;
-    var puesto = document.getElementById('empPuesto').value;
-    var depto = document.getElementById('empDepto').value;
-    var salario = document.getElementById('empSalario').value;
-    if (!nombre || !puesto || !salario) { alert('Completa los campos'); return; }
-    datosLocales.empleados.push({ id: Date.now(), nombre: nombre, puesto: puesto, departamento: depto, salario: parseFloat(salario) });
-    guardarEmpleados();
-    cargarDatos();
-    document.getElementById('empNombre').value = '';
-    document.getElementById('empPuesto').value = '';
-    document.getElementById('empSalario').value = '';
+// ============ PROVEEDORES ============
+async function cargarProveedores(search = '') {
+    try {
+        const data = await API.getProveedores(search);
+        const list = data.suppliers;
+
+        let html = '';
+        list.forEach(p => {
+            html += `<tr>
+                <td>${p.id}</td>
+                <td>${p.name}</td>
+                <td>${p.contactName || '-'}</td>
+                <td>${p.phone || '-'}</td>
+                <td>${p.category || '-'}</td>
+                <td><span class="badge ${p.active ? 'badge-success' : 'badge-danger'}">${p.active ? 'Activo' : 'Inactivo'}</span></td>
+                <td>
+                    <button class="btn btn-sm btn-primary" onclick="abrirModalProveedor(${p.id})">Editar</button>
+                </td>
+            </tr>`;
+        });
+        document.getElementById('proveedoresTable').innerHTML = html || '<tr><td colspan="7" class="empty-state">Sin proveedores</td></tr>';
+        document.getElementById('badgeProveedores').textContent = list.length;
+    } catch (e) {
+        document.getElementById('proveedoresTable').innerHTML = '<tr><td colspan="7" class="empty-state">Error: ' + e.message + '</td></tr>';
+    }
 }
 
-function crearProveedor() {
-    var nombre = document.getElementById('provNombre').value;
-    var contacto = document.getElementById('provContacto').value;
-    var telefono = document.getElementById('provTelefono').value;
-    var tipo = document.getElementById('provTipo').value;
-    if (!nombre) { alert('El nombre es obligatorio'); return; }
-    datosLocales.proveedores.push({ id: Date.now(), nombre: nombre, contacto: contacto, telefono: telefono, tipo: tipo });
-    guardarProveedores();
-    cargarDatos();
-    document.getElementById('provNombre').value = '';
-    document.getElementById('provContacto').value = '';
-    document.getElementById('provTelefono').value = '';
+function buscarProveedores() { cargarProveedores(document.getElementById('provSearch').value); }
+
+async function guardarProveedor() {
+    const id = document.getElementById('provId')?.value;
+    const input = {
+        name: document.getElementById('provNombre').value,
+        contactName: document.getElementById('provContacto').value,
+        email: document.getElementById('provEmail').value,
+        phone: document.getElementById('provTelefono').value,
+        category: document.getElementById('provTipo').value
+    };
+
+    try {
+        if (id) {
+            await API.updateProveedor(id, input);
+            showToast('Proveedor actualizado', 'success');
+        } else {
+            await API.createProveedor(input);
+            showToast('Proveedor creado', 'success');
+        }
+        cerrarModal();
+        cargarProveedores();
+    } catch (e) {
+        showToast('Error: ' + e.message, 'error');
+    }
 }
 
-function crearProducto() {
-    var nombre = document.getElementById('prodNombre').value;
-    var categoria = document.getElementById('prodCategoria').value;
-    var precio = document.getElementById('prodPrecio').value;
-    var estrategia = document.getElementById('prodEstrategia').value;
-    if (!nombre || !precio) { alert('Completa los campos'); return; }
-    datosLocales.productos.push({ id: Date.now(), nombre: nombre, categoria: categoria, precio: parseFloat(precio), estrategia: estrategia });
-    guardarProductos();
-    cargarDatos();
-    document.getElementById('prodNombre').value = '';
-    document.getElementById('prodPrecio').value = '';
+function abrirModalProveedor(id = null) {
+    const isEdit = !!id;
+    document.getElementById('modalContent').innerHTML = `
+        <div class="modal-header">
+            <h3>${isEdit ? 'Editar' : 'Nuevo'} Proveedor</h3>
+            <button class="modal-close" onclick="cerrarModal()">&times;</button>
+        </div>
+        <input type="hidden" id="provId" value="${id || ''}">
+        <div class="form-group"><label>Empresa *</label><input type="text" id="provNombre" required></div>
+        <div class="form-group"><label>Contacto</label><input type="text" id="provContacto"></div>
+        <div class="form-row">
+            <div class="form-group"><label>Email</label><input type="email" id="provEmail"></div>
+            <div class="form-group"><label>Teléfono</label><input type="tel" id="provTelefono"></div>
+        </div>
+        <div class="form-group">
+            <label>Categoría</label>
+            <select id="provTipo">
+                <option value="papel">Papel Fotográfico</option>
+                <option value="equipo">Equipo</option>
+                <option value="tintas">Tintas</option>
+                <option value="marcos">Marcos y Cuadros</option>
+                <option value="otro">Otro</option>
+            </select>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-primary" onclick="guardarProveedor()">Guardar</button>
+            <button class="btn" onclick="cerrarModal()">Cancelar</button>
+        </div>
+    `;
+    document.getElementById('modalOverlay').classList.add('active');
 }
 
+function cerrarModal() {
+    document.getElementById('modalOverlay').classList.remove('active');
+}
+
+// ============ PRODUCTOS ============
+async function cargarProductos(search = '') {
+    try {
+        const data = await API.getProductos(search);
+        const list = data.products;
+
+        let html = '';
+        list.forEach(p => {
+            const badge = p.strategy === 'push' ? 'badge-warning' : 'badge-info';
+            const strategy = p.strategy === 'push' ? 'PUSH' : 'PULL';
+            html += `<tr>
+                <td>${p.id}</td>
+                <td>${p.name}</td>
+                <td>${p.category?.name || '-'}</td>
+                <td>$${p.price.toLocaleString('es-MX')}</td>
+                <td>${p.stock} ${p.unit}</td>
+                <td><span class="badge ${badge}">${strategy}</span></td>
+                <td>
+                    <button class="btn btn-sm btn-primary" onclick="abrirModalProducto(${p.id})">Editar</button>
+                </td>
+            </tr>`;
+        });
+        document.getElementById('productosTable').innerHTML = html || '<tr><td colspan="7" class="empty-state">Sin productos</td></tr>';
+        document.getElementById('badgeProductos').textContent = list.length;
+    } catch (e) {
+        document.getElementById('productosTable').innerHTML = '<tr><td colspan="7" class="empty-state">Error: ' + e.message + '</td></tr>';
+    }
+}
+
+function buscarProductos() { cargarProductos(document.getElementById('prodSearch').value); }
+
+async function guardarProducto() {
+    const id = document.getElementById('prodId')?.value;
+    const input = {
+        name: document.getElementById('prodNombre').value,
+        sku: document.getElementById('prodSku').value || 'SKU-' + Date.now(),
+        price: parseFloat(document.getElementById('prodPrecio').value),
+        cost: parseFloat(document.getElementById('prodCosto').value) || 0,
+        stock: parseInt(document.getElementById('prodStock').value) || 0,
+        type: document.getElementById('prodTipo').value,
+        strategy: document.getElementById('prodEstrategia').value
+    };
+
+    try {
+        if (id) {
+            await API.updateProducto(id, input);
+            showToast('Producto actualizado', 'success');
+        } else {
+            await API.createProducto(input);
+            showToast('Producto creado', 'success');
+        }
+        cerrarModal();
+        cargarProductos();
+        cargarDashboard();
+    } catch (e) {
+        showToast('Error: ' + e.message, 'error');
+    }
+}
+
+function abrirModalProducto(id = null) {
+    const isEdit = !!id;
+    document.getElementById('modalContent').innerHTML = `
+        <div class="modal-header">
+            <h3>${isEdit ? 'Editar' : 'Nuevo'} Producto</h3>
+            <button class="modal-close" onclick="cerrarModal()">&times;</button>
+        </div>
+        <input type="hidden" id="prodId" value="${id || ''}">
+        <div class="form-group"><label>Nombre *</label><input type="text" id="prodNombre" required></div>
+        <div class="form-row">
+            <div class="form-group"><label>Precio *</label><input type="number" id="prodPrecio" step="0.01" required></div>
+            <div class="form-group"><label>Costo</label><input type="number" id="prodCosto" step="0.01"></div>
+        </div>
+        <div class="form-row">
+            <div class="form-group"><label>Stock</label><input type="number" id="prodStock" value="0"></div>
+            <div class="form-group"><label>Tipo</label>
+                <select id="prodTipo">
+                    <option value="servicio">Servicio</option>
+                    <option value="producto">Producto</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Estrategia</label>
+            <select id="prodEstrategia">
+                <option value="pull">PULL - Bajo demanda (sesiones)</option>
+                <option value="push">PUSH - Con stock (materiales)</option>
+            </select>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-primary" onclick="guardarProducto()">Guardar</button>
+            <button class="btn" onclick="cerrarModal()">Cancelar</button>
+        </div>
+    `;
+    document.getElementById('modalOverlay').classList.add('active');
+}
+
+// ============ CLIENTES ============
+async function cargarClientes(search = '') {
+    try {
+        const data = await API.getClientes(1, 50, search);
+        const list = data.clients.data;
+
+        let html = '';
+        list.forEach(c => {
+            html += `<tr>
+                <td>${c.id}</td>
+                <td>${c.name}</td>
+                <td>${c.email || '-'}</td>
+                <td>${c.phone || '-'}</td>
+                <td>${c.segment || '-'}</td>
+                <td><span class="badge ${c.active ? 'badge-success' : 'badge-danger'}">${c.active ? 'Activo' : 'Inactivo'}</span></td>
+                <td>
+                    <button class="btn btn-sm btn-primary" onclick="abrirModalCliente(${c.id})">Editar</button>
+                </td>
+            </tr>`;
+        });
+        document.getElementById('clientesTable').innerHTML = html || '<tr><td colspan="7" class="empty-state">Sin clientes</td></tr>';
+    } catch (e) {
+        document.getElementById('clientesTable').innerHTML = '<tr><td colspan="7" class="empty-state">Error: ' + e.message + '</td></tr>';
+    }
+}
+
+function buscarClientes() { cargarClientes(document.getElementById('cliSearch').value); }
+
+async function guardarCliente() {
+    const id = document.getElementById('cliId')?.value;
+    const input = {
+        name: document.getElementById('cliNombre').value,
+        email: document.getElementById('cliEmail').value,
+        phone: document.getElementById('cliTelefono').value,
+        company: document.getElementById('cliEmpresa').value,
+        segment: document.getElementById('cliSegmento').value
+    };
+
+    try {
+        if (id) {
+            await API.updateCliente(id, input);
+            showToast('Cliente actualizado', 'success');
+        } else {
+            await API.createCliente(input);
+            showToast('Cliente creado', 'success');
+        }
+        cerrarModal();
+        cargarClientes();
+        cargarDashboard();
+    } catch (e) {
+        showToast('Error: ' + e.message, 'error');
+    }
+}
+
+function abrirModalCliente(id = null) {
+    const isEdit = !!id;
+    document.getElementById('modalContent').innerHTML = `
+        <div class="modal-header">
+            <h3>${isEdit ? 'Editar' : 'Nuevo'} Cliente</h3>
+            <button class="modal-close" onclick="cerrarModal()">&times;</button>
+        </div>
+        <input type="hidden" id="cliId" value="${id || ''}">
+        <div class="form-group"><label>Nombre *</label><input type="text" id="cliNombre" required></div>
+        <div class="form-row">
+            <div class="form-group"><label>Email</label><input type="email" id="cliEmail"></div>
+            <div class="form-group"><label>Teléfono</label><input type="tel" id="cliTelefono"></div>
+        </div>
+        <div class="form-group"><label>Empresa</label><input type="text" id="cliEmpresa"></div>
+        <div class="form-group">
+            <label>Segmento</label>
+            <select id="cliSegmento">
+                <option value="">-- Seleccionar --</option>
+                <option value="particular">Particular</option>
+                <option value="corporativo">Corporativo</option>
+                <option value="gobierno">Gobierno</option>
+            </select>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-primary" onclick="guardarCliente()">Guardar</button>
+            <button class="btn" onclick="cerrarModal()">Cancelar</button>
+        </div>
+    `;
+    document.getElementById('modalOverlay').classList.add('active');
+}
+
+// ============ LEADS ============
+async function cargarLeads() {
+    try {
+        const data = await API.getLeads();
+        const list = data.leads;
+
+        let html = '';
+        list.forEach(l => {
+            const stageBadge = { 'nuevo': 'badge-info', 'contactado': 'badge-warning', 'propuesta': 'badge-warning', 'ganado': 'badge-success', 'perdido': 'badge-danger' }[l.stage] || 'badge-info';
+            html += `<tr>
+                <td>${l.id}</td>
+                <td>${l.client?.name || '-'}</td>
+                <td><span class="badge ${stageBadge}">${l.stage}</span></td>
+                <td>${l.score || '-'}</td>
+                <td>${l.budget ? '$' + l.budget.toLocaleString('es-MX') : '-'}</td>
+                <td>${l.source || '-'}</td>
+                <td>
+                    ${l.stage === 'nuevo' ? `<button class="btn btn-sm btn-success" onclick="convertirLead(${l.id})">Convertir</button>` : ''}
+                </td>
+            </tr>`;
+        });
+        document.getElementById('leadsTable').innerHTML = html || '<tr><td colspan="7" class="empty-state">Sin leads</td></tr>';
+    } catch (e) {
+        document.getElementById('leadsTable').innerHTML = '<tr><td colspan="7" class="empty-state">Error: ' + e.message + '</td></tr>';
+    }
+}
+
+async function convertirLead(id) {
+    try {
+        await API.convertLead(id);
+        showToast('Lead convertido a cliente', 'success');
+        cargarLeads();
+        cargarClientes();
+        cargarDashboard();
+    } catch (e) {
+        showToast('Error: ' + e.message, 'error');
+    }
+}
+
+// ============ VENTAS ============
+async function cargarVentas() {
+    try {
+        const [cotizaciones, facturas] = await Promise.all([
+            API.getCotizaciones(),
+            API.getFacturas()
+        ]);
+
+        document.getElementById('ventasCotizaciones').textContent = cotizaciones.quotes?.length || 0;
+        document.getElementById('ventasFacturas').textContent = facturas.invoices?.length || 0;
+
+        let html = '';
+        [...(cotizaciones.quotes || []).map(q => ({...q, type: 'Cotización'})), ...(facturas.invoices || []).map(i => ({...i, type: 'Factura'}))].forEach(v => {
+            const statusBadge = v.type === 'Cotización'
+                ? ({'borrador': 'badge-info', 'enviado': 'badge-warning', 'aprobado': 'badge-success', 'rechazado': 'badge-danger'}[v.status] || 'badge-info')
+                : ({'pendiente': 'badge-warning', 'pagado': 'badge-success', 'vencido': 'badge-danger', 'cancelado': 'badge-danger'}[v.status] || 'badge-info');
+
+            html += `<tr>
+                <td>${v.folio}</td>
+                <td>${v.client?.name || '-'}</td>
+                <td>$${v.total.toLocaleString('es-MX')}</td>
+                <td><span class="badge ${statusBadge}">${v.status}</span></td>
+                <td>${v.fechaEmision || v.createdAt?.split('T')[0] || '-'}</td>
+                <td><button class="btn btn-sm btn-primary">Ver</button></td>
+            </tr>`;
+        });
+        document.getElementById('ventasTable').innerHTML = html || '<tr><td colspan="6" class="empty-state">Sin datos</td></tr>';
+    } catch (e) {
+        document.getElementById('ventasTable').innerHTML = '<tr><td colspan="6" class="empty-state">Error: ' + e.message + '</td></tr>';
+    }
+}
+
+// ============ FACTURAS ============
+async function cargarFacturas() {
+    try {
+        const data = await API.getFacturas();
+        const list = data.invoices;
+
+        let html = '';
+        list.forEach(f => {
+            const statusBadge = {'pendiente': 'badge-warning', 'pagado': 'badge-success', 'vencido': 'badge-danger', 'cancelado': 'badge-danger'}[f.status] || 'badge-info';
+            html += `<tr>
+                <td>${f.folio}</td>
+                <td>${f.client?.name || '-'}</td>
+                <td>$${f.total.toLocaleString('es-MX')}</td>
+                <td>$${f.saldo.toLocaleString('es-MX')}</td>
+                <td><span class="badge ${statusBadge}">${f.status}</span></td>
+                <td>${f.fechaEmision || '-'}</td>
+                <td><button class="btn btn-sm btn-primary">Ver</button></td>
+            </tr>`;
+        });
+        document.getElementById('facturasTable').innerHTML = html || '<tr><td colspan="7" class="empty-state">Sin facturas</td></tr>';
+    } catch (e) {
+        document.getElementById('facturasTable').innerHTML = '<tr><td colspan="7" class="empty-state">Error: ' + e.message + '</td></tr>';
+    }
+}
+
+// ============ PEDIDOS ============
+async function cargarPedidos() {
+    try {
+        const data = await API.getPurchaseOrders();
+        const list = data.purchaseOrders || [];
+
+        let html = '';
+        list.forEach(p => {
+            const statusBadge = {'borrador': 'badge-info', 'enviado': 'badge-warning', 'parcial': 'badge-warning', 'recibido': 'badge-success', 'cancelado': 'badge-danger'}[p.status] || 'badge-info';
+            html += `<tr>
+                <td>${p.folio}</td>
+                <td>${p.supplier?.name || '-'}</td>
+                <td>$${p.total.toLocaleString('es-MX')}</td>
+                <td><span class="badge ${statusBadge}">${p.status}</span></td>
+                <td>${p.expectedDate || '-'}</td>
+                <td><button class="btn btn-sm btn-primary">Ver</button></td>
+            </tr>`;
+        });
+        document.getElementById('pedidosTable').innerHTML = html || '<tr><td colspan="6" class="empty-state">Sin pedidos</td></tr>';
+    } catch (e) {
+        document.getElementById('pedidosTable').innerHTML = '<tr><td colspan="6" class="empty-state">Error: ' + e.message + '</td></tr>';
+    }
+}
+
+// ============ NÓMINA ============
+async function cargarNomina() {
+    try {
+        const data = await API.getEmpleados(1, 50, '', null, true);
+        const list = data.employees.data.filter(e => e.active);
+
+        let total = 0;
+        let html = '';
+        list.forEach(e => {
+            const sal = e.salary || 0;
+            total += sal;
+            html += `<tr>
+                <td>${e.name}</td>
+                <td>${e.position?.name || '-'}</td>
+                <td>${e.department?.name || '-'}</td>
+                <td>$${sal.toLocaleString('es-MX')}</td>
+            </tr>`;
+        });
+
+        document.getElementById('nominaCount').textContent = list.length;
+        document.getElementById('nominaTotal').textContent = '$' + total.toLocaleString('es-MX');
+        document.getElementById('nominaTable').innerHTML = html || '<tr><td colspan="4" class="empty-state">Sin datos</td></tr>';
+    } catch (e) {
+        document.getElementById('nominaTable').innerHTML = '<tr><td colspan="4" class="empty-state">Error: ' + e.message + '</td></tr>';
+    }
+}
+
+// ============ ASISTENCIA ============
+async function cargarAsistencia() {
+    try {
+        const data = await API.getAsistencia();
+        const list = data.attendance || [];
+
+        let html = '';
+        list.forEach(a => {
+            const statusBadge = {'presente': 'badge-success', 'falta': 'badge-danger', 'retardo': 'badge-warning', 'permiso': 'badge-info', 'vacaciones': 'badge-info'}[a.status] || 'badge-info';
+            html += `<tr>
+                <td>${a.employee?.name || '-'}</td>
+                <td>${a.date}</td>
+                <td>${a.clockIn || '-'}</td>
+                <td>${a.clockOut || '-'}</td>
+                <td>${a.hoursWorked || '-'}</td>
+                <td><span class="badge ${statusBadge}">${a.status}</span></td>
+            </tr>`;
+        });
+        document.getElementById('asistenciaTable').innerHTML = html || '<tr><td colspan="6" class="empty-state">Sin registros</td></tr>';
+    } catch (e) {
+        document.getElementById('asistenciaTable').innerHTML = '<tr><td colspan="6" class="empty-state">Error: ' + e.message + '</td></tr>';
+    }
+}
+
+// ============ USUARIOS ============
+async function cargarUsuarios() {
+    try {
+        const data = await API.getUsuarios();
+        const list = data.users || [];
+
+        let html = '';
+        list.forEach(u => {
+            const rol = mapRolAPItoLocal(u.roles);
+            html += `<tr>
+                <td>${u.id}</td>
+                <td>${u.name}</td>
+                <td>${u.email}</td>
+                <td><span class="badge badge-info">${permissionSystem.obtenerNombreRol(rol)}</span></td>
+                <td><span class="badge ${u.active ? 'badge-success' : 'badge-danger'}">${u.active ? 'Activo' : 'Inactivo'}</span></td>
+                <td>
+                    <button class="btn btn-sm btn-primary" onclick="abrirModalUsuario(${u.id})">Editar</button>
+                </td>
+            </tr>`;
+        });
+        document.getElementById('usuariosTable').innerHTML = html || '<tr><td colspan="6" class="empty-state">Sin usuarios</td></tr>';
+    } catch (e) {
+        document.getElementById('usuariosTable').innerHTML = '<tr><td colspan="6" class="empty-state">Error: ' + e.message + '</td></tr>';
+    }
+}
+
+function abrirModalUsuario(id = null) {
+    document.getElementById('modalContent').innerHTML = `
+        <div class="modal-header">
+            <h3>Nuevo Usuario</h3>
+            <button class="modal-close" onclick="cerrarModal()">&times;</button>
+        </div>
+        <p style="color:#666;margin-bottom:15px;">La creación de usuarios está limitada por seguridad. Contacta al administrador del sistema.</p>
+        <div class="modal-footer">
+            <button class="btn" onclick="cerrarModal()">Cerrar</button>
+        </div>
+    `;
+    document.getElementById('modalOverlay').classList.add('active');
+}
+
+// ============ EVENT LISTENERS ============
 document.getElementById('btnEntrar').addEventListener('click', handleLogin);
 document.addEventListener('keypress', function(e) {
     if (e.key === 'Enter' && document.getElementById('loginModal').style.display === 'flex') {
@@ -683,7 +1268,17 @@ document.addEventListener('keypress', function(e) {
     }
 });
 
-document.getElementById('welcomeScreen').style.display = 'flex';
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('welcomeScreen').style.display = 'flex';
+
+    if (API.isAuthenticated()) {
+        const { user } = API.getAuth();
+        if (user) {
+            usuarioActual = user;
+            inicializarSistema();
+        }
+    }
+});
 </script>
 </body>
 </html>

@@ -453,7 +453,7 @@ function mostrarAlertaPermiso(accion) {
         'crear_empleados': 'Solo el área de Recursos Humanos puede registrar empleados.',
         'editar_empleados': 'Solo el área de Recursos Humanos puede editar empleados.',
         'ver_nominas': 'Solo el área de Recursos Humanos puede ver las nóminas.',
-        'ver_asistencias': 'Solo el área de Recursos Humanos puede ver las asistir.',
+        'ver_asistencias': 'Solo el área de Recursos Humanos puede ver la asistencia.',
         'ver_compras': 'Solo el área de Compras puede ver las órdenes de compra.',
         'crear_pedidos_compra': 'Solo el área de Compras puede crear órdenes de compra.',
         'ver_proveedores': 'Solo el área de Proveedores puede ver la lista de proveedores.',

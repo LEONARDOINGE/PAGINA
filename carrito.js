@@ -1,25 +1,23 @@
-// ============ SISTEMA DE CARRITO PERSISTENTE ============
-// FotoTec - Carrito de compras con persistencia en localStorage
+// ============ SISTEMA DE CARRITO PERSISTENTE CON API ============
+// FotoTec - Carrito de compras conectado a GraphQL/Turso
 
 const carritoSystem = {
-    STORAGE_KEY: 'fotovecCarrito',
+    STORAGE_KEY: 'fototecCarrito',
+    API_ENDPOINT: '/graphql',
 
-    // Obtener carrito del localStorage
     obtenerCarrito() {
         const carrito = localStorage.getItem(this.STORAGE_KEY);
         return carrito ? JSON.parse(carrito) : [];
     },
 
-    // Guardar carrito en localStorage
     guardarCarrito(carrito) {
         localStorage.setItem(this.STORAGE_KEY, JSON.stringify(carrito));
         this.actualizarContador();
     },
 
-    // Agregar producto/servicio al carrito
     agregarProducto(producto, cantidad = 1) {
         const carrito = this.obtenerCarrito();
-        const productoId = producto.id || producto.productoId;
+        const productoId = producto.id || producto.productoId || producto.sku;
 
         const existente = carrito.find(item => item.productoId === productoId);
 
@@ -29,22 +27,24 @@ const carritoSystem = {
         } else {
             carrito.push({
                 productoId: productoId,
-                nombre: producto.nombre,
-                descripcion: producto.descripcion || '',
-                precio: parseFloat(producto.precio),
+                sku: producto.sku || producto.id,
+                nombre: producto.nombre || producto.name,
+                descripcion: producto.descripcion || producto.description || '',
+                precio: parseFloat(producto.precio || producto.price),
                 cantidad: cantidad,
-                subtotal: parseFloat(producto.precio) * cantidad,
-                categoria: producto.categoria || 'servicio',
+                subtotal: parseFloat(producto.precio || producto.price) * cantidad,
+                categoria: producto.categoria || producto.category || 'servicio',
+                tipo: producto.type || 'servicio',
+                estrategia: producto.strategy || 'pull',
                 fechaAgregado: new Date().toISOString()
             });
         }
 
         this.guardarCarrito(carrito);
-        this.mostrarNotificacion(`${producto.nombre} agregado al carrito`);
+        this.mostrarNotificacion(`${producto.nombre || producto.name} agregado al carrito`);
         return true;
     },
 
-    // Quitar producto del carrito
     quitarProducto(productoId) {
         let carrito = this.obtenerCarrito();
         carrito = carrito.filter(item => item.productoId !== productoId);
@@ -52,7 +52,6 @@ const carritoSystem = {
         this.mostrarNotificacion('Producto quitado del carrito');
     },
 
-    // Actualizar cantidad de un producto
     actualizarCantidad(productoId, cantidad) {
         const carrito = this.obtenerCarrito();
         const item = carrito.find(item => item.productoId === productoId);
@@ -68,41 +67,32 @@ const carritoSystem = {
         }
     },
 
-    // Limpiar carrito
     limpiarCarrito() {
         localStorage.removeItem(this.STORAGE_KEY);
         this.actualizarContador();
         this.mostrarNotificacion('Carrito vaciado');
     },
 
-    // Obtener total del carrito
     obtenerTotal() {
-        const carrito = this.obtenerCarrito();
-        return carrito.reduce((sum, item) => sum + item.subtotal, 0);
+        return this.obtenerCarrito().reduce((sum, item) => sum + item.subtotal, 0);
     },
 
-    // Obtener cantidad total de items
     obtenerCantidadTotal() {
-        const carrito = this.obtenerCarrito();
-        return carrito.reduce((sum, item) => sum + item.cantidad, 0);
+        return this.obtenerCarrito().reduce((sum, item) => sum + item.cantidad, 0);
     },
 
-    // Obtener impuesto (16% IVA)
     obtenerIVA() {
         return this.obtenerTotal() * 0.16;
     },
 
-    // Obtener total con IVA
     obtenerTotalConIVA() {
         return this.obtenerTotal() * 1.16;
     },
 
-    // Verificar si hay productos en el carrito
     hayProductos() {
         return this.obtenerCarrito().length > 0;
     },
 
-    // Actualizar contador en el DOM
     actualizarContador() {
         const contador = document.getElementById('carritoContador');
         if (contador) {
@@ -112,23 +102,19 @@ const carritoSystem = {
         }
     },
 
-    // Mostrar notificación
     mostrarNotificacion(mensaje) {
         let notificacion = document.getElementById('carritoNotificacion');
         if (!notificacion) {
             notificacion = document.createElement('div');
             notificacion.id = 'carritoNotificacion';
-            notificacion.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#27ae60;color:white;padding:15px 25px;border-radius:8px;font-weight:bold;z-index:10000;opacity:0;transition:opacity 0.3s;box-shadow:0 4px 15px rgba(0,0,0,0.3);';
+            notificacion.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#27ae60;color:white;padding:15px 25px;border-radius:8px;font-weight:bold;z-index:100000;opacity:0;transition:opacity 0.3s;box-shadow:0 4px 15px rgba(0,0,0,0.3);';
             document.body.appendChild(notificacion);
         }
         notificacion.textContent = mensaje;
         notificacion.style.opacity = '1';
-        setTimeout(() => {
-            notificacion.style.opacity = '0';
-        }, 2500);
+        setTimeout(() => { notificacion.style.opacity = '0'; }, 2500);
     },
 
-    // Renderizar carrito en el DOM
     renderizarCarrito(containerId) {
         const container = document.getElementById(containerId);
         if (!container) return;
@@ -197,7 +183,22 @@ const carritoSystem = {
         container.innerHTML = html;
     },
 
-    // Proceder al pago (crear pedido)
+    async gql(query, variables = {}) {
+        const token = localStorage.getItem('fototec_token');
+        const headers = { 'Content-Type': 'application/json' };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+
+        const res = await fetch(this.API_ENDPOINT, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({ query, variables })
+        });
+
+        const data = await res.json();
+        if (data.errors) throw new Error(data.errors[0].message);
+        return data.data;
+    },
+
     async procederAlPago() {
         const carrito = this.obtenerCarrito();
         if (carrito.length === 0) {
@@ -206,58 +207,86 @@ const carritoSystem = {
         }
 
         const total = this.obtenerTotalConIVA();
+        const clienteNombre = prompt('Nombre del cliente:', '');
+        if (!clienteNombre) return;
+
+        const clienteEmail = prompt('Email del cliente:', '');
+        const clienteTelefono = prompt('Teléfono:', '');
 
         try {
-            const res = await fetch('/api/pedidos', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    productos: carrito.map(item => ({
-                        productoId: item.productoId,
-                        nombre: item.nombre,
-                        cantidad: item.cantidad,
-                        precio: item.precio
-                    })),
-                    total: total,
-                    estado: 'pendiente'
-                })
+            let clientId = null;
+
+            try {
+                const clientData = await this.gql(`
+                    mutation CreateClient($input: ClientInput!) {
+                        createClient(input: $input) { id name }
+                    }
+                `, {
+                    input: {
+                        name: clienteNombre,
+                        email: clienteEmail || null,
+                        phone: clienteTelefono || null
+                    }
+                });
+                clientId = clientData.createClient.id;
+            } catch (e) {
+                console.warn('No se pudo crear cliente:', e.message);
+            }
+
+            const items = carrito.map(item => ({
+                description: item.nombre + (item.descripcion ? ' - ' + item.descripcion : ''),
+                quantity: item.cantidad,
+                price: item.precio
+            }));
+
+            const invoiceData = await this.gql(`
+                mutation CreateInvoice($input: InvoiceInput!) {
+                    createInvoice(input: $input) {
+                        id folio status total
+                        client { id name }
+                    }
+                }
+            `, {
+                input: {
+                    clientId: clientId || 1,
+                    items: items
+                }
             });
 
-            const data = await res.json();
+            const invoice = invoiceData.createInvoice;
+            this.limpiarCarrito();
+            alert(`¡Cotización creada con éxito!\n\nFolio: ${invoice.folio}\nTotal: $${invoice.total.toFixed(2)} MXN\n\nNos pondremos en contacto contigo pronto.`);
 
-            if (data.success) {
-                this.limpiarCarrito();
-                alert('¡Pedido creado con éxito!\n\nFolio: ' + data.pedido.id + '\nTotal: $' + total.toFixed(2) + ' MXN\n\nNos pondremos en contacto contigo pronto.');
-            } else {
-                alert('Error al crear el pedido: ' + (data.error || 'Intenta de nuevo'));
-            }
-        } catch(e) {
-            // Si no hay backend, guardar localmente
-            if (typeof database !== 'undefined') {
-                const pedidoLocal = {
-                    id: Date.now(),
-                    clienteNombre: 'Cliente Web',
-                    estado: 'Pendiente',
-                    total: total,
-                    productos: carrito.map(item => ({
-                        id: item.productoId,
-                        cantidad: item.cantidad
-                    })),
-                    fechaCreacion: new Date().toLocaleString('es-ES')
-                };
-                database.pedidos.push(pedidoLocal);
-                localStorage.setItem('fotovecPedidos', JSON.stringify(database.pedidos));
-
-                this.limpiarCarrito();
-                alert('¡Pedido guardado localmente!\n\nPedido #: ' + pedidoLocal.id + '\nTotal: $' + total.toFixed(2) + ' MXN\n\nNota: El pedido será procesado cuando el servidor esté disponible.');
-            } else {
-                alert('Error de conexión: ' + e.message);
-            }
+        } catch (e) {
+            console.error('Error al crear pedido:', e);
+            this.guardarPedidoLocal(clienteNombre, carrito, total);
         }
+    },
+
+    guardarPedidoLocal(clienteNombre, carrito, total) {
+        const pedidoLocal = {
+            id: 'LOCAL-' + Date.now(),
+            clienteNombre: clienteNombre,
+            estado: 'Pendiente',
+            total: total,
+            productos: carrito.map(item => ({
+                id: item.productoId,
+                nombre: item.nombre,
+                cantidad: item.cantidad,
+                precio: item.precio
+            })),
+            fechaCreacion: new Date().toLocaleString('es-ES')
+        };
+
+        const pedidosLocales = JSON.parse(localStorage.getItem('fototecPedidosLocal') || '[]');
+        pedidosLocales.push(pedidoLocal);
+        localStorage.setItem('fototecPedidosLocal', JSON.stringify(pedidosLocales));
+
+        this.limpiarCarrito();
+        alert(`¡Pedido guardado localmente!\n\nPedido #: ${pedidoLocal.id}\nTotal: $${total.toFixed(2)} MXN\n\nNota: El pedido será procesado cuando el servidor esté disponible.`);
     }
 };
 
-// Inicializar contador al cargar
 document.addEventListener('DOMContentLoaded', function() {
     if (typeof carritoSystem !== 'undefined') {
         carritoSystem.actualizarContador();
