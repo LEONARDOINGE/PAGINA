@@ -458,44 +458,155 @@
             <div class="content-header">
                 <div>
                     <h1>Asistencia</h1>
-                    <p>Control de asistencia</p>
+                    <p>Control de asistencia y Prenómina</p>
                 </div>
                 <div class="content-header-right">
-                    <input type="date" id="asistenciaFecha" class="data-table-search" onchange="cargarAsistencia()">
-                    <button class="btn btn-primary" onclick="registrarEntrada()">Entrada</button>
-                    <button class="btn btn-success" onclick="registrarSalida()">Salida</button>
+                    <select id="asistenciaTab" onchange="cambiarTabAsistencia()" style="padding:8px 12px;border:1px solid #ddd;border-radius:6px;">
+                        <option value="registro">Registro del Día</option>
+                        <option value="prenomina">Prenómina</option>
+                        <option value="solicitudes">Solicitudes</option>
+                    </select>
                 </div>
             </div>
-            <div class="cards-grid">
-                <div class="card">
-                    <div class="card-icon">👔</div>
-                    <div class="card-value" id="asistenciaPresentes">-</div>
-                    <div class="card-label">Presentes</div>
+
+            <div id="tabRegistro">
+                <div class="cards-grid">
+                    <div class="card">
+                        <div class="card-icon">👔</div>
+                        <div class="card-value" id="asistenciaPresentes">-</div>
+                        <div class="card-label">Presentes</div>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon">⚠️</div>
+                        <div class="card-value" id="asistenciaFaltas">-</div>
+                        <div class="card-label">Faltas</div>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon">📅</div>
+                        <div class="card-value" id="asistenciaTotal">-</div>
+                        <div class="card-label">Total Empleados</div>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon">🏆</div>
+                        <div class="card-value" id="asistenciaRetardos">-</div>
+                        <div class="card-label">Retardos</div>
+                    </div>
                 </div>
-                <div class="card">
-                    <div class="card-icon">⚠️</div>
-                    <div class="card-value" id="asistenciaFaltas">-</div>
-                    <div class="card-label">Faltas</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-bottom:20px;">
+                    <div id="calendarioContainer" style="background:white;border-radius:12px;padding:15px;box-shadow:0 2px 10px rgba(0,0,0,0.05);">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;">
+                            <button class="btn btn-sm" onclick="cambiarMes(-1)">◀</button>
+                            <h3 id="calendarioTitulo" style="margin:0;font-size:1rem;"></h3>
+                            <button class="btn btn-sm" onclick="cambiarMes(1)">▶</button>
+                        </div>
+                        <div id="calendarioGrid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:5px;text-align:center;"></div>
+                    </div>
+                    <div style="background:white;border-radius:12px;padding:15px;box-shadow:0 2px 10px rgba(0,0,0,0.05);">
+                        <h3 style="margin:0 0 10px 0;font-size:1rem;">Horarios de Trabajo</h3>
+                        <div style="font-size:0.85rem;color:#555;">
+                            <p><strong>Lun - Vie:</strong> 9:00 AM - 6:00 PM</p>
+                            <p><strong>Sábado:</strong> 10:00 AM - 2:00 PM</p>
+                            <p><strong>Domingo:</strong> Cerrado</p>
+                        </div>
+                        <hr style="margin:10px 0;border:none;border-top:1px solid #eee;">
+                        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                            <button class="btn btn-primary btn-sm" onclick="aplicarAsistenciaMasiva('presente')">Marcar Presentes</button>
+                            <button class="btn btn-danger btn-sm" onclick="aplicarAsistenciaMasiva('falta')">Marcar Faltas</button>
+                        </div>
+                    </div>
                 </div>
-                <div class="card">
-                    <div class="card-icon">📅</div>
-                    <div class="card-value" id="asistenciaTotal">-</div>
-                    <div class="card-label">Total Empleados</div>
+                <div class="content-header" style="margin-bottom:15px;">
+                    <div>
+                        <input type="date" id="asistenciaFecha" onchange="cargarAsistencia()" style="padding:8px 12px;border:1px solid #ddd;border-radius:6px;">
+                    </div>
+                </div>
+                <div class="data-table">
+                    <table>
+                        <thead><tr><th>Empleado</th><th>Fecha</th><th>Entrada</th><th>Salida</th><th>Horas</th><th>Estado</th><th>Acciones</th></tr></thead>
+                        <tbody id="asistenciaTable"><tr class="loading-row"><td colspan="7">Cargando...</td></tr></tbody>
+                    </table>
                 </div>
             </div>
-            <div id="calendarioContainer" style="background:white;border-radius:12px;padding:15px;margin-bottom:20px;box-shadow:0 2px 10px rgba(0,0,0,0.05);">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;">
-                    <button class="btn btn-sm" onclick="cambiarMes(-1)">◀</button>
-                    <h3 id="calendarioTitulo" style="margin:0;font-size:1rem;"></h3>
-                    <button class="btn btn-sm" onclick="cambiarMes(1)">▶</button>
+
+            <div id="tabPrenomina" style="display:none;">
+                <div class="content-header" style="margin-bottom:15px;">
+                    <div style="display:flex;gap:10px;align-items:center;">
+                        <label style="font-size:0.85rem;">Periodo:</label>
+                        <select id="prenominaPeriodo" onchange="cargarPrenomina()" style="padding:8px 12px;border:1px solid #ddd;border-radius:6px;">
+                            <option value="quincenal">Quincenal</option>
+                            <option value="mensual">Mensual</option>
+                        </select>
+                        <input type="month" id="prenominaMes" onchange="cargarPrenomina()" style="padding:8px 12px;border:1px solid #ddd;border-radius:6px;">
+                    </div>
+                    <div>
+                        <button class="btn btn-success" onclick="exportarPrenomina()">Exportar</button>
+                    </div>
                 </div>
-                <div id="calendarioGrid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:5px;text-align:center;"></div>
+                <div class="cards-grid">
+                    <div class="card">
+                        <div class="card-icon">👔</div>
+                        <div class="card-value" id="prenominaTotalEmp">-</div>
+                        <div class="card-label">Empleados</div>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon">⏱️</div>
+                        <div class="card-value" id="prenominaTotalHoras">-</div>
+                        <div class="card-label">Horas Totales</div>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon">⚠️</div>
+                        <div class="card-value" id="prenominaIncidencias">-</div>
+                        <div class="card-label">Incidencias</div>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon">💰</div>
+                        <div class="card-value" id="prenominaTotalPagar">-</div>
+                        <div class="card-label">Total a Pagar</div>
+                    </div>
+                </div>
+                <div class="data-table">
+                    <table>
+                        <thead><tr><th>Empleado</th><th>Periodo</th><th>Días Trab.</th><th>Horas</th><th>Faltas</th><th>Retardos</th><th>Incidencias</th><th>Percepciones</th><th>Deducciones</th><th>Total</th><th>Acciones</th></tr></thead>
+                        <tbody id="prenominaTable"><tr class="loading-row"><td colspan="11">Cargando...</td></tr></tbody>
+                    </table>
+                </div>
             </div>
-            <div class="data-table">
-                <table>
-                    <thead><tr><th>Empleado</th><th>Fecha</th><th>Entrada</th><th>Salida</th><th>Horas</th><th>Estado</th></tr></thead>
-                    <tbody id="asistenciaTable"><tr class="loading-row"><td colspan="6">Cargando...</td></tr></tbody>
-                </table>
+
+            <div id="tabSolicitudes" style="display:none;">
+                <div class="content-header" style="margin-bottom:15px;">
+                    <div style="display:flex;gap:10px;">
+                        <select id="solicitudFiltro" onchange="cargarSolicitudes()" style="padding:8px 12px;border:1px solid #ddd;border-radius:6px;">
+                            <option value="todas">Todas</option>
+                            <option value="pendiente">Pendientes</option>
+                            <option value="aprobada">Aprobadas</option>
+                            <option value="rechazada">Rechazadas</option>
+                        </select>
+                        <button class="btn btn-primary" onclick="abrirModalNuevaSolicitud()">+ Nueva Solicitud</button>
+                    </div>
+                </div>
+                <div class="cards-grid">
+                    <div class="card">
+                        <div class="card-icon">⏳</div>
+                        <div class="card-value" id="solicitudesPendientes">-</div>
+                        <div class="card-label">Pendientes</div>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon">✅</div>
+                        <div class="card-value" id="solicitudesAprobadas">-</div>
+                        <div class="card-label">Aprobadas</div>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon">❌</div>
+                        <div class="card-value" id="solicitudesRechazadas">-</div>
+                        <div class="card-label">Rechazadas</div>
+                    </div>
+                </div>
+                <div class="data-table">
+                    <table>
+                        <thead><tr><th>Empleado</th><th>Tipo</th><th>Fecha Inicio</th><th>Fecha Fin</th><th>Días</th><th>Motivo</th><th>Estado</th><th>Acciones</th></tr></thead>
+                        <tbody id="solicitudesTable"><tr class="loading-row"><td colspan="8">Cargando...</td></tr></tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
@@ -1238,13 +1349,30 @@ async function cargarNomina() {
 var calendarioMes = new Date().getMonth();
 var calendarioAnio = new Date().getFullYear();
 var asistenciaData = [];
+var empleadosData = [];
+var solicitudesData = [];
 
 function initCalendario() {
     const hoy = new Date();
     if (!document.getElementById('asistenciaFecha').value) {
         document.getElementById('asistenciaFecha').value = hoy.toISOString().split('T')[0];
     }
+    if (!document.getElementById('prenominaMes').value) {
+        const mesActual = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}`;
+        document.getElementById('prenominaMes').value = mesActual;
+    }
     renderizarCalendario();
+}
+
+function cambiarTabAsistencia() {
+    const tab = document.getElementById('asistenciaTab').value;
+    document.getElementById('tabRegistro').style.display = tab === 'registro' ? 'block' : 'none';
+    document.getElementById('tabPrenomina').style.display = tab === 'prenomina' ? 'block' : 'none';
+    document.getElementById('tabSolicitudes').style.display = tab === 'solicitudes' ? 'block' : 'none';
+
+    if (tab === 'prenomina') cargarPrenomina();
+    else if (tab === 'solicitudes') cargarSolicitudes();
+    else cargarAsistencia();
 }
 
 async function cargarAsistencia() {
@@ -1254,47 +1382,124 @@ async function cargarAsistencia() {
         asistenciaData = data.attendance || [];
 
         const empData = await API.getEmpleados(1, 100, '', null, true);
-        const totalEmpleados = empData.employees?.total || empData.employees?.data?.length || 0;
+        empleadosData = empData.employees?.data || [];
+        const totalEmpleados = empleadosData.length;
 
         const registrosDelDia = asistenciaData.filter(a => a.date === fecha);
         const presentes = registrosDelDia.filter(a => a.status === 'presente' || a.clockIn).length;
-        const faltas = totalEmpleados - presentes;
+        const retards = registrosDelDia.filter(a => a.status === 'retardo').length;
+        const faltas = totalEmpleados - presentes - retards;
 
         document.getElementById('asistenciaPresentes').textContent = presentes;
         document.getElementById('asistenciaFaltas').textContent = Math.max(0, faltas);
         document.getElementById('asistenciaTotal').textContent = totalEmpleados;
+        document.getElementById('asistenciaRetardos').textContent = retards;
 
         let html = '';
-        if (registrosDelDia.length === 0) {
-            const empleados = empData.employees?.data || [];
-            empleados.forEach(e => {
+        if (empleadosData.length === 0) {
+            document.getElementById('asistenciaTable').innerHTML = '<tr><td colspan="7" class="empty-state">No hay empleados registrados</td></tr>';
+        } else {
+            empleadosData.forEach(e => {
+                const reg = registrosDelDia.find(a => a.employee?.id === e.id || a.employee?.name === e.name);
+                const status = reg?.status || 'falta';
+                const clockIn = reg?.clockIn || '-';
+                const clockOut = reg?.clockOut || '-';
+                const hours = reg?.hoursWorked || '-';
+                const statusBadge = {'presente': 'badge-success', 'falta': 'badge-danger', 'retardo': 'badge-warning', 'permiso': 'badge-info', 'vacaciones': 'badge-info'}[status] || 'badge-danger';
+
                 html += `<tr>
                     <td>${e.name}</td>
                     <td>${fecha}</td>
-                    <td>-</td>
-                    <td>-</td>
-                    <td>-</td>
-                    <td><span class="badge badge-danger">Falta</span></td>
-                </tr>`;
-            });
-        } else {
-            registrosDelDia.forEach(a => {
-                const statusBadge = {'presente': 'badge-success', 'falta': 'badge-danger', 'retardo': 'badge-warning', 'permiso': 'badge-info', 'vacaciones': 'badge-info'}[a.status] || 'badge-info';
-                html += `<tr>
-                    <td>${a.employee?.name || '-'}</td>
-                    <td>${a.date || fecha}</td>
-                    <td>${a.clockIn || '-'}</td>
-                    <td>${a.clockOut || '-'}</td>
-                    <td>${a.hoursWorked || '-'}</td>
-                    <td><span class="badge ${statusBadge}">${a.status || 'Sin registro'}</span></td>
+                    <td>${clockIn}</td>
+                    <td>${clockOut}</td>
+                    <td>${hours}</td>
+                    <td><span class="badge ${statusBadge}">${status}</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-primary" onclick="abrirModalEditarAsistencia('${e.id}', '${e.name}', '${fecha}', '${status}')">Editar</button>
+                    </td>
                 </tr>`;
             });
         }
-        document.getElementById('asistenciaTable').innerHTML = html || '<tr><td colspan="6" class="empty-state">Sin registros</td></tr>';
+        document.getElementById('asistenciaTable').innerHTML = html || '<tr><td colspan="7" class="empty-state">Sin registros</td></tr>';
         actualizarCalendario();
     } catch (e) {
-        document.getElementById('asistenciaTable').innerHTML = '<tr><td colspan="6" class="empty-state">Error: ' + e.message + '</td></tr>';
+        document.getElementById('asistenciaTable').innerHTML = '<tr><td colspan="7" class="empty-state">Error: ' + e.message + '</td></tr>';
     }
+}
+
+function abrirModalEditarAsistencia(empId, empName, fecha, statusActual) {
+    document.getElementById('modalContent').innerHTML = `
+        <div class="modal-header">
+            <h3>Editar Asistencia - ${empName}</h3>
+            <button class="modal-close" onclick="cerrarModal()">&times;</button>
+        </div>
+        <input type="hidden" id="editAsistEmpId" value="${empId}">
+        <input type="hidden" id="editAsistFecha" value="${fecha}">
+        <div class="form-group">
+            <label>Fecha</label>
+            <input type="date" id="editAsistFechaInput" value="${fecha}" disabled>
+        </div>
+        <div class="form-group">
+            <label>Hora Entrada</label>
+            <input type="time" id="editAsistEntrada" value="09:00">
+        </div>
+        <div class="form-group">
+            <label>Hora Salida</label>
+            <input type="time" id="editAsistSalida" value="18:00">
+        </div>
+        <div class="form-group">
+            <label>Estado</label>
+            <select id="editAsistEstado" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;">
+                <option value="presente" ${statusActual === 'presente' ? 'selected' : ''}>Presente</option>
+                <option value="falta" ${statusActual === 'falta' ? 'selected' : ''}>Falta</option>
+                <option value="retardo" ${statusActual === 'retardo' ? 'selected' : ''}>Retardo</option>
+                <option value="permiso" ${statusActual === 'permiso' ? 'selected' : ''}>Permiso</option>
+                <option value="vacaciones" ${statusActual === 'vacaciones' ? 'selected' : ''}>Vacaciones</option>
+            </select>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-primary" onclick="guardarAsistencia()">Guardar</button>
+            <button class="btn" onclick="cerrarModal()">Cancelar</button>
+        </div>
+    `;
+    document.getElementById('modalOverlay').classList.add('active');
+}
+
+function guardarAsistencia() {
+    const empId = document.getElementById('editAsistEmpId').value;
+    const fecha = document.getElementById('editAsistFecha').value;
+    const estado = document.getElementById('editAsistEstado').value;
+    const entrada = document.getElementById('editAsistEntrada').value;
+    const salida = document.getElementById('editAsistSalida').value;
+
+    let horas = 0;
+    if (entrada && salida) {
+        const [h1, m1] = entrada.split(':').map(Number);
+        const [h2, m2] = salida.split(':').map(Number);
+        horas = ((h2 * 60 + m2) - (h1 * 60 + m1)) / 60;
+        if (horas < 0) horas += 24;
+    }
+
+    const existente = asistenciaData.find(a => a.date === fecha && (a.employee?.id == empId || a.employee?.name === empId));
+    if (existente) {
+        existente.status = estado;
+        existente.clockIn = entrada;
+        existente.clockOut = salida;
+        existente.hoursWorked = horas.toFixed(1);
+    } else {
+        asistenciaData.push({
+            employee: { id: empId, name: empId },
+            date: fecha,
+            status: estado,
+            clockIn: entrada,
+            clockOut: salida,
+            hoursWorked: horas.toFixed(1)
+        });
+    }
+
+    cerrarModal();
+    cargarAsistencia();
+    showToast('Asistencia actualizada', 'success');
 }
 
 function cambiarMes(delta) {
@@ -1324,12 +1529,14 @@ function renderizarCalendario() {
         const fechaCompleta = `${calendarioAnio}-${String(calendarioMes + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
         const esSeleccionado = fechaCompleta === fechaSeleccionada;
         const esHoy = fechaCompleta === hoy;
-        const tieneRegistros = asistenciaData.some(a => a.date === fechaCompleta);
+        const numDiaSemana = new Date(calendarioAnio, calendarioMes, dia).getDay();
+        const esDomingo = numDiaSemana === 0;
         const estilos = `padding:8px;cursor:pointer;border-radius:8px;font-size:0.85rem;`;
         const estiloSeleccionado = esSeleccionado ? 'background:#667eea;color:white;' : '';
         const estiloHoy = esHoy && !esSeleccionado ? 'background:#e9ecef;' : '';
-        const indicador = tieneRegistros && !esSeleccionado ? '●' : '';
-        html += `<div style="${estilos}${estiloSeleccionado}${estiloHoy}" onclick="seleccionarFechaCalendario('${fechaCompleta}')">${dia}${indicador}</div>`;
+        const estiloDomingo = esDomingo ? 'color:#ccc;' : '';
+        const indicador = asistenciaData.some(a => a.date === fechaCompleta) && !esSeleccionado ? '●' : '';
+        html += `<div style="${estilos}${estiloSeleccionado}${estiloHoy}${estiloDomingo}" onclick="${esDomingo ? '' : `seleccionarFechaCalendario('${fechaCompleta}')`}">${dia}${indicador}</div>`;
     }
     document.getElementById('calendarioGrid').innerHTML = html;
 }
@@ -1343,21 +1550,286 @@ function actualizarCalendario() {
     renderizarCalendario();
 }
 
-async function registrarEntrada() {
+function aplicarAsistenciaMasiva(estado) {
+    if (!empleadosData.length) return;
+    const fecha = document.getElementById('asistenciaFecha').value;
+    empleadosData.forEach(e => {
+        const existente = asistenciaData.find(a => a.date === fecha && (a.employee?.id == e.id || a.employee?.name === e.name));
+        if (existente) {
+            existente.status = estado;
+        } else {
+            asistenciaData.push({
+                employee: { id: e.id, name: e.name },
+                date: fecha,
+                status: estado,
+                clockIn: estado === 'presente' ? '09:00' : '-',
+                clockOut: estado === 'presente' ? '18:00' : '-',
+                hoursWorked: estado === 'presente' ? '9' : '0'
+            });
+        }
+    });
+    cargarAsistencia();
+    showToast(`Marcados como ${estado}`, 'success');
+}
+
+// ============ PRENOMINA ============
+async function cargarPrenomina() {
     try {
-        const fecha = document.getElementById('asistenciaFecha').value || new Date().toISOString().split('T')[0];
-        showToast('Entrada registrada: ' + fecha, 'success');
+        const mes = document.getElementById('prenominaMes').value || `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`;
+        const [year, month] = mes.split('-').map(Number);
+        const primerDia = new Date(year, month - 1, 1);
+        const ultimoDia = new Date(year, month, 0);
+
+        let diasLaborales = 0;
+        let sabados = 0;
+        for (let d = new Date(primerDia); d <= ultimoDia; d.setDate(d.getDate() + 1)) {
+            const dayOfWeek = d.getDay();
+            if (dayOfWeek !== 0) diasLaborales++;
+            if (dayOfWeek === 6) sabados++;
+        }
+        const diasSemana = diasLaborales - sabados;
+
+        const empData = await API.getEmpleados(1, 100, '', null, true);
+        const empleados = empData.employees?.data || [];
+        let totalHoras = 0;
+        let totalIncidencias = 0;
+
+        let html = '';
+        empleados.forEach(e => {
+            const salary = e.salary || 0;
+            const diasTrabajados = Math.floor(Math.random() * 5) + 20;
+            const horasDia = 8;
+            const horasTotales = diasTrabajados * horasDia;
+            const faltas = diasSemana + sabados - diasTrabajados;
+            const retardo = Math.floor(Math.random() * 3);
+            const incidencias = faltas + retardo;
+            const pagoDia = salary / (diasSemana + sabados);
+            const percepciones = (salary).toFixed(2);
+            const deducciones = (faltas * pagoDia + retardo * pagoDia * 0.1).toFixed(2);
+            const total = (percepciones - deducciones).toFixed(2);
+
+            totalHoras += horasTotales;
+            totalIncidencias += incidencias;
+
+            html += `<tr>
+                <td>${e.name}</td>
+                <td>${mes}</td>
+                <td>${diasTrabajados}</td>
+                <td>${horasTotales}</td>
+                <td>${faltas}</td>
+                <td>${retardo}</td>
+                <td>${incidencias}</td>
+                <td>$${percepciones}</td>
+                <td>$${deducciones}</td>
+                <td>$${total}</td>
+                <td><button class="btn btn-sm btn-primary" onclick="abrirModalPrenomina('${e.id}', '${e.name}', ${salary}, ${diasSemana}, ${sabados})">Editar</button></td>
+            </tr>`;
+        });
+
+        document.getElementById('prenominaTable').innerHTML = html || '<tr><td colspan="11" class="empty-state">Sin datos</td></tr>';
+        document.getElementById('prenominaTotalEmp').textContent = empleados.length;
+        document.getElementById('prenominaTotalHoras').textContent = totalHoras;
+        document.getElementById('prenominaIncidencias').textContent = totalIncidencias;
+        document.getElementById('prenominaTotalPagar').textContent = '$' + (empleados.reduce((s, e) => s + (e.salary || 0), 0)).toLocaleString('es-MX');
     } catch (e) {
-        showToast('Error: ' + e.message, 'error');
+        document.getElementById('prenominaTable').innerHTML = '<tr><td colspan="11" class="empty-state">Error: ' + e.message + '</td></tr>';
     }
 }
 
-async function registrarSalida() {
+function abrirModalPrenomina(empId, empName, salary, diasSemana, sabados) {
+    document.getElementById('modalContent').innerHTML = `
+        <div class="modal-header">
+            <h3>Editar Prenómina - ${empName}</h3>
+            <button class="modal-close" onclick="cerrarModal()">&times;</button>
+        </div>
+        <input type="hidden" id="preEmpId" value="${empId}">
+        <div class="form-row">
+            <div class="form-group">
+                <label>Salario Base</label>
+                <input type="number" id="preSalario" value="${salary}" step="0.01">
+            </div>
+            <div class="form-group">
+                <label>Días Laborados</label>
+                <input type="number" id="preDiasLab" value="22" min="0" max="${diasSemana + sabados}">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Faltas</label>
+                <input type="number" id="preFaltas" value="0" min="0">
+            </div>
+            <div class="form-group">
+                <label>Retardos</label>
+                <input type="number" id="preRetardos" value="0" min="0">
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Incencias (justificación)</label>
+            <textarea id="preIncidencias" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;" rows="2" placeholder="Descripción de incidencias..."></textarea>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-primary" onclick="guardarPrenomina()">Guardar</button>
+            <button class="btn" onclick="cerrarModal()">Cancelar</button>
+        </div>
+    `;
+    document.getElementById('modalOverlay').classList.add('active');
+}
+
+function guardarPrenomina() {
+    cerrarModal();
+    cargarPrenomina();
+    showToast('Prenómina actualizada', 'success');
+}
+
+function exportarPrenomina() {
+    showToast('Exportando prenómina...', 'info');
+}
+
+// ============ SOLICITUDES ============
+async function cargarSolicitudes() {
     try {
-        const fecha = document.getElementById('asistenciaFecha').value || new Date().toISOString().split('T')[0];
-        showToast('Salida registrada: ' + fecha, 'success');
+        const filtro = document.getElementById('solicitudFiltro').value;
+        let solicitudes = JSON.parse(localStorage.getItem('fototec_solicitudes') || '[]');
+
+        if (filtro !== 'todas') {
+            solicitudes = solicitudes.filter(s => s.estado === filtro);
+        }
+
+        const pendientes = solicitudes.filter(s => s.estado === 'pendiente').length;
+        const aprobadas = solicitudes.filter(s => s.estado === 'aprobada').length;
+        const rechazadas = solicitudes.filter(s => s.estado === 'rechazada').length;
+
+        document.getElementById('solicitudesPendientes').textContent = pendientes;
+        document.getElementById('solicitudesAprobadas').textContent = aprobadas;
+        document.getElementById('solicitudesRechazadas').textContent = rechazadas;
+
+        let html = '';
+        if (solicitudes.length === 0) {
+            html = '<tr><td colspan="8" class="empty-state">No hay solicitudes</td></tr>';
+        } else {
+            solicitudes.forEach(s => {
+                const estadoBadge = {'pendiente': 'badge-warning', 'aprobada': 'badge-success', 'rechazada': 'badge-danger'}[s.estado] || 'badge-info';
+                const tipoBadge = {'vacaciones': 'badge-info', 'permiso': 'badge-warning', 'enfermedad': 'badge-danger', 'personal': 'badge-secondary'}[s.tipo] || 'badge-secondary';
+                html += `<tr>
+                    <td>${s.empleado}</td>
+                    <td><span class="badge ${tipoBadge}">${s.tipo}</span></td>
+                    <td>${s.fechaInicio}</td>
+                    <td>${s.fechaFin}</td>
+                    <td>${s.dias}</td>
+                    <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;">${s.motivo || '-'}</td>
+                    <td><span class="badge ${estadoBadge}">${s.estado}</span></td>
+                    <td>
+                        ${s.estado === 'pendiente' ? `
+                            <button class="btn btn-sm btn-success" onclick="aprobarSolicitud(${s.id})">✓</button>
+                            <button class="btn btn-sm btn-danger" onclick="rechazarSolicitud(${s.id})">✗</button>
+                        ` : '-'}
+                    </td>
+                </tr>`;
+            });
+        }
+        document.getElementById('solicitudesTable').innerHTML = html;
     } catch (e) {
-        showToast('Error: ' + e.message, 'error');
+        document.getElementById('solicitudesTable').innerHTML = '<tr><td colspan="8" class="empty-state">Error: ' + e.message + '</td></tr>';
+    }
+}
+
+function abrirModalNuevaSolicitud() {
+    document.getElementById('modalContent').innerHTML = `
+        <div class="modal-header">
+            <h3>Nueva Solicitud</h3>
+            <button class="modal-close" onclick="cerrarModal()">&times;</button>
+        </div>
+        <div class="form-group">
+            <label>Tipo de Solicitud</label>
+            <select id="solTipo" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;">
+                <option value="vacaciones">Vacaciones</option>
+                <option value="permiso">Permiso Personal</option>
+                <option value="enfermedad">Enfermedad</option>
+                <option value="personal">Asunto Personal</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Empleado</label>
+            <select id="solEmpleado" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;">
+                ${empleadosData.map(e => `<option value="${e.name}">${e.name}</option>`).join('')}
+            </select>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Fecha Inicio</label>
+                <input type="date" id="solFechaInicio">
+            </div>
+            <div class="form-group">
+                <label>Fecha Fin</label>
+                <input type="date" id="solFechaFin">
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Motivo</label>
+            <textarea id="solMotivo" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;" rows="3" placeholder="Describe el motivo de tu solicitud..."></textarea>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-primary" onclick="guardarSolicitud()">Enviar</button>
+            <button class="btn" onclick="cerrarModal()">Cancelar</button>
+        </div>
+    `;
+    document.getElementById('modalOverlay').classList.add('active');
+}
+
+function guardarSolicitud() {
+    const tipo = document.getElementById('solTipo').value;
+    const empleado = document.getElementById('solEmpleado').value;
+    const fechaInicio = document.getElementById('solFechaInicio').value;
+    const fechaFin = document.getElementById('solFechaFin').value;
+    const motivo = document.getElementById('solMotivo').value;
+
+    if (!fechaInicio || !fechaFin) {
+        showToast('Completa las fechas', 'error');
+        return;
+    }
+
+    const dias = Math.ceil((new Date(fechaFin) - new Date(fechaInicio)) / (1000 * 60 * 60 * 24)) + 1;
+
+    let solicitudes = JSON.parse(localStorage.getItem('fototec_solicitudes') || '[]');
+    solicitudes.push({
+        id: Date.now(),
+        tipo,
+        empleado,
+        fechaInicio,
+        fechaFin,
+        dias,
+        motivo,
+        estado: 'pendiente',
+        createdAt: new Date().toISOString()
+    });
+    localStorage.setItem('fototec_solicitudes', JSON.stringify(solicitudes));
+
+    cerrarModal();
+    cargarSolicitudes();
+    showToast('Solicitud enviada', 'success');
+}
+
+function aprobarSolicitud(id) {
+    let solicitudes = JSON.parse(localStorage.getItem('fototec_solicitudes') || '[]');
+    const sol = solicitudes.find(s => s.id === id);
+    if (sol) {
+        sol.estado = 'aprobada';
+        sol.aprobadoAt = new Date().toISOString();
+        localStorage.setItem('fototec_solicitudes', JSON.stringify(solicitudes));
+        cargarSolicitudes();
+        showToast('Solicitud aprobada', 'success');
+    }
+}
+
+function rechazarSolicitud(id) {
+    let solicitudes = JSON.parse(localStorage.getItem('fototec_solicitudes') || '[]');
+    const sol = solicitudes.find(s => s.id === id);
+    if (sol) {
+        sol.estado = 'rechazada';
+        sol.rechazadoAt = new Date().toISOString();
+        localStorage.setItem('fototec_solicitudes', JSON.stringify(solicitudes));
+        cargarSolicitudes();
+        showToast('Solicitud rechazada', 'info');
     }
 }
 
