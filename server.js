@@ -36,6 +36,17 @@ async function initDB() {
             created_at TEXT DEFAULT (datetime('now'))
         )
     `);
+
+    // ============ TABLA DE PERMISOS POR USUARIO ============
+    await db.execute(`
+        CREATE TABLE IF NOT EXISTS user_permissions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            permission TEXT NOT NULL,
+            UNIQUE(user_id, permission)
+        )
+    `);
+
     await db.execute(`
         CREATE TABLE IF NOT EXISTS reservas (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -805,6 +816,40 @@ app.put('/api/users/:id', async (req, res) => {
         res.json({ success: true, message: 'Usuario actualizado' });
     } catch (err) {
         console.error('Error updating user:', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// Obtener permisos de un usuario
+app.get('/api/users/:id/permissions', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const rows = await dbAll(`SELECT permission FROM user_permissions WHERE user_id = ?`, [parseInt(id)]);
+        res.json({ success: true, permissions: rows.map(r => r.permission) });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// Guardar permisos de un usuario
+app.post('/api/users/:id/permissions', async (req, res) => {
+    const { id } = req.params;
+    const { permissions } = req.body;
+
+    try {
+        await db.execute(`DELETE FROM user_permissions WHERE user_id = ?`, [parseInt(id)]);
+
+        if (Array.isArray(permissions)) {
+            for (const perm of permissions) {
+                await db.execute({
+                    sql: `INSERT OR IGNORE INTO user_permissions (user_id, permission) VALUES (?, ?)`,
+                    args: [parseInt(id), perm]
+                });
+            }
+        }
+
+        res.json({ success: true, message: 'Permisos actualizados' });
+    } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
 });

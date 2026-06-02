@@ -839,6 +839,30 @@ function aplicarRestriccionesRol() {
 var moduloActual = 'dashboard';
 
 function mostrarModulo(modulo, btn) {
+    const modulePermissionMap = {
+        'dashboard': 'ver_dashboard',
+        'clientes': 'ver_clientes',
+        'leads': 'ver_leads',
+        'ventas': 'ver_pedidos',
+        'productos': 'ver_productos',
+        'inventario': 'ver_inventario',
+        'pedidos': 'ver_pedidos',
+        'proveedores': 'ver_proveedores',
+        'empleados': 'ver_empleados',
+        'nomina': 'ver_nominas',
+        'asistencia': 'ver_asistencias',
+        'facturas': 'ver_facturas',
+        'gastos': 'ver_gastos',
+        'usuarios': 'ver_usuarios',
+        'configuracion': 'editar_configuracion'
+    };
+
+    const permiso = modulePermissionMap[modulo];
+    if (permiso && usuarioActual && !Permisos.tienePermiso(permiso, usuarioActual.id, usuarioActual.userType)) {
+        showToast('No tienes permiso para acceder a este módulo', 'error');
+        return;
+    }
+
     moduloActual = modulo;
     var modulos = document.querySelectorAll('.module-content');
     modulos.forEach(m => m.classList.remove('active'));
@@ -2613,6 +2637,18 @@ async function cargarUsuarios() {
         const data = await API.getUsuarios();
         const list = data.users || [];
 
+        userCustomPermissions = {};
+
+        for (const u of list) {
+            try {
+                const p = await fetch('/api/users/' + u.id + '/permissions');
+                const pd = await p.json();
+                userCustomPermissions[u.id] = pd.permissions || [];
+            } catch (e) {
+                userCustomPermissions[u.id] = [];
+            }
+        }
+
         let html = '';
         list.forEach(u => {
             const rol = mapRolAPItoLocal(u.roles);
@@ -2704,34 +2740,99 @@ async function guardarUsuario() {
     }
 }
 
-function abrirModalPermisos(id, name, rolActual) {
-    const permisos = permissionSystem.obtenerPermisosRol(rolActual);
+var currentUserPermisos = { id: null, permissions: [] };
 
-    let htmlPermisos = '';
-    const categorias = {
-        'Productos': ['ver_productos', 'crear_productos', 'editar_productos', 'eliminar_productos', 'editar_precios', 'editar_stock'],
-        'CRM/Pedidos': ['ver_todos_pedidos', 'cambiar_estado_pedido', 'cancelar_pedido', 'ver_reservas', 'gestionar_reservas'],
-        'Recursos Humanos': ['ver_empleados', 'crear_empleados', 'editar_empleados', 'eliminar_empleados', 'ver_nominas', 'gestionar_nominas', 'ver_asistencias', 'gestionar_asistencias'],
-        'Compras': ['ver_compras', 'crear_pedidos_compra', 'editar_pedidos_compra', 'eliminar_pedidos_compra', 'ver_gastos'],
-        'Proveedores': ['ver_proveedores', 'crear_proveedores', 'editar_proveedores', 'eliminar_proveedores'],
-        'Usuarios': ['ver_usuarios', 'crear_usuarios', 'editar_usuarios', 'eliminar_usuarios', 'cambiar_rol'],
-        'Dashboard': ['ver_reportes', 'ver_estadisticas', 'editar_configuracion', 'acceder_panel_admin', 'ver_dashboard_completo']
+async function abrirModalPermisos(id, name, rolActual) {
+    currentUserPermisos = { id, permissions: [] };
+
+    const allPermissions = {
+        'Dashboard': {
+            'ver_dashboard': 'Ver Dashboard',
+            'ver_reportes': 'Ver Reportes',
+            'ver_estadisticas': 'Ver Estadísticas',
+            'editar_configuracion': 'Editar Configuración'
+        },
+        'Productos': {
+            'ver_productos': 'Ver Productos',
+            'crear_productos': 'Crear Productos',
+            'editar_productos': 'Editar Productos',
+            'eliminar_productos': 'Eliminar Productos',
+            'editar_precios': 'Editar Precios',
+            'editar_stock': 'Editar Stock'
+        },
+        'Inventario': {
+            'ver_inventario': 'Ver Inventario',
+            'editar_inventario': 'Editar Inventario',
+            'ajuste_stock': 'Hacer Ajuste de Stock'
+        },
+        'CRM / Ventas': {
+            'ver_pedidos': 'Ver Pedidos',
+            'ver_clientes': 'Ver Clientes',
+            'crear_clientes': 'Crear Clientes',
+            'editar_clientes': 'Editar Clientes',
+            'ver_leads': 'Ver Leads/Pipeline',
+            'crear_leads': 'Crear Leads',
+            'editar_leads': 'Editar Leads',
+            'ver_facturas': 'Ver Facturas',
+            'crear_facturas': 'Crear Facturas',
+            'editar_facturas': 'Editar Facturas'
+        },
+        'Recursos Humanos': {
+            'ver_empleados': 'Ver Empleados',
+            'crear_empleados': 'Crear Empleados',
+            'editar_empleados': 'Editar Empleados',
+            'eliminar_empleados': 'Eliminar Empleados',
+            'ver_nominas': 'Ver Nóminas',
+            'editar_nominas': 'Editar Nóminas',
+            'ver_asistencias': 'Ver Asistencias',
+            'editar_asistencias': 'Editar Asistencias',
+            'ver_solicitudes': 'Ver Solicitudes',
+            'aprobar_solicitudes': 'Aprobar Solicitudes'
+        },
+        'Compras': {
+            'ver_compras': 'Ver Órdenes de Compra',
+            'crear_compras': 'Crear Órdenes',
+            'editar_compras': 'Editar Órdenes',
+            'ver_gastos': 'Ver Gastos',
+            'crear_gastos': 'Crear Gastos'
+        },
+        'Proveedores': {
+            'ver_proveedores': 'Ver Proveedores',
+            'crear_proveedores': 'Crear Proveedores',
+            'editar_proveedores': 'Editar Proveedores',
+            'eliminar_proveedores': 'Eliminar Proveedores'
+        },
+        'Usuarios': {
+            'ver_usuarios': 'Ver Usuarios',
+            'crear_usuarios': 'Crear Usuarios',
+            'editar_usuarios': 'Editar Usuarios',
+            'eliminar_usuarios': 'Eliminar Usuarios',
+            'cambiar_roles': 'Cambiar Roles'
+        }
     };
 
-    for (const [categoria, perms] of Object.entries(categorias)) {
+    try {
+        const res = await fetch('/api/users/' + id + '/permissions');
+        const data = await res.json();
+        currentUserPermisos.permissions = data.permissions || [];
+    } catch (e) {
+        console.error('Error loading permissions:', e);
+    }
+
+    let htmlPermisos = '';
+    for (const [categoria, perms] of Object.entries(allPermissions)) {
         htmlPermisos += `<div style="margin-bottom:15px;">
-            <h4 style="color:#667eea;margin-bottom:8px;font-size:0.9rem;border-bottom:1px solid #eee;padding-bottom:4px;">${categoria}</h4>`;
-        perms.forEach(p => {
-            const estado = permisos[p] ? '✅' : '❌';
-            const checked = permisos[p] ? 'checked' : '';
+            <h4 style="color:#667eea;margin-bottom:8px;font-size:0.9rem;border-bottom:1px solid #eee;padding-bottom:4px;">${categoria}</h4>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;">`;
+        for (const [key, label] of Object.entries(perms)) {
+            const checked = currentUserPermisos.permissions.includes(key) ? 'checked' : '';
             htmlPermisos += `
-            <label style="display:flex;align-items:center;gap:8px;padding:4px 0;font-size:0.85rem;cursor:pointer;">
-                <input type="checkbox" id="perm_${p}" ${checked} onchange="togglePermiso('${id}', '${p}', this.checked)">
-                <span>${estado}</span>
-                <span style="color:#666;">${p.replace(/_/g, ' ')}</span>
-            </label>`;
-        });
-        htmlPermisos += '</div>';
+                <label style="display:flex;align-items:center;gap:6px;padding:6px;background:#f8f9fa;border-radius:4px;font-size:0.8rem;cursor:pointer;">
+                    <input type="checkbox" id="perm_${key}" ${checked} onchange="togglePermiso('${id}', '${key}', this.checked)">
+                    <span>${label}</span>
+                </label>`;
+        }
+        htmlPermisos += '</div></div>';
     }
 
     document.getElementById('modalContent').innerHTML = `
@@ -2739,18 +2840,48 @@ function abrirModalPermisos(id, name, rolActual) {
             <h3>Permisos de ${name}</h3>
             <button class="modal-close" onclick="cerrarModal()">&times;</button>
         </div>
-        <p style="color:#666;font-size:0.8rem;margin-bottom:15px;">Rol actual: <strong>${Permisos.obtenerNombreRol(rolActual)}</strong></p>
-        <div style="max-height:400px;overflow-y:auto;padding-right:10px;">
+        <p style="color:#666;font-size:0.8rem;margin-bottom:15px;">Rol base: <strong>${Permisos.obtenerNombreRol(rolActual)}</strong></p>
+        <div style="max-height:450px;overflow-y:auto;padding-right:10px;">
             ${htmlPermisos}
         </div>
         <div style="margin-top:15px;padding-top:10px;border-top:1px solid #eee;">
-            <p style="color:#999;font-size:0.75rem;">⚠️ Los permisos se basarán en el rol. Los cambios requieren cambiar el rol del usuario.</p>
+            <p style="color:#28a745;font-size:0.75rem;">✓ Los permisos personalizados se suman al rol base</p>
         </div>
         <div class="modal-footer">
+            <button class="btn btn-primary" onclick="guardarTodosPermisos(${id})">Guardar Todo</button>
             <button class="btn" onclick="cerrarModal()">Cerrar</button>
         </div>
     `;
     document.getElementById('modalOverlay').classList.add('active');
+}
+
+async function togglePermiso(userId, permiso, valor) {
+    if (valor) {
+        if (!currentUserPermisos.permissions.includes(permiso)) {
+            currentUserPermisos.permissions.push(permiso);
+        }
+    } else {
+        currentUserPermisos.permissions = currentUserPermisos.permissions.filter(p => p !== permiso);
+    }
+}
+
+async function guardarTodosPermisos(userId) {
+    try {
+        const res = await fetch('/api/users/' + userId + '/permissions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ permissions: currentUserPermisos.permissions })
+        });
+        const result = await res.json();
+        if (result.success) {
+            cerrarModal();
+            showToast('Permisos guardados', 'success');
+        } else {
+            showToast('Error: ' + (result.error || 'No se guardaron'), 'error');
+        }
+    } catch (e) {
+        showToast('Error: ' + e.message, 'error');
+    }
 }
 
 async function togglePermiso(userId, permiso, valor) {
@@ -2848,6 +2979,8 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // ============ SISTEMA DE PERMISOS SIMPLE ============
+var userCustomPermissions = {};
+
 const Permisos = {
     roles: {
         administrador: { nombre: 'Administrador', color: '#667eea' },
@@ -2856,11 +2989,24 @@ const Permisos = {
         proveedores: { nombre: 'Proveedores', color: '#27ae60' },
         cliente: { nombre: 'Cliente', color: '#95a5a6' }
     },
+    permisosPorRol: {
+        administrador: ['ver_dashboard', 'ver_reportes', 'ver_estadisticas', 'editar_configuracion', 'ver_productos', 'crear_productos', 'editar_productos', 'eliminar_productos', 'editar_precios', 'editar_stock', 'ver_inventario', 'editar_inventario', 'ajuste_stock', 'ver_pedidos', 'ver_clientes', 'crear_clientes', 'editar_clientes', 'ver_leads', 'crear_leads', 'editar_leads', 'ver_facturas', 'crear_facturas', 'editar_facturas', 'ver_empleados', 'crear_empleados', 'editar_empleados', 'eliminar_empleados', 'ver_nominas', 'editar_nominas', 'ver_asistencias', 'editar_asistencias', 'ver_solicitudes', 'aprobar_solicitudes', 'ver_compras', 'crear_compras', 'editar_compras', 'ver_gastos', 'crear_gastos', 'ver_proveedores', 'crear_proveedores', 'editar_proveedores', 'eliminar_proveedores', 'ver_usuarios', 'crear_usuarios', 'editar_usuarios', 'eliminar_usuarios', 'cambiar_roles'],
+        rh: ['ver_dashboard', 'ver_empleados', 'crear_empleados', 'editar_empleados', 'ver_nominas', 'editar_nominas', 'ver_asistencias', 'editar_asistencias', 'ver_solicitudes', 'aprobar_solicitudes'],
+        compras: ['ver_dashboard', 'ver_productos', 'crear_productos', 'editar_productos', 'ver_inventario', 'editar_inventario', 'ajuste_stock', 'ver_compras', 'crear_compras', 'editar_compras', 'ver_gastos', 'crear_gastos'],
+        proveedores: ['ver_dashboard', 'ver_proveedores', 'crear_proveedores', 'editar_proveedores'],
+        cliente: ['ver_dashboard']
+    },
     obtenerNombreRol(rol) {
         return this.roles[rol]?.nombre || rol || 'Desconocido';
     },
     obtenerColorRol(rol) {
         return this.roles[rol]?.color || '#666';
+    },
+    tienePermiso(permiso, userId, userRole) {
+        if (userRole === 'administrador') return true;
+        if (this.permisosPorRol[userRole]?.includes(permiso)) return true;
+        if (userCustomPermissions[userId]?.includes(permiso)) return true;
+        return false;
     }
 };
 </script>
