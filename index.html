@@ -1583,7 +1583,11 @@
 
             setUser(data) {
                 const userData = data.user || data;
-                const userType = userData.role === 'admin' ? 'administrador' : 'cliente';
+                let userType = 'cliente';
+                if (userData.role === 'admin' || userData.role === 'administrador' || userData.role === 'super_admin') userType = 'administrador';
+                else if (userData.role === 'rh' || userData.role === 'recursos_humanos') userType = 'rh';
+                else if (userData.role === 'compras') userType = 'compras';
+                else if (userData.role === 'proveedores') userType = 'proveedores';
                 this.currentUser = { ...userData, userType };
                 this.token = data.token || this.token;
                 localStorage.setItem('fotovecToken', this.token);
