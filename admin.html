@@ -1558,6 +1558,8 @@ async function convertirLead(id) {
 }
 
 // ============ VENTAS ============
+var ventasData = { pedidos: [], facturas: [] };
+
 async function cargarVentas() {
     try {
         const [pedidosRes, facturasRes] = await Promise.all([
@@ -1567,14 +1569,14 @@ async function cargarVentas() {
         const pedidosData = await pedidosRes.json();
         const facturasData = await facturasRes.json();
 
-        const pedidos = pedidosData.pedidos || [];
-        const facturas = facturasData.facturas || [];
+        ventasData.pedidos = pedidosData.pedidos || [];
+        ventasData.facturas = facturasData.facturas || [];
 
-        document.getElementById('ventasCotizaciones').textContent = pedidos.length;
-        document.getElementById('ventasFacturas').textContent = facturas.length;
+        document.getElementById('ventasCotizaciones').textContent = ventasData.pedidos.length;
+        document.getElementById('ventasFacturas').textContent = ventasData.facturas.length;
 
         let html = '';
-        [...pedidos.map(p => ({...p, type: 'Pedido'})), ...facturas.map(f => ({...f, type: 'Factura'}))].forEach(v => {
+        [...ventasData.pedidos.map(p => ({...p, type: 'Pedido'})), ...ventasData.facturas.map(f => ({...f, type: 'Factura'}))].forEach(v => {
             const statusBadge = v.type === 'Pedido'
                 ? ({'pendiente': 'badge-warning', 'completado': 'badge-success', 'cancelado': 'badge-danger'}[v.estado] || 'badge-info')
                 : ({'pendiente': 'badge-warning', 'pagado': 'badge-success', 'vencido': 'badge-danger', 'cancelado': 'badge-danger'}[v.estado] || 'badge-info');
@@ -1595,7 +1597,49 @@ async function cargarVentas() {
 }
 
 function verVenta(id, type) {
-    showToast('Ver ' + type + ' #' + id, 'info');
+    let venta = null;
+    if (type === 'Pedido') {
+        venta = ventasData.pedidos.find(p => p.id === id);
+    } else {
+        venta = ventasData.facturas.find(f => f.id === id);
+    }
+
+    if (!venta) {
+        showToast('No se encontro la venta', 'error');
+        return;
+    }
+
+    document.getElementById('modalContent').innerHTML = `
+        <div class="modal-header">
+            <h3>${type} ${venta.folio || '#' + id}</h3>
+            <button class="modal-close" onclick="cerrarModal()">&times;</button>
+        </div>
+        <div style="padding:10px 0;">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-bottom:20px;">
+                <div style="background:#f8f9fa;padding:15px;border-radius:8px;">
+                    <label style="font-size:0.75rem;color:#666;">Cliente</label>
+                    <p style="font-weight:bold;margin:5px 0;">${venta.cliente_nombre || '-'}</p>
+                </div>
+                <div style="background:#f8f9fa;padding:15px;border-radius:8px;">
+                    <label style="font-size:0.75rem;color:#666;">Fecha</label>
+                    <p style="font-weight:bold;margin:5px 0;">${venta.fecha ? venta.fecha.split('T')[0] : '-'}</p>
+                </div>
+                <div style="background:#f8f9fa;padding:15px;border-radius:8px;">
+                    <label style="font-size:0.75rem;color:#666;">Total</label>
+                    <p style="font-weight:bold;margin:5px 0;font-size:1.2rem;">$${(venta.total || 0).toLocaleString('es-MX')}</p>
+                </div>
+                <div style="background:#667eea;color:white;padding:15px;border-radius:8px;">
+                    <label style="font-size:0.75rem;opacity:0.8;">Estado</label>
+                    <p style="font-weight:bold;margin:5px 0;text-transform:uppercase;">${venta.estado || 'pendiente'}</p>
+                </div>
+            </div>
+            <p style="color:#666;">Total: <strong>$${(venta.total || 0).toLocaleString('es-MX')}</strong></p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn" onclick="cerrarModal()">Cerrar</button>
+        </div>
+    `;
+    document.getElementById('modalOverlay').classList.add('active');
 }
 
 // ============ FACTURAS ============
@@ -2652,7 +2696,32 @@ async function guardarPrenomina() {
 }
 
 function exportarPrenomina() {
-    showToast('Exportando prenómina...', 'info');
+    if (!nominaData || nominaData.length === 0) {
+        showToast('No hay datos de nómina para exportar', 'error');
+        return;
+    }
+
+    const headers = ['Empleado', 'Departamento', 'Dias Asist.', 'Salario Base', 'Bonos', 'Deducciones', 'Neto', 'Estado'];
+    const rows = nominaData.map(e => [
+        e.nombre,
+        e.area || '-',
+        e.diasAsistidos + '/5',
+        e.salarioBase,
+        e.bonos,
+        e.deducciones,
+        e.neto,
+        e.estado
+    ]);
+
+    const csv = [headers, ...rows].map(row => row.join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'prenomina_' + new Date().toISOString().split('T')[0] + '.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('Prenómina exportada', 'success');
 }
 
 // ============ SOLICITUDES ============
@@ -3506,10 +3575,6 @@ async function guardarTodosPermisos(userId) {
     } catch (e) {
         showToast('Error: ' + e.message, 'error');
     }
-}
-
-async function togglePermiso(userId, permiso, valor) {
-    showToast('Para cambiar permisos, cambia el rol del usuario', 'info');
 }
 
 function abrirModalNuevoUsuario() {
