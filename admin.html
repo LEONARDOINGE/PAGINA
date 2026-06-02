@@ -2058,6 +2058,8 @@ async function cargarNomina() {
             const statusBadge = {'pagado': 'badge-success', 'pendiente': 'badge-warning', 'no_pagado': 'badge-danger'}[e.estado] || 'badge-warning';
             const statusText = {'pagado': 'Pagado', 'pendiente': 'Pendiente', 'no_pagado': 'No Pagado'}[e.estado] || 'Pendiente';
 
+            const bancoMostrar = e.banco ? `${e.banco} ${e.clabe ? '****' + (e.clabe || '').slice(-4) : ''}` : '-';
+
             html += `<tr>
                 <td><strong>${e.nombre}</strong></td>
                 <td>${e.area || '-'}</td>
@@ -2096,6 +2098,16 @@ function abrirModalNomina(idx) {
         <input type="hidden" id="nominaIdx" value="${idx}">
         <div class="form-row">
             <div class="form-group">
+                <label>Banco</label>
+                <input type="text" id="nominaBanco" value="${e.banco || ''}" placeholder="Ej: BBVA, HSBC, Santander" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;">
+            </div>
+            <div class="form-group">
+                <label>CLABE Interbancaria</label>
+                <input type="text" id="nominaCLABE" value="${e.clabe || ''}" placeholder="18 dígitos" maxlength="18" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
                 <label>Salario Base</label>
                 <input type="number" id="nominaSalario" value="${e.salarioBase}" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;">
             </div>
@@ -2128,11 +2140,15 @@ function abrirModalNomina(idx) {
 
 function guardarNomina() {
     const idx = parseInt(document.getElementById('nominaIdx').value);
+    const banco = document.getElementById('nominaBanco').value;
+    const clabe = document.getElementById('nominaCLABE').value;
     const salarioBase = parseFloat(document.getElementById('nominaSalario').value) || 0;
     const bonos = parseFloat(document.getElementById('nominaBonos').value) || 0;
     const deducciones = parseFloat(document.getElementById('nominaDed').value) || 0;
     const estado = document.getElementById('nominaEstado').value;
 
+    nominaData[idx].banco = banco;
+    nominaData[idx].clabe = clabe;
     nominaData[idx].salarioBase = salarioBase;
     nominaData[idx].bonos = bonos;
     nominaData[idx].deducciones = deducciones;
