@@ -2683,9 +2683,12 @@ async function cargarInventario() {
             else if (catMostrar === 'boda') catMostrar = 'Servicios';
             else if (catMostrar === 'impresion') catMostrar = 'Papel';
 
+            const nombreMostrar = p.nombre || p.name || p.descripcion || 'Producto sin nombre';
+            const skuMostrar = p.sku || p.codigo || 'S/N';
+
             html += `<tr>
-                <td><code style="font-size:0.8rem;">${p.sku || 'N/A'}</code></td>
-                <td><strong>${p.nombre}</strong><br><small style="color:#999;">${p.descripcion || '-'}</small></td>
+                <td><code style="font-size:0.8rem;">${skuMostrar}</code></td>
+                <td><strong>${nombreMostrar}</strong><br><small style="color:#999;">${p.descripcion || '-'}</small></td>
                 <td><span class="badge badge-info">${catMostrar}</span></td>
                 <td><strong style="font-size:1.1rem;">${stock}</strong> ${p.unit || 'pzas'}</td>
                 <td>${stockMin}</td>
@@ -2693,7 +2696,7 @@ async function cargarInventario() {
                 <td>${p.proveedor_nombre || '-'}</td>
                 <td><span class="badge ${estadoClass}">${estado}</span></td>
                 <td>
-                    <button class="btn btn-sm btn-primary" onclick="abrirModalEditarStock(${p.id}, '${p.nombre}', ${stock}, '${p.unit || 'pzas'}')">Editar Stock</button>
+                    <button class="btn btn-sm btn-primary" onclick="abrirModalEditarStock(${p.id}, '${nombreMostrar.replace(/'/g, "\\'")}', ${stock}, '${p.unit || 'pzas'}')">Editar Stock</button>
                 </td>
             </tr>`;
         });
@@ -2713,10 +2716,14 @@ async function cargarInventario() {
 function abrirModalEditarStock(id, nombre, stockActual, unidad) {
     document.getElementById('modalContent').innerHTML = `
         <div class="modal-header">
-            <h3>Editar Stock - ${nombre}</h3>
+            <h3>Editar Producto</h3>
             <button class="modal-close" onclick="cerrarModal()">&times;</button>
         </div>
         <input type="hidden" id="editStockId" value="${id}">
+        <div class="form-group">
+            <label>Nombre del Producto</label>
+            <input type="text" id="editProdNombre" value="${nombre}" class="form-control" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;">
+        </div>
         <div class="form-group">
             <label>Stock Actual</label>
             <input type="number" id="editStockActual" value="${stockActual}" class="form-control" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:1.2rem;font-weight:bold;">
@@ -2760,6 +2767,7 @@ function abrirModalEditarStock(id, nombre, stockActual, unidad) {
 
 async function guardarStock() {
     const id = document.getElementById('editStockId').value;
+    const nombre = document.getElementById('editProdNombre').value;
     const nuevoStock = parseInt(document.getElementById('editStockNuevo').value) || 0;
     const tipo = document.getElementById('editStockTipo').value;
     const notas = document.getElementById('editStockNotas').value;
@@ -2768,7 +2776,7 @@ async function guardarStock() {
         const res = await fetch('/api/products/' + id, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ stock: nuevoStock })
+            body: JSON.stringify({ nombre, stock: nuevoStock })
         });
         const result = await res.json();
 
