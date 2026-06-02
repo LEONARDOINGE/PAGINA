@@ -459,6 +459,10 @@ app.post('/graphql', async (req, res) => {
             }
 
             const token = generateToken(user);
+            let apiRole = user.role;
+            if (apiRole === 'admin' || apiRole === 'administrador' || apiRole === 'super_admin') {
+                apiRole = 'super_admin';
+            }
             return res.json({
                 data: {
                     login: {
@@ -467,7 +471,7 @@ app.post('/graphql', async (req, res) => {
                             id: user.id,
                             name: user.name,
                             email: user.email,
-                            roles: [user.role === 'admin' ? 'super_admin' : user.role],
+                            roles: [apiRole],
                             permissions: []
                         }
                     }

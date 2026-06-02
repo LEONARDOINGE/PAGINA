@@ -565,12 +565,15 @@ const API = {
 
 // ============ MAPEO DE ROLES ============
 function mapRolAPItoLocal(roles) {
-    if (!roles || !Array.isArray(roles)) return 'cliente';
-    if (roles.includes('admin') || roles.includes('super_admin')) return 'administrador';
-    if (roles.includes('coordinador_rrhh') || roles.includes('rh')) return 'rh';
-    if (roles.includes('coordinador_scm') || roles.includes('compras')) return 'compras';
-    if (roles.includes('proveedores')) return 'proveedores';
-    if (roles.includes('gerente_ventas')) return 'administrador';
+    if (!roles) return 'cliente';
+    let rolArray = roles;
+    if (typeof rolArray === 'string') rolArray = [rolArray];
+    if (!Array.isArray(rolArray)) return 'cliente';
+    if (rolArray.includes('admin') || rolArray.includes('super_admin') || rolArray.includes('Administrador')) return 'administrador';
+    if (rolArray.includes('coordinador_rrhh') || rolArray.includes('rh') || rolArray.includes('Recursos Humanos')) return 'rh';
+    if (rolArray.includes('coordinador_scm') || rolArray.includes('compras') || rolArray.includes('Compras')) return 'compras';
+    if (rolArray.includes('proveedores') || rolArray.includes('Proveedores')) return 'proveedores';
+    if (rolArray.includes('gerente_ventas')) return 'administrador';
     return 'cliente';
 }
 
