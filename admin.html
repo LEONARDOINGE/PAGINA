@@ -2019,8 +2019,13 @@ async function guardarPedidoCompra() {
 // ============ NÓMINA ============
 var nominaData = [];
 
-async function cargarNomina() {
+async function cargarNomina(forceReload = false) {
     try {
+        if (!forceReload && nominaData.length > 0) {
+            renderNominaTable();
+            return;
+        }
+
         const res = await fetch('/api/erp/empleados');
         const data = await res.json();
         const list = data.empleados || [];
@@ -2041,10 +2046,19 @@ async function cargarNomina() {
                 bonos,
                 deducciones,
                 neto,
-                estado: 'pendiente'
+                estado: 'pendiente',
+                banco: e.banco || '',
+                clabe: e.clabe || ''
             };
         });
 
+        renderNominaTable();
+    } catch (e) {
+        document.getElementById('nominaTable').innerHTML = '<tr><td colspan="9" class="empty-state">Error: ' + e.message + '</td></tr>';
+    }
+}
+
+function renderNominaTable() {
         let total = 0;
         let totalPagado = 0;
         let totalPendiente = 0;
@@ -2081,9 +2095,6 @@ async function cargarNomina() {
         document.getElementById('nominaPagado').textContent = '$' + totalPagado.toLocaleString('es-MX');
         document.getElementById('nominaPendiente').textContent = '$' + totalPendiente.toLocaleString('es-MX');
         document.getElementById('nominaTable').innerHTML = html || '<tr><td colspan="9" class="empty-state">Sin datos</td></tr>';
-    } catch (e) {
-        document.getElementById('nominaTable').innerHTML = '<tr><td colspan="9" class="empty-state">Error: ' + e.message + '</td></tr>';
-    }
 }
 
 function abrirModalNomina(idx) {
@@ -2156,13 +2167,13 @@ function guardarNomina() {
     nominaData[idx].estado = estado;
 
     cerrarModal();
-    cargarNomina();
+    renderNominaTable();
     showToast('Nómina actualizada', 'success');
 }
 
 function marcarPagado(idx) {
     nominaData[idx].estado = 'pagado';
-    cargarNomina();
+    renderNominaTable();
     showToast('Marcado como pagado', 'success');
 }
 
