@@ -311,18 +311,41 @@
             <div class="content-header">
                 <div>
                     <h1>Empleados</h1>
-                    <p>Gestión de empleados</p>
+                    <p>Gestión de personal, asistencia y kardex</p>
                 </div>
                 <div class="content-header-right">
-                    <input type="text" class="data-table-search" placeholder="Buscar empleado..." id="empSearch" oninput="buscarEmpleados()">
                     <button class="btn btn-success" onclick="abrirModalEmpleado()">+ Nuevo Empleado</button>
                 </div>
             </div>
+
+            <div class="cards-grid" style="margin-bottom:20px;">
+                <div class="card">
+                    <div class="card-icon">👥</div>
+                    <div class="card-value" id="empTotal">0</div>
+                    <div class="card-label">Total Empleados</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">✅</div>
+                    <div class="card-value" id="empActivos">0</div>
+                    <div class="card-label">Activos</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">🏢</div>
+                    <div class="card-value" id="empDeptos">0</div>
+                    <div class="card-label">Departamentos</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">💵</div>
+                    <div class="card-value" id="empNomina">$0</div>
+                    <div class="card-label">Nómina Mensual</div>
+                </div>
+            </div>
+
             <div class="data-table">
                 <table>
                     <thead>
                         <tr>
-                            <th>ID</th><th>Nombre</th><th>Puesto</th><th>Departamento</th><th>Salario</th><th>Estado</th><th>Acciones</th>
+                            <th>Empleado</th><th>Email</th><th>Puesto</th><th>Departamento</th><th>Rol</th><th>Estado</th><th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody id="empleadosTable">
@@ -947,14 +970,34 @@ async function cargarEmpleados(search = '') {
         const data = await API.getEmpleados(1, 50, search);
         const list = data.employees.data;
 
+        const activos = list.filter(e => e.active).length;
+        const deptos = [...new Set(list.map(e => e.department?.name).filter(Boolean))].length;
+        const nomina = list.filter(e => e.active).reduce((sum, e) => sum + (e.salary || 0), 0);
+
+        document.getElementById('empTotal').textContent = list.length;
+        document.getElementById('empActivos').textContent = activos;
+        document.getElementById('empDeptos').textContent = deptos;
+        document.getElementById('empNomina').textContent = '$' + nomina.toLocaleString('es-MX');
+        document.getElementById('badgeEmpleados').textContent = list.length;
+
         let html = '';
         list.forEach(e => {
+            const initials = e.name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
+            const rol = e.position?.name || '-';
             html += `<tr>
-                <td>${e.employeeNumber}</td>
-                <td>${e.name}</td>
+                <td>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <div style="width:32px;height:32px;background:#667eea;color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:bold;">${initials}</div>
+                        <div>
+                            <strong>${e.name}</strong>
+                            <div style="font-size:0.7rem;color:#999;">${e.employeeNumber || ''}</div>
+                        </div>
+                    </div>
+                </td>
+                <td>${e.email || '-'}</td>
                 <td>${e.position?.name || '-'}</td>
                 <td>${e.department?.name || '-'}</td>
-                <td>$${(e.salary || 0).toLocaleString('es-MX')}</td>
+                <td><span class="badge badge-info">${rol}</span></td>
                 <td><span class="badge ${e.active ? 'badge-success' : 'badge-danger'}">${e.active ? 'Activo' : 'Inactivo'}</span></td>
                 <td>
                     <button class="btn btn-sm btn-primary" onclick="abrirModalEmpleado(${e.id})">Editar</button>
@@ -962,7 +1005,6 @@ async function cargarEmpleados(search = '') {
             </tr>`;
         });
         document.getElementById('empleadosTable').innerHTML = html || '<tr><td colspan="7" class="empty-state">Sin empleados</td></tr>';
-        document.getElementById('badgeEmpleados').textContent = data.employees.total;
     } catch (e) {
         document.getElementById('empleadosTable').innerHTML = '<tr><td colspan="7" class="empty-state">Error: ' + e.message + '</td></tr>';
     }
