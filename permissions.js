@@ -762,10 +762,14 @@ function aplicarPermisosAlDOM() {
     }
 }
 
-// Aplicar permisos cuando carga la página
+// Aplicar permisos cuando carga la página (solo si authSystem ya está definido)
 window.addEventListener('load', function() {
-    aplicarPermisosAlDOM();
-    if (authSystem.currentUser) {
-        aplicarRBACAlDOM();
+    if (typeof aplicarPermisosAlDOM === 'function') {
+        aplicarPermisosAlDOM();
+    }
+    if (typeof authSystem !== 'undefined' && authSystem.currentUser) {
+        if (typeof aplicarRBACAlDOM === 'function') {
+            aplicarRBACAlDOM();
+        }
     }
 });

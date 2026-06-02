@@ -20,7 +20,7 @@
             display: none;
             justify-content: center;
             align-items: center;
-            z-index: 9999;
+            z-index: 99999;
         }
         .auth-modal.active { display: flex; }
         .auth-box {
@@ -297,18 +297,18 @@
 <body>
 
 <!-- LOGIN MODAL -->
-<div id="loginModal" class="auth-modal">
+<div id="loginModal" class="auth-modal" style="display: none;">
     <div class="auth-box">
         <h2>📸 FotoTec</h2>
         <p>Iniciar Sesión</p>
         <input type="text" id="loginUser" class="auth-input" placeholder="Usuario">
         <input type="password" id="loginPass" class="auth-input" placeholder="Contraseña">
-        <button class="auth-btn" onclick="handleLogin()">Entrar</button>
+        <button class="auth-btn" id="btnEntrar">Entrar</button>
         <div id="loginError" class="auth-error"></div>
     </div>
 </div>
 
-<div class="layout">
+<div class="layout" id="mainLayout" style="display: none;">
     <!-- SIDEBAR -->
     <nav class="sidebar" id="sidebar">
         <div class="sidebar-header">
@@ -435,7 +435,7 @@
     </nav>
 
     <!-- MAIN CONTENT -->
-    <main class="main-content" id="mainContent">
+    <main class="main-content" id="mainContent" style="margin-left: 0;">
         <!-- WELCOME SCREEN -->
         <div id="welcomeScreen" class="welcome-screen">
             <div class="welcome-box">
@@ -1027,12 +1027,12 @@
 
     // ============ FUNCIONES DE AUTENTICACIÓN ============
     function abrirLogin() {
-        document.getElementById('loginModal').classList.add('active');
+        document.getElementById('loginModal').style.display = 'flex';
         document.getElementById('loginUser').focus();
     }
 
     function cerrarLogin() {
-        document.getElementById('loginModal').classList.remove('active');
+        document.getElementById('loginModal').style.display = 'none';
         document.getElementById('loginError').textContent = '';
     }
 
@@ -1054,9 +1054,13 @@
     function handleLogout() {
         usuarioActual = null;
         document.getElementById('welcomeScreen').style.display = 'flex';
+        document.getElementById('mainLayout').style.display = 'none';
         document.getElementById('sidebarUser').innerHTML = '<div class="sidebar-user-name">Invitado</div><span class="sidebar-user-role" style="background:#666;">Sin sesión</span>';
         ocultarTodasSecciones();
     }
+
+    // Event listener para el botón de entrar
+    document.getElementById('btnEntrar').addEventListener('click', handleLogin);
 
     // ============ INICIALIZACIÓN ============
     function inicializarSistema() {
@@ -1071,8 +1075,9 @@
         // Aplicar restricciones de roles
         aplicarRestriccionesRol();
 
-        // Ocultar welcome, mostrar dashboard
+        // Ocultar welcome, mostrar layout principal
         document.getElementById('welcomeScreen').style.display = 'none';
+        document.getElementById('mainLayout').style.display = 'flex';
         mostrarModulo('dashboard');
 
         // Cargar datos
@@ -1347,13 +1352,15 @@
 
     // ============ ENTER PARA LOGIN ============
     document.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter' && document.getElementById('loginModal').classList.contains('active')) {
+        if (e.key === 'Enter' && document.getElementById('loginModal').style.display === 'flex') {
             handleLogin();
         }
     });
 
     // ============ INIT ============
     ocultarTodasSecciones();
+    document.getElementById('mainLayout').style.display = 'none';
+    document.getElementById('welcomeScreen').style.display = 'flex';
 </script>
 </body>
 </html>
