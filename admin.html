@@ -6,17 +6,12 @@
     <title>FotoTec | Panel de Administración</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f5f5f5; color: #333; min-height: 100vh; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f5f5f5; color: #333; }
 
-        /* ========== LOGIN MODAL ========== */
         .auth-modal {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.7);
-            backdrop-filter: blur(5px);
             display: none;
             justify-content: center;
             align-items: center;
@@ -35,258 +30,84 @@
         .auth-box h2 { color: #667eea; margin-bottom: 5px; }
         .auth-box p { color: #666; margin-bottom: 25px; }
         .auth-input {
-            width: 100%;
-            padding: 12px 15px;
-            margin-bottom: 15px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 1rem;
+            width: 100%; padding: 12px 15px; margin-bottom: 15px;
+            border: 1px solid #ddd; border-radius: 8px; font-size: 1rem;
         }
         .auth-btn {
-            width: 100%;
-            padding: 12px;
-            background: #667eea;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: bold;
-            cursor: pointer;
+            width: 100%; padding: 12px; background: #667eea; color: white;
+            border: none; border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer;
         }
         .auth-btn:hover { background: #5a6fd6; }
         .auth-error { color: #ff6b6b; font-size: 0.85rem; margin-top: 10px; min-height: 20px; }
 
-        /* ========== LAYOUT ========== */
         .layout { display: flex; min-height: 100vh; }
-
-        /* ========== SIDEBAR ========== */
         .sidebar {
-            width: 260px;
-            background: #1a1a2e;
-            color: #fff;
-            position: fixed;
-            height: 100vh;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
+            width: 260px; background: #1a1a2e; color: #fff;
+            position: fixed; height: 100vh; overflow-y: auto;
         }
         .sidebar-header {
-            padding: 20px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            text-align: center;
+            padding: 20px; background: linear-gradient(135deg, #667eea, #764ba2); text-align: center;
         }
         .sidebar-header h1 { font-size: 1.5rem; margin-bottom: 5px; }
         .sidebar-header small { opacity: 0.7; font-size: 0.75rem; }
-        .sidebar-user {
-            padding: 15px 20px;
-            background: rgba(255,255,255,0.05);
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-        }
+        .sidebar-user { padding: 15px 20px; background: rgba(255,255,255,0.05); border-bottom: 1px solid rgba(255,255,255,0.1); }
         .sidebar-user-name { font-weight: bold; font-size: 0.9rem; }
-        .sidebar-user-role {
-            font-size: 0.7rem;
-            padding: 3px 8px;
-            border-radius: 10px;
-            display: inline-block;
-            margin-top: 5px;
-        }
+        .sidebar-user-role { font-size: 0.7rem; padding: 3px 8px; border-radius: 10px; display: inline-block; margin-top: 5px; }
         .sidebar-section { padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .sidebar-section-title {
-            font-size: 0.65rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: rgba(255,255,255,0.4);
-            padding: 8px 20px 5px;
-        }
-        .sidebar-item {
-            padding: 10px 20px;
-            cursor: pointer;
-            transition: 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 0.85rem;
-        }
+        .sidebar-section-title { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1px; color: rgba(255,255,255,0.4); padding: 8px 20px 5px; }
+        .sidebar-item { padding: 10px 20px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 10px; font-size: 0.85rem; }
         .sidebar-item:hover { background: rgba(255,255,255,0.1); }
         .sidebar-item.active { background: #667eea; }
         .sidebar-item .icon { font-size: 1.1rem; }
-        .sidebar-item .badge {
-            margin-left: auto;
-            background: rgba(255,255,255,0.2);
-            padding: 2px 8px;
-            border-radius: 10px;
-            font-size: 0.7rem;
-        }
-        .sidebar-footer {
-            margin-top: auto;
-            padding: 15px 20px;
-            border-top: 1px solid rgba(255,255,255,0.1);
-        }
-        .sidebar-logout {
-            width: 100%;
-            padding: 10px;
-            background: rgba(255,255,255,0.1);
-            border: none;
-            color: white;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 0.85rem;
-        }
+        .sidebar-item .badge { margin-left: auto; background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 10px; font-size: 0.7rem; }
+        .sidebar-footer { margin-top: auto; padding: 15px 20px; border-top: 1px solid rgba(255,255,255,0.1); }
+        .sidebar-logout { width: 100%; padding: 10px; background: rgba(255,255,255,0.1); border: none; color: white; border-radius: 8px; cursor: pointer; font-size: 0.85rem; }
         .sidebar-logout:hover { background: rgba(255,100,100,0.3); }
 
-        /* ========== MAIN CONTENT ========== */
-        .main-content {
-            margin-left: 260px;
-            flex: 1;
-            padding: 20px;
-        }
+        .main-content { margin-left: 260px; flex: 1; padding: 20px; }
 
-        /* ========== WELCOME SCREEN ========== */
-        .welcome-screen {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 80vh;
-            text-align: center;
-        }
-        .welcome-box {
-            background: white;
-            padding: 60px;
-            border-radius: 16px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-        }
+        .welcome-screen { display: flex; justify-content: center; align-items: center; min-height: 80vh; text-align: center; }
+        .welcome-box { background: white; padding: 60px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
         .welcome-box h2 { color: #667eea; margin-bottom: 10px; }
         .welcome-box p { color: #666; margin-bottom: 30px; }
-        .welcome-btn {
-            padding: 15px 40px;
-            background: #667eea;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 1rem;
-            cursor: pointer;
-        }
+        .welcome-btn { padding: 15px 40px; background: #667eea; color: white; border: none; border-radius: 8px; font-size: 1rem; cursor: pointer; }
         .welcome-btn:hover { background: #5a6fd6; }
 
-        /* ========== CONTENT HEADER ========== */
-        .content-header {
-            background: white;
-            padding: 20px 25px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        }
+        .content-header { background: white; padding: 20px 25px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
         .content-header h1 { font-size: 1.5rem; color: #333; margin-bottom: 5px; }
         .content-header p { color: #666; font-size: 0.9rem; }
 
-        /* ========== CARDS GRID ========== */
-        .cards-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-        .card {
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        }
+        .cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
         .card-icon { font-size: 2rem; margin-bottom: 10px; }
         .card-value { font-size: 2rem; font-weight: bold; color: #333; }
         .card-label { color: #666; font-size: 0.85rem; }
-        .card-link {
-            color: #667eea;
-            font-size: 0.8rem;
-            text-decoration: none;
-            display: inline-block;
-            margin-top: 8px;
-        }
-        .card-link:hover { text-decoration: underline; }
 
-        /* ========== TABLES ========== */
-        .data-table {
-            background: white;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        }
-        .data-table-header {
-            padding: 15px 20px;
-            border-bottom: 1px solid #eee;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+        .data-table { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .data-table-header { padding: 15px 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
         .data-table-header h3 { font-size: 1rem; }
-        .data-table table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        .data-table th {
-            background: #f8f9fa;
-            padding: 12px 15px;
-            text-align: left;
-            font-weight: 600;
-            font-size: 0.8rem;
-            color: #666;
-            text-transform: uppercase;
-        }
-        .data-table td {
-            padding: 12px 15px;
-            border-bottom: 1px solid #eee;
-            font-size: 0.9rem;
-        }
+        .data-table table { width: 100%; border-collapse: collapse; }
+        .data-table th { background: #f8f9fa; padding: 12px 15px; text-align: left; font-weight: 600; font-size: 0.8rem; color: #666; text-transform: uppercase; }
+        .data-table td { padding: 12px 15px; border-bottom: 1px solid #eee; font-size: 0.9rem; }
         .data-table tr:hover { background: #f8f9fa; }
 
-        /* ========== STATUS BADGES ========== */
         .badge-success { background: #d4edda; color: #155724; padding: 3px 10px; border-radius: 10px; font-size: 0.75rem; }
         .badge-warning { background: #fff3cd; color: #856404; padding: 3px 10px; border-radius: 10px; font-size: 0.75rem; }
-        .badge-danger { background: #f8d7da; color: #721c24; padding: 3px 10px; border-radius: 10px; font-size: 0.75rem; }
-        .badge-info { background: #d1ecf1; color: #0c5460; padding: 3px 10px; border-radius: 10px; font-size: 0.75rem; }
 
-        /* ========== FORMS ========== */
-        .form-card {
-            background: white;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            margin-bottom: 20px;
-        }
+        .form-card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
         .form-card h3 { margin-bottom: 20px; font-size: 1.1rem; }
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
         .form-group { display: flex; flex-direction: column; }
         .form-group label { font-size: 0.85rem; margin-bottom: 5px; font-weight: 500; color: #555; }
-        .form-group input, .form-group select, .form-group textarea {
-            padding: 10px 12px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 0.9rem;
-        }
-        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-        .btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            font-weight: 500;
-        }
-        .btn-primary { background: #667eea; color: white; }
-        .btn-primary:hover { background: #5a6fd6; }
+        .form-group input, .form-group select { padding: 10px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.9rem; }
+        .form-group input:focus, .form-group select:focus { outline: none; border-color: #667eea; }
+        .btn { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem; font-weight: 500; }
         .btn-success { background: #28a745; color: white; }
         .btn-success:hover { background: #218838; }
-        .btn-danger { background: #dc3545; color: white; }
-        .btn-danger:hover { background: #c82333; }
 
-        /* ========== MODULE CONTENT ========== */
         .module-content { display: none; }
         .module-content.active { display: block; }
 
-        /* ========== RESPONSIVE ========== */
         @media (max-width: 768px) {
             .sidebar { width: 200px; }
             .main-content { margin-left: 200px; }
@@ -296,1071 +117,573 @@
 </head>
 <body>
 
-<!-- LOGIN MODAL -->
-<div id="loginModal" class="auth-modal" style="display: none;">
+<div id="loginModal" class="auth-modal">
     <div class="auth-box">
-        <h2>📸 FotoTec</h2>
-        <p>Iniciar Sesión</p>
+        <h2>FotoTec</h2>
+        <p>Iniciar Sesion</p>
         <input type="text" id="loginUser" class="auth-input" placeholder="Usuario">
-        <input type="password" id="loginPass" class="auth-input" placeholder="Contraseña">
+        <input type="password" id="loginPass" class="auth-input" placeholder="Contrasena">
         <button class="auth-btn" id="btnEntrar">Entrar</button>
         <div id="loginError" class="auth-error"></div>
     </div>
 </div>
 
-<div class="layout" id="mainLayout" style="display: none;">
-    <!-- SIDEBAR -->
+<div class="layout" id="mainLayout" style="display:none;">
     <nav class="sidebar" id="sidebar">
         <div class="sidebar-header">
-            <h1>📸 FotoTec</h1>
-            <small>Panel de Administración</small>
+            <h1>FotoTec</h1>
+            <small>Panel de Administracion</small>
         </div>
-
         <div class="sidebar-user" id="sidebarUser">
             <div class="sidebar-user-name">Invitado</div>
-            <span class="sidebar-user-role" style="background:#666;">Sin sesión</span>
         </div>
 
-        <!-- Dashboard -->
         <div class="sidebar-section" id="sectionDashboard">
             <div class="sidebar-section-title">Dashboard</div>
             <div class="sidebar-item active" onclick="mostrarModulo('dashboard', this)">
-                <span class="icon">📊</span> Dashboard
+                <span class="icon">D</span> Dashboard
             </div>
         </div>
 
-        <!-- CRM -->
         <div class="sidebar-section" id="sectionCRM">
             <div class="sidebar-section-title">CRM</div>
             <div class="sidebar-item" onclick="mostrarModulo('clientes', this)">
-                <span class="icon">👥</span> Clientes <span class="badge" id="badgeClientes">0</span>
+                <span class="icon">C</span> Clientes <span class="badge" id="badgeClientes">0</span>
             </div>
             <div class="sidebar-item" onclick="mostrarModulo('leads', this)">
-                <span class="icon">🎯</span> Leads <span class="badge" id="badgeLeads">0</span>
-            </div>
-            <div class="sidebar-item" onclick="mostrarModulo('tickets', this)">
-                <span class="icon">🎫</span> Tickets <span class="badge" id="badgeTickets">0</span>
+                <span class="icon">L</span> Leads
             </div>
             <div class="sidebar-item" onclick="mostrarModulo('ventas', this)">
-                <span class="icon">💰</span> Ventas
-            </div>
-            <div class="sidebar-item" onclick="mostrarModulo('campanas', this)">
-                <span class="icon">📢</span> Campañas
+                <span class="icon">V</span> Ventas
             </div>
         </div>
 
-        <!-- Cadena de Suministro -->
         <div class="sidebar-section" id="sectionSCM">
             <div class="sidebar-section-title">Cadena Suministro</div>
             <div class="sidebar-item" onclick="mostrarModulo('productos', this)">
-                <span class="icon">📦</span> Productos <span class="badge" id="badgeProductos">0</span>
+                <span class="icon">P</span> Productos <span class="badge" id="badgeProductos">0</span>
             </div>
             <div class="sidebar-item" onclick="mostrarModulo('inventario', this)">
-                <span class="icon">📋</span> Inventario <span class="badge" id="badgeInventario">0</span>
+                <span class="icon">I</span> Inventario
             </div>
             <div class="sidebar-item" onclick="mostrarModulo('pedidos', this)">
-                <span class="icon">🛒</span> Pedidos <span class="badge" id="badgePedidos">0</span>
+                <span class="icon">P</span> Pedidos
             </div>
             <div class="sidebar-item" onclick="mostrarModulo('proveedores', this)">
-                <span class="icon">🚚</span> Proveedores <span class="badge" id="badgeProveedores">0</span>
-            </div>
-            <div class="sidebar-item" onclick="mostrarModulo('categorias', this)">
-                <span class="icon">🏷️</span> Categorías
-            </div>
-            <div class="sidebar-item" onclick="mostrarModulo('devoluciones', this)">
-                <span class="icon">↩️</span> Devoluciones
+                <span class="icon">P</span> Proveedores <span class="badge" id="badgeProveedores">0</span>
             </div>
         </div>
 
-        <!-- Recursos Humanos -->
         <div class="sidebar-section" id="sectionRH">
             <div class="sidebar-section-title">Recursos Humanos</div>
             <div class="sidebar-item" onclick="mostrarModulo('empleados', this)">
-                <span class="icon">👔</span> Empleados <span class="badge" id="badgeEmpleados">0</span>
-            </div>
-            <div class="sidebar-item" onclick="mostrarModulo('asistencia', this)">
-                <span class="icon">🕐</span> Asistencia
-            </div>
-            <div class="sidebar-item" onclick="mostrarModulo('departamentos', this)">
-                <span class="icon">🏢</span> Departamentos
+                <span class="icon">E</span> Empleados <span class="badge" id="badgeEmpleados">0</span>
             </div>
             <div class="sidebar-item" onclick="mostrarModulo('nomina', this)">
-                <span class="icon">💵</span> Nómina <span class="badge" id="badgeNomina">$0</span>
+                <span class="icon">N</span> Nomina
             </div>
-            <div class="sidebar-item" onclick="mostrarModulo('reclutamiento', this)">
-                <span class="icon">📥</span> Reclutamiento
-            </div>
-            <div class="sidebar-item" onclick="mostrarModulo('permisos', this)">
-                <span class="icon">🔐</span> Permisos
+            <div class="sidebar-item" onclick="mostrarModulo('asistencia', this)">
+                <span class="icon">A</span> Asistencia
             </div>
         </div>
 
-        <!-- Finanzas -->
         <div class="sidebar-section" id="sectionFinanzas">
             <div class="sidebar-section-title">Finanzas</div>
-            <div class="sidebar-item" onclick="mostrarModulo('resumenFinanzas', this)">
-                <span class="icon">📈</span> Resumen
-            </div>
             <div class="sidebar-item" onclick="mostrarModulo('facturas', this)">
-                <span class="icon">🧾</span> Facturas
+                <span class="icon">F</span> Facturas
             </div>
             <div class="sidebar-item" onclick="mostrarModulo('gastos', this)">
-                <span class="icon">💳</span> Gastos
-            </div>
-            <div class="sidebar-item" onclick="mostrarModulo('presupuestos', this)">
-                <span class="icon">📊</span> Presupuestos
+                <span class="icon">G</span> Gastos
             </div>
         </div>
 
-        <!-- Administración -->
         <div class="sidebar-section" id="sectionAdmin">
-            <div class="sidebar-section-title">Administración</div>
+            <div class="sidebar-section-title">Administracion</div>
             <div class="sidebar-item" onclick="mostrarModulo('usuarios', this)">
-                <span class="icon">👥</span> Usuarios
+                <span class="icon">U</span> Usuarios
             </div>
             <div class="sidebar-item" onclick="mostrarModulo('configuracion', this)">
-                <span class="icon">⚙️</span> Configuración
-            </div>
-            <div class="sidebar-item" onclick="mostrarModulo('auditoria', this)">
-                <span class="icon">📋</span> Auditoría
-            </div>
-            <div class="sidebar-item" onclick="mostrarModulo('notificaciones', this)">
-                <span class="icon">🔔</span> Notificaciones
+                <span class="icon">C</span> Configuracion
             </div>
         </div>
 
         <div class="sidebar-footer">
-            <button class="sidebar-logout" onclick="handleLogout()">🚪 Cerrar Sesión</button>
+            <button class="sidebar-logout" onclick="handleLogout()">Cerrar Sesion</button>
         </div>
     </nav>
 
-    <!-- MAIN CONTENT -->
-    <main class="main-content" id="mainContent" style="margin-left: 0;">
-        <!-- WELCOME SCREEN -->
-        <div id="welcomeScreen" class="welcome-screen">
-            <div class="welcome-box">
-                <h2>📸 FotoTec</h2>
-                <p>Sistema de gestión integral para tu estudio fotográfico</p>
-                <button class="welcome-btn" onclick="abrirLogin()">🔐 Iniciar Sesión</button>
-            </div>
-        </div>
-
-        <!-- DASHBOARD MODULE -->
-        <div id="modDashboard" class="module-content">
+    <main class="main-content">
+        <div id="modDashboard" class="module-content active">
             <div class="content-header">
-                <h1>📊 Dashboard</h1>
+                <h1>Dashboard</h1>
                 <p>Resumen general del sistema</p>
             </div>
-
             <div class="cards-grid">
                 <div class="card">
-                    <div class="card-icon">👥</div>
+                    <div class="card-icon">C</div>
                     <div class="card-value" id="cardClientes">0</div>
                     <div class="card-label">Clientes</div>
                 </div>
                 <div class="card">
-                    <div class="card-icon">📦</div>
+                    <div class="card-icon">P</div>
                     <div class="card-value" id="cardProductos">0</div>
                     <div class="card-label">Productos</div>
                 </div>
                 <div class="card">
-                    <div class="card-icon">🛒</div>
-                    <div class="card-value" id="cardPedidos">0</div>
-                    <div class="card-label">Pedidos</div>
-                </div>
-                <div class="card">
-                    <div class="card-icon">💰</div>
-                    <div class="card-value" id="cardIngresos">$0</div>
-                    <div class="card-label">Ingresos</div>
-                </div>
-                <div class="card">
-                    <div class="card-icon">👔</div>
+                    <div class="card-icon">E</div>
                     <div class="card-value" id="cardEmpleados">0</div>
                     <div class="card-label">Empleados</div>
                 </div>
                 <div class="card">
-                    <div class="card-icon">🚚</div>
-                    <div class="card-value" id="cardProveedores">0</div>
-                    <div class="card-label">Proveedores</div>
+                    <div class="card-icon">$</div>
+                    <div class="card-value" id="cardIngresos">$0</div>
+                    <div class="card-label">Ingresos</div>
                 </div>
             </div>
         </div>
 
-        <!-- EMPLEADOS MODULE (RH) -->
         <div id="modEmpleados" class="module-content">
             <div class="content-header">
-                <h1>👔 Gestión de Empleados</h1>
-                <p>Altas, bajas y modificaciones del personal</p>
+                <h1>Empleados</h1>
+                <p>Gestion de empleados</p>
             </div>
-
             <div class="form-card">
-                <h3>➕ Nuevo Empleado</h3>
+                <h3>Nuevo Empleado</h3>
                 <div class="form-row">
                     <div class="form-group">
-                        <label>Nombre Completo</label>
-                        <input type="text" id="empNombre" placeholder="Nombre del empleado">
+                        <label>Nombre</label>
+                        <input type="text" id="empNombre" placeholder="Nombre completo">
                     </div>
                     <div class="form-group">
                         <label>Puesto</label>
-                        <input type="text" id="empPuesto" placeholder="Ej: Fotógrafo">
+                        <input type="text" id="empPuesto" placeholder="Puesto">
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
                         <label>Departamento</label>
                         <select id="empDepto">
-                            <option value="Produccion">Producción</option>
-                            <option value="Post-produccion">Post-producción</option>
-                            <option value="Administracion">Administración</option>
-                            <option value="Ventas">Ventas</option>
+                            <option value="Produccion">Produccion</option>
+                            <option value="Post-produccion">Post-produccion</option>
+                            <option value="Administracion">Administracion</option>
                         </select>
                     </div>
                     <div class="form-group">
-                        <label>Salario Mensual ($)</label>
+                        <label>Salario</label>
                         <input type="number" id="empSalario" placeholder="10000">
                     </div>
                 </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Teléfono</label>
-                        <input type="text" id="empTelefono" placeholder="8991234567">
-                    </div>
-                    <div class="form-group">
-                        <label>Email</label>
-                        <input type="email" id="empEmail" placeholder="email@fototec.com">
-                    </div>
-                </div>
-                <button class="btn btn-success" onclick="crearEmpleado()">✅ Registrar Empleado</button>
+                <button class="btn btn-success" onclick="crearEmpleado()">Registrar</button>
             </div>
-
             <div class="data-table">
-                <div class="data-table-header">
-                    <h3>📋 Lista de Empleados</h3>
-                </div>
                 <table>
                     <thead>
                         <tr>
-                            <th>ID</th>
-                            <th>Nombre</th>
-                            <th>Puesto</th>
-                            <th>Departamento</th>
-                            <th>Salario</th>
-                            <th>Estado</th>
+                            <th>ID</th><th>Nombre</th><th>Puesto</th><th>Depto</th><th>Salario</th><th>Estado</th>
                         </tr>
                     </thead>
-                    <tbody id="empleadosTableBody">
-                    </tbody>
+                    <tbody id="empleadosTable"></tbody>
                 </table>
             </div>
         </div>
 
-        <!-- PROVEEDORES MODULE -->
         <div id="modProveedores" class="module-content">
             <div class="content-header">
-                <h1>🚚 Gestión de Proveedores</h1>
-                <p>Catálogo y contacto de proveedores</p>
+                <h1>Proveedores</h1>
+                <p>Gestion de proveedores</p>
             </div>
-
             <div class="form-card">
-                <h3>➕ Nuevo Proveedor</h3>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Nombre / Razón Social</label>
-                        <input type="text" id="provNombre" placeholder="Nombre de la empresa">
-                    </div>
-                    <div class="form-group">
-                        <label>Persona de Contacto</label>
-                        <input type="text" id="provContacto" placeholder="Nombre del contacto">
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Teléfono</label>
-                        <input type="text" id="provTelefono" placeholder="8991234567">
-                    </div>
-                    <div class="form-group">
-                        <label>Email</label>
-                        <input type="email" id="provEmail" placeholder="email@proveedor.com">
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Tipo de Insumo</label>
-                        <select id="provTipo">
-                            <option value="papel_fotografico">Papel Fotográfico</option>
-                            <option value="equipo">Equipo Fotográfico</option>
-                            <option value="tintas">Tintas y Cartuchos</option>
-                            <option value="marcos">Marcos y Acabados</option>
-                            <option value="iluminacion">Iluminación</option>
-                            <option value="otro">Otro</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Detalle de Insumos</label>
-                        <input type="text" id="provDetalle" placeholder="Ej: Papel Glossy 4x6">
-                    </div>
-                </div>
-                <button class="btn btn-success" onclick="crearProveedor()">✅ Registrar Proveedor</button>
-            </div>
-
-            <div class="data-table">
-                <div class="data-table-header">
-                    <h3>📋 Catálogo de Proveedores</h3>
-                </div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Empresa</th>
-                            <th>Contacto</th>
-                            <th>Teléfono</th>
-                            <th>Tipo Insumo</th>
-                            <th>Estado</th>
-                        </tr>
-                    </thead>
-                    <tbody id="proveedoresTableBody">
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- PRODUCTOS MODULE -->
-        <div id="modProductos" class="module-content">
-            <div class="content-header">
-                <h1>📦 Gestión de Productos</h1>
-                <p>Servicios y productos del estudio</p>
-            </div>
-
-            <div class="form-card">
-                <h3>➕ Nuevo Producto/Servicio</h3>
+                <h3>Nuevo Proveedor</h3>
                 <div class="form-row">
                     <div class="form-group">
                         <label>Nombre</label>
-                        <input type="text" id="prodNombre" placeholder="Ej: Sesión de Estudio">
+                        <input type="text" id="provNombre" placeholder="Nombre empresa">
                     </div>
                     <div class="form-group">
-                        <label>Categoría</label>
+                        <label>Contacto</label>
+                        <input type="text" id="provContacto" placeholder="Nombre contacto">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Telefono</label>
+                        <input type="text" id="provTelefono" placeholder="8991234567">
+                    </div>
+                    <div class="form-group">
+                        <label>Tipo Insumo</label>
+                        <select id="provTipo">
+                            <option value="papel">Papel Fotografico</option>
+                            <option value="equipo">Equipo</option>
+                            <option value="tintas">Tintas</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="btn btn-success" onclick="crearProveedor()">Registrar</button>
+            </div>
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th><th>Empresa</th><th>Contacto</th><th>Telefono</th><th>Tipo</th><th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody id="proveedoresTable"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="modProductos" class="module-content">
+            <div class="content-header">
+                <h1>Productos</h1>
+                <p>Gestion de productos y servicios</p>
+            </div>
+            <div class="form-card">
+                <h3>Nuevo Producto</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Nombre</label>
+                        <input type="text" id="prodNombre" placeholder="Nombre">
+                    </div>
+                    <div class="form-group">
+                        <label>Categoria</label>
                         <select id="prodCategoria">
-                            <option value="estudio">Sesión Estudio</option>
+                            <option value="estudio">Sesion Estudio</option>
                             <option value="boda">Boda</option>
-                            <option value="evento">Evento</option>
-                            <option value="impresion">Impresión</option>
-                            <option value="otro">Otro</option>
+                            <option value="impresion">Impresion</option>
                         </select>
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label>Precio ($)</label>
+                        <label>Precio</label>
                         <input type="number" id="prodPrecio" placeholder="0">
                     </div>
                     <div class="form-group">
-                        <label>Estrategia SCM</label>
+                        <label>Estrategia</label>
                         <select id="prodEstrategia">
-                            <option value="pull">🔄 PULL - Bajo demanda</option>
-                            <option value="push">📦 PUSH - Reabastecimiento</option>
+                            <option value="pull">PULL - Bajo demanda</option>
+                            <option value="push">PUSH - Reabastecimiento</option>
                         </select>
                     </div>
                 </div>
-                <div class="form-group">
-                    <label>Descripción</label>
-                    <textarea id="prodDesc" rows="2" placeholder="Descripción del producto"></textarea>
-                </div>
-                <button class="btn btn-success" onclick="crearProducto()">✅ Crear Producto</button>
+                <button class="btn btn-success" onclick="crearProducto()">Crear</button>
             </div>
-
             <div class="data-table">
-                <div class="data-table-header">
-                    <h3>📋 Lista de Productos</h3>
-                </div>
                 <table>
                     <thead>
                         <tr>
-                            <th>ID</th>
-                            <th>Nombre</th>
-                            <th>Categoría</th>
-                            <th>Precio</th>
-                            <th>Estrategia</th>
+                            <th>ID</th><th>Nombre</th><th>Categoria</th><th>Precio</th><th>Estrategia</th>
                         </tr>
                     </thead>
-                    <tbody id="productosTableBody">
-                    </tbody>
+                    <tbody id="productosTable"></tbody>
                 </table>
             </div>
         </div>
 
-        <!-- PEDIDOS MODULE -->
-        <div id="modPedidos" class="module-content">
-            <div class="content-header">
-                <h1>🛒 Gestión de Pedidos</h1>
-                <p>Órdenes de clientes</p>
-            </div>
-
-            <div class="data-table">
-                <div class="data-table-header">
-                    <h3>📋 Pedidos</h3>
-                </div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Cliente</th>
-                            <th>Total</th>
-                            <th>Fecha</th>
-                            <th>Estado</th>
-                        </tr>
-                    </thead>
-                    <tbody id="pedidosTableBody">
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- FACTURAS MODULE -->
-        <div id="modFacturas" class="module-content">
-            <div class="content-header">
-                <h1>🧾 Facturas</h1>
-                <p>Gestión de facturas y notas de venta</p>
-            </div>
-
-            <div class="form-card">
-                <h3>➕ Nueva Factura</h3>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Cliente</label>
-                        <input type="text" id="factCliente" placeholder="Nombre del cliente">
-                    </div>
-                    <div class="form-group">
-                        <label>Concepto</label>
-                        <input type="text" id="factConcepto" placeholder="Servicio prestado">
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Subtotal ($)</label>
-                        <input type="number" id="factSubtotal" placeholder="0" onchange="calcIVA()">
-                    </div>
-                    <div class="form-group">
-                        <label>Total ($)</label>
-                        <input type="number" id="factTotal" placeholder="0" readonly style="background:#f5f5f5;">
-                    </div>
-                </div>
-                <button class="btn btn-success" onclick="crearFactura()">🧾 Generar Factura</button>
-            </div>
-
-            <div class="data-table">
-                <div class="data-table-header">
-                    <h3>📋 Facturas</h3>
-                </div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Folio</th>
-                            <th>Cliente</th>
-                            <th>Concepto</th>
-                            <th>Total</th>
-                            <th>Estado</th>
-                        </tr>
-                    </thead>
-                    <tbody id="facturasTableBody">
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- USUARIOS MODULE -->
-        <div id="modUsuarios" class="module-content">
-            <div class="content-header">
-                <h1>👥 Gestión de Usuarios</h1>
-                <p>Usuarios del sistema</p>
-            </div>
-
-            <div class="data-table">
-                <div class="data-table-header">
-                    <h3>📋 Usuarios</h3>
-                </div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Nombre</th>
-                            <th>Usuario</th>
-                            <th>Rol</th>
-                            <th>Estado</th>
-                        </tr>
-                    </thead>
-                    <tbody id="usuariosTableBody">
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- NÓMINA MODULE -->
-        <div id="modNomina" class="module-content">
-            <div class="content-header">
-                <h1>💵 Nómina</h1>
-                <p>Resumen de nómina mensual</p>
-            </div>
-
-            <div class="cards-grid">
-                <div class="card">
-                    <div class="card-icon">👔</div>
-                    <div class="card-value" id="nominaEmpleados">0</div>
-                    <div class="card-label">Empleados Activos</div>
-                </div>
-                <div class="card">
-                    <div class="card-icon">💰</div>
-                    <div class="card-value" id="nominaTotal">$0</div>
-                    <div class="card-label">Nómina Mensual</div>
-                </div>
-            </div>
-
-            <div class="data-table">
-                <div class="data-table-header">
-                    <h3>📋 Detalle de Nómina</h3>
-                </div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Empleado</th>
-                            <th>Puesto</th>
-                            <th>Departamento</th>
-                            <th>Salario</th>
-                        </tr>
-                    </thead>
-                    <tbody id="nominaTableBody">
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- INVENTARIO MODULE -->
-        <div id="modInventario" class="module-content">
-            <div class="content-header">
-                <h1>📋 Inventario</h1>
-                <p>Control de stock de materiales</p>
-            </div>
-
-            <div class="cards-grid">
-                <div class="card">
-                    <div class="card-icon">📦</div>
-                    <div class="card-value" id="invTotal">0</div>
-                    <div class="card-label">Total Items</div>
-                </div>
-                <div class="card">
-                    <div class="card-icon">⚠️</div>
-                    <div class="card-value" id="invBajo">0</div>
-                    <div class="card-label">Stock Bajo</div>
-                </div>
-            </div>
-
-            <div class="data-table">
-                <div class="data-table-header">
-                    <h3>📋 Items en Inventario</h3>
-                </div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Producto</th>
-                            <th>Stock</th>
-                            <th>Mínimo</th>
-                            <th>Estado</th>
-                        </tr>
-                    </thead>
-                    <tbody id="inventarioTableBody">
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- GASTOS MODULE -->
-        <div id="modGastos" class="module-content">
-            <div class="content-header">
-                <h1>💳 Gastos</h1>
-                <p>Control de gastos y compras</p>
-            </div>
-
-            <div class="cards-grid">
-                <div class="card">
-                    <div class="card-icon">💸</div>
-                    <div class="card-value" id="gastosTotal">$0</div>
-                    <div class="card-label">Total Gastos</div>
-                </div>
-            </div>
-
-            <div class="data-table">
-                <div class="data-table-header">
-                    <h3>📋 Detalle de Gastos</h3>
-                </div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Fecha</th>
-                            <th>Concepto</th>
-                            <th>Monto</th>
-                            <th>Categoría</th>
-                        </tr>
-                    </thead>
-                    <tbody id="gastosTableBody">
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- CLIENTES MODULE -->
         <div id="modClientes" class="module-content">
-            <div class="content-header">
-                <h1>👥 Clientes</h1>
-                <p>Gestión de clientes</p>
-            </div>
-
+            <div class="content-header"><h1>Clientes</h1><p>Gestion de clientes</p></div>
             <div class="data-table">
-                <div class="data-table-header">
-                    <h3>📋 Clientes</h3>
-                </div>
                 <table>
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Nombre</th>
-                            <th>Email</th>
-                            <th>Teléfono</th>
-                            <th>Estado</th>
-                        </tr>
-                    </thead>
-                    <tbody id="clientesTableBody">
-                    </tbody>
+                    <thead><tr><th>ID</th><th>Nombre</th><th>Email</th><th>Telefono</th><th>Estado</th></tr></thead>
+                    <tbody id="clientesTable"><tr><td colspan="5" style="text-align:center;color:#666;">Sin datos</td></tr></tbody>
                 </table>
             </div>
         </div>
 
-        <!-- OTROS MÓDULOS VACÍOS -->
         <div id="modLeads" class="module-content">
-            <div class="content-header"><h1>🎯 Leads</h1><p>Prospectos de venta</p></div>
-            <div class="data-table"><div class="data-table-header"><h3>📋 Leads</h3></div><p style="padding:20px;text-align:center;color:#666;">Sin datos registrados</p></div>
-        </div>
-        <div id="modTickets" class="module-content">
-            <div class="content-header"><h1>🎫 Tickets</h1><p>Sistema de tickets</p></div>
-            <div class="data-table"><div class="data-table-header"><h3>📋 Tickets</h3></div><p style="padding:20px;text-align:center;color:#666;">Sin datos registrados</p></div>
-        </div>
-        <div id="modVentas" class="module-content">
-            <div class="content-header"><h1>💰 Ventas</h1><p>Módulo de ventas</p></div>
-            <div class="data-table"><div class="data-table-header"><h3>📋 Ventas</h3></div><p style="padding:20px;text-align:center;color:#666;">Sin datos registrados</p></div>
-        </div>
-        <div id="modCampanas" class="module-content">
-            <div class="content-header"><h1>📢 Campañas</h1><p>Campañas de marketing</p></div>
-            <div class="data-table"><div class="data-table-header"><h3>📋 Campañas</h3></div><p style="padding:20px;text-align:center;color:#666;">Sin datos registrados</p></div>
-        </div>
-        <div id="modCategorias" class="module-content">
-            <div class="content-header"><h1>🏷️ Categorías</h1><p>Categorías de productos</p></div>
-            <div class="data-table"><div class="data-table-header"><h3>📋 Categorías</h3></div><p style="padding:20px;text-align:center;color:#666;">Sin datos registrados</p></div>
-        </div>
-        <div id="modDevoluciones" class="module-content">
-            <div class="content-header"><h1>↩️ Devoluciones</h1><p>Gestión de devoluciones</p></div>
-            <div class="data-table"><div class="data-table-header"><h3>📋 Devoluciones</h3></div><p style="padding:20px;text-align:center;color:#666;">Sin datos registrados</p></div>
-        </div>
-        <div id="modAsistencia" class="module-content">
-            <div class="content-header"><h1>🕐 Asistencia</h1><p>Control de asistencia</p></div>
-            <div class="data-table"><div class="data-table-header"><h3>📋 Registro de Asistencia</h3></div><p style="padding:20px;text-align:center;color:#666;">Sin datos registrados</p></div>
-        </div>
-        <div id="modDepartamentos" class="module-content">
-            <div class="content-header"><h1>🏢 Departamentos</h1><p>Departamentos de la empresa</p></div>
-            <div class="data-table"><div class="data-table-header"><h3>📋 Departamentos</h3></div><p style="padding:20px;text-align:center;color:#666;">Sin datos registrados</p></div>
-        </div>
-        <div id="modReclutamiento" class="module-content">
-            <div class="content-header"><h1>📥 Reclutamiento</h1><p>Proceso de selección</p></div>
-            <div class="data-table"><div class="data-table-header"><h3>📋 Candidatos</h3></div><p style="padding:20px;text-align:center;color:#666;">Sin datos registrados</p></div>
-        </div>
-        <div id="modPermisos" class="module-content">
-            <div class="content-header"><h1>🔐 Permisos</h1><p>Gestión de permisos</p></div>
-            <div class="data-table"><div class="data-table-header"><h3>📋 Permisos</h3></div><p style="padding:20px;text-align:center;color:#666;">Sin datos registrados</p></div>
-        </div>
-        <div id="modResumenFinanzas" class="module-content">
-            <div class="content-header"><h1>📈 Resumen Financiero</h1><p>Resumen general</p></div>
-            <div class="cards-grid">
-                <div class="card"><div class="card-icon">💵</div><div class="card-value">$0</div><div class="card-label">Ingresos</div></div>
-                <div class="card"><div class="card-icon">💸</div><div class="card-value">$0</div><div class="card-label">Gastos</div></div>
-                <div class="card"><div class="card-icon">📊</div><div class="card-value">$0</div><div class="card-label">Ganancia</div></div>
-            </div>
-        </div>
-        <div id="modPresupuestos" class="module-content">
-            <div class="content-header"><h1>📊 Presupuestos</h1><p>Gestión de presupuestos</p></div>
-            <div class="data-table"><div class="data-table-header"><h3>📋 Presupuestos</h3></div><p style="padding:20px;text-align:center;color:#666;">Sin datos registrados</p></div>
-        </div>
-        <div id="modConfiguracion" class="module-content">
-            <div class="content-header"><h1>⚙️ Configuración</h1><p>Configuración del sistema</p></div>
-            <div class="form-card"><p style="text-align:center;color:#666;">Módulo de configuración en desarrollo</p></div>
-        </div>
-        <div id="modAuditoria" class="module-content">
-            <div class="content-header"><h1>📋 Auditoría</h1><p>Log de actividades</p></div>
-            <div class="data-table"><div class="data-table-header"><h3>📋 Registro de Auditoría</h3></div><p style="padding:20px;text-align:center;color:#666;">Sin datos registrados</p></div>
-        </div>
-        <div id="modNotificaciones" class="module-content">
-            <div class="content-header"><h1>🔔 Notificaciones</h1><p>Notificaciones del sistema</p></div>
-            <div class="data-table"><div class="data-table-header"><h3>📋 Notificaciones</h3></div><p style="padding:20px;text-align:center;color:#666;">Sin datos registrados</p></div>
+            <div class="content-header"><h1>Leads</h1><p>Prospectos de venta</p></div>
+            <div class="data-table"><p style="padding:20px;text-align:center;color:#666;">Sin datos</p></div>
         </div>
 
+        <div id="modVentas" class="module-content">
+            <div class="content-header"><h1>Ventas</h1><p>Modulo de ventas</p></div>
+            <div class="data-table"><p style="padding:20px;text-align:center;color:#666;">Sin datos</p></div>
+        </div>
+
+        <div id="modInventario" class="module-content">
+            <div class="content-header"><h1>Inventario</h1><p>Control de stock</p></div>
+            <div class="data-table"><p style="padding:20px;text-align:center;color:#666;">Sin datos</p></div>
+        </div>
+
+        <div id="modPedidos" class="module-content">
+            <div class="content-header"><h1>Pedidos</h1><p>Gestion de pedidos</p></div>
+            <div class="data-table"><p style="padding:20px;text-align:center;color:#666;">Sin datos</p></div>
+        </div>
+
+        <div id="modNomina" class="module-content">
+            <div class="content-header"><h1>Nomina</h1><p>Resumen de nomina</p></div>
+            <div class="cards-grid">
+                <div class="card">
+                    <div class="card-icon">E</div>
+                    <div class="card-value" id="nominaCount">0</div>
+                    <div class="card-label">Empleados</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">$</div>
+                    <div class="card-value" id="nominaTotal">$0</div>
+                    <div class="card-label">Total Nomina</div>
+                </div>
+            </div>
+            <div class="data-table">
+                <table>
+                    <thead><tr><th>Empleado</th><th>Puesto</th><th>Salario</th></tr></thead>
+                    <tbody id="nominaTable"><tr><td colspan="3" style="text-align:center;color:#666;">Sin datos</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="modAsistencia" class="module-content">
+            <div class="content-header"><h1>Asistencia</h1><p>Control de asistencia</p></div>
+            <div class="data-table"><p style="padding:20px;text-align:center;color:#666;">Sin datos</p></div>
+        </div>
+
+        <div id="modFacturas" class="module-content">
+            <div class="content-header"><h1>Facturas</h1><p>Gestion de facturas</p></div>
+            <div class="data-table"><p style="padding:20px;text-align:center;color:#666;">Sin datos</p></div>
+        </div>
+
+        <div id="modGastos" class="module-content">
+            <div class="content-header"><h1>Gastos</h1><p>Control de gastos</p></div>
+            <div class="data-table"><p style="padding:20px;text-align:center;color:#666;">Sin datos</p></div>
+        </div>
+
+        <div id="modUsuarios" class="module-content">
+            <div class="content-header"><h1>Usuarios</h1><p>Gestion de usuarios</p></div>
+            <div class="data-table"><p style="padding:20px;text-align:center;color:#666;">Sin datos</p></div>
+        </div>
+
+        <div id="modConfiguracion" class="module-content">
+            <div class="content-header"><h1>Configuracion</h1><p>Configuracion del sistema</p></div>
+            <div class="form-card"><p style="text-align:center;color:#666;">Modulo en desarrollo</p></div>
+        </div>
     </main>
 </div>
 
-<script src="permissions.js"></script>
+<div id="welcomeScreen" class="welcome-screen" style="display:none;">
+    <div class="welcome-box">
+        <h2>FotoTec</h2>
+        <p>Sistema de gestion integral para tu estudio fotografico</p>
+        <button class="welcome-btn" onclick="abrirLogin()">Iniciar Sesion</button>
+    </div>
+</div>
+
 <script>
-    // ============ DATOS LOCALES ============
-    const datosLocales = {
-        empleados: [],
-        proveedores: [],
-        productos: [],
-        pedidos: [],
-        facturas: [],
-        usuarios: []
-    };
+var demoUsers = [
+    { username: 'admin', password: 'admin123', name: 'Administrador', role: 'administrador' },
+    { username: 'rh', password: 'rh123', name: 'Recursos Humanos', role: 'rh' },
+    { username: 'compras', password: 'compras123', name: 'Compras', role: 'compras' },
+    { username: 'proveedores', password: 'prov123', name: 'Proveedores', role: 'proveedores' }
+];
 
-    // ============ USUARIOS DE PRUEBA ============
-    const demoUsers = [
-        { id: 1, username: 'admin', password: 'admin123', name: 'Administrador', role: 'administrador' },
-        { id: 2, username: 'rh', password: 'rh123', name: 'Recursos Humanos', role: 'rh' },
-        { id: 3, username: 'compras', password: 'compras123', name: 'Compras', role: 'compras' },
-        { id: 4, username: 'proveedores', password: 'proveedores123', name: 'Proveedores', role: 'proveedores' }
-    ];
+var usuarioActual = null;
 
-    let usuarioActual = null;
+var datosLocales = {
+    empleados: [],
+    proveedores: [],
+    productos: []
+};
 
-    // ============ FUNCIONES DE AUTENTICACIÓN ============
-    function abrirLogin() {
-        document.getElementById('loginModal').style.display = 'flex';
-        document.getElementById('loginUser').focus();
-    }
+function abrirLogin() {
+    document.getElementById('loginModal').style.display = 'flex';
+    document.getElementById('loginUser').focus();
+}
 
-    function cerrarLogin() {
-        document.getElementById('loginModal').style.display = 'none';
-        document.getElementById('loginError').textContent = '';
-    }
+function cerrarLogin() {
+    document.getElementById('loginModal').style.display = 'none';
+    document.getElementById('loginError').textContent = '';
+}
 
-    function handleLogin() {
-        const user = document.getElementById('loginUser').value;
-        const pass = document.getElementById('loginPass').value;
-
-        const usuario = demoUsers.find(u => u.username === user && u.password === pass);
-
-        if (usuario) {
-            usuarioActual = usuario;
-            cerrarLogin();
-            inicializarSistema();
-        } else {
-            document.getElementById('loginError').textContent = 'Usuario o contraseña incorrectos';
+function handleLogin() {
+    var user = document.getElementById('loginUser').value;
+    var pass = document.getElementById('loginPass').value;
+    var usuario = null;
+    for (var i = 0; i < demoUsers.length; i++) {
+        if (demoUsers[i].username === user && demoUsers[i].password === pass) {
+            usuario = demoUsers[i];
+            break;
         }
     }
-
-    function handleLogout() {
-        usuarioActual = null;
-        document.getElementById('welcomeScreen').style.display = 'flex';
-        document.getElementById('mainLayout').style.display = 'none';
-        document.getElementById('sidebarUser').innerHTML = '<div class="sidebar-user-name">Invitado</div><span class="sidebar-user-role" style="background:#666;">Sin sesión</span>';
-        ocultarTodasSecciones();
+    if (usuario) {
+        usuarioActual = usuario;
+        cerrarLogin();
+        inicializarSistema();
+    } else {
+        document.getElementById('loginError').textContent = 'Usuario o contrasena incorrectos';
     }
+}
 
-    // Event listener para el botón de entrar
-    document.getElementById('btnEntrar').addEventListener('click', handleLogin);
-
-    // ============ INICIALIZACIÓN ============
-    function inicializarSistema() {
-        // Actualizar sidebar
-        const colorRol = permissionSystem.obtenerColorRol(usuarioActual.role);
-        const nombreRol = permissionSystem.obtenerNombreRol(usuarioActual.role);
-        document.getElementById('sidebarUser').innerHTML = `
-            <div class="sidebar-user-name">${usuarioActual.name}</div>
-            <span class="sidebar-user-role" style="background:${colorRol};">${nombreRol}</span>
-        `;
-
-        // Aplicar restricciones de roles
-        aplicarRestriccionesRol();
-
-        // Ocultar welcome, mostrar layout principal
-        document.getElementById('welcomeScreen').style.display = 'none';
-        document.getElementById('mainLayout').style.display = 'flex';
-        mostrarModulo('dashboard');
-
-        // Cargar datos
-        cargarDatos();
-    }
-
-    function aplicarRestriccionesRol() {
-        const rol = usuarioActual.role;
-
-        // Ocultar todas las secciones primero
-        document.getElementById('sectionDashboard').style.display = 'block';
-        document.getElementById('sectionCRM').style.display = 'none';
-        document.getElementById('sectionSCM').style.display = 'none';
-        document.getElementById('sectionRH').style.display = 'none';
-        document.getElementById('sectionFinanzas').style.display = 'none';
-        document.getElementById('sectionAdmin').style.display = 'none';
-
-        if (rol === 'administrador') {
-            // Admin ve todo
-            document.getElementById('sectionCRM').style.display = 'block';
-            document.getElementById('sectionSCM').style.display = 'block';
-            document.getElementById('sectionRH').style.display = 'block';
-            document.getElementById('sectionFinanzas').style.display = 'block';
-            document.getElementById('sectionAdmin').style.display = 'block';
-        } else if (rol === 'rh') {
-            // RH solo ve RH
-            document.getElementById('sectionRH').style.display = 'block';
-        } else if (rol === 'compras') {
-            // Compras solo ve SCM
-            document.getElementById('sectionSCM').style.display = 'block';
-        } else if (rol === 'proveedores') {
-            // Proveedores solo ve proveedores
-            document.getElementById('sectionSCM').style.display = 'block';
-        }
-    }
-
-    function ocultarTodasSecciones() {
-        document.getElementById('sectionDashboard').style.display = 'none';
-        document.getElementById('sectionCRM').style.display = 'none';
-        document.getElementById('sectionSCM').style.display = 'none';
-        document.getElementById('sectionRH').style.display = 'none';
-        document.getElementById('sectionFinanzas').style.display = 'none';
-        document.getElementById('sectionAdmin').style.display = 'none';
-    }
-
-    // ============ NAVEGACIÓN ============
-    function mostrarModulo(modulo, btn) {
-        // Ocultar todos los módulos
-        document.querySelectorAll('.module-content').forEach(m => m.classList.remove('active'));
-
-        // Mostrar el módulo seleccionado
-        const mod = document.getElementById('mod' + modulo.charAt(0).toUpperCase() + modulo.slice(1));
-        if (mod) mod.classList.add('active');
-
-        // Actualizar sidebar
-        document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
-        if (btn) btn.classList.add('active');
-    }
-
-    // ============ CARGAR DATOS ============
-    function cargarDatos() {
-        // Cargar desde localStorage si existe
-        const empGuardados = localStorage.getItem('fototec_empleados');
-        if (empGuardados) datosLocales.empleados = JSON.parse(empGuardados);
-
-        const provGuardados = localStorage.getItem('fototec_proveedores');
-        if (provGuardados) datosLocales.proveedores = JSON.parse(provGuardados);
-
-        const prodGuardados = localStorage.getItem('fototec_productos');
-        if (prodGuardados) datosLocales.productos = JSON.parse(prodGuardados);
-
-        // Actualizar badges del sidebar
-        document.getElementById('badgeEmpleados').textContent = datosLocales.empleados.length;
-        document.getElementById('badgeProveedores').textContent = datosLocales.proveedores.length;
-        document.getElementById('badgeProductos').textContent = datosLocales.productos.length;
-
-        // Actualizar cards del dashboard
-        document.getElementById('cardEmpleados').textContent = datosLocales.empleados.length;
-        document.getElementById('cardProveedores').textContent = datosLocales.proveedores.length;
-        document.getElementById('cardProductos').textContent = datosLocales.productos.length;
-
-        // Calcular nómina
-        const nominaTotal = datosLocales.empleados.reduce((sum, e) => sum + (parseFloat(e.salario) || 0), 0);
-        document.getElementById('badgeNomina').textContent = '$' + nominaTotal.toFixed(0);
-        document.getElementById('nominaTotal').textContent = '$' + nominaTotal.toFixed(0);
-        document.getElementById('nominaEmpleados').textContent = datosLocales.empleados.length;
-
-        // Renderizar tablas
-        renderizarTablas();
-    }
-
-    function guardarEmpleados() {
-        localStorage.setItem('fototec_empleados', JSON.stringify(datosLocales.empleados));
-    }
-
-    function guardarProveedores() {
-        localStorage.setItem('fototec_proveedores', JSON.stringify(datosLocales.proveedores));
-    }
-
-    function guardarProductos() {
-        localStorage.setItem('fototec_productos', JSON.stringify(datosLocales.productos));
-    }
-
-    // ============ RENDERIZAR TABLAS ============
-    function renderizarTablas() {
-        // Empleados
-        let htmlEmp = '';
-        datosLocales.empleados.forEach(e => {
-            htmlEmp += `<tr>
-                <td>${e.id}</td>
-                <td>${e.nombre}</td>
-                <td>${e.puesto}</td>
-                <td>${e.departamento}</td>
-                <td>$${parseFloat(e.salario).toFixed(2)}</td>
-                <td><span class="badge-success">Activo</span></td>
-            </tr>`;
-        });
-        document.getElementById('empleadosTableBody').innerHTML = htmlEmp || '<tr><td colspan="6" style="text-align:center;color:#666;">Sin empleados registrados</td></tr>';
-
-        // Proveedores
-        let htmlProv = '';
-        datosLocales.proveedores.forEach(p => {
-            htmlProv += `<tr>
-                <td>${p.id}</td>
-                <td>${p.nombre}</td>
-                <td>${p.contacto}</td>
-                <td>${p.telefono}</td>
-                <td>${p.tipo}</td>
-                <td><span class="badge-success">Activo</span></td>
-            </tr>`;
-        });
-        document.getElementById('proveedoresTableBody').innerHTML = htmlProv || '<tr><td colspan="6" style="text-align:center;color:#666;">Sin proveedores registrados</td></tr>';
-
-        // Productos
-        let htmlProd = '';
-        datosLocales.productos.forEach(p => {
-            const estrategiaBadge = p.estrategia === 'push' ? '<span class="badge-warning">PUSH</span>' : '<span class="badge-info">PULL</span>';
-            htmlProd += `<tr>
-                <td>${p.id}</td>
-                <td>${p.nombre}</td>
-                <td>${p.categoria}</td>
-                <td>$${parseFloat(p.precio).toFixed(2)}</td>
-                <td>${estrategiaBadge}</td>
-            </tr>`;
-        });
-        document.getElementById('productosTableBody').innerHTML = htmlProd || '<tr><td colspan="5" style="text-align:center;color:#666;">Sin productos registrados</td></tr>';
-
-        // Nómina
-        let htmlNomina = '';
-        datosLocales.empleados.forEach(e => {
-            htmlNomina += `<tr>
-                <td>${e.nombre}</td>
-                <td>${e.puesto}</td>
-                <td>${e.departamento}</td>
-                <td>$${parseFloat(e.salario).toFixed(2)}</td>
-            </tr>`;
-        });
-        document.getElementById('nominaTableBody').innerHTML = htmlNomina || '<tr><td colspan="4" style="text-align:center;color:#666;">Sin datos</td></tr>';
-    }
-
-    // ============ CRUD EMPLEADOS ============
-    function crearEmpleado() {
-        const nombre = document.getElementById('empNombre').value;
-        const puesto = document.getElementById('empPuesto').value;
-        const depto = document.getElementById('empDepto').value;
-        const salario = document.getElementById('empSalario').value;
-        const telefono = document.getElementById('empTelefono').value;
-        const email = document.getElementById('empEmail').value;
-
-        if (!nombre || !puesto || !salario) {
-            alert('Completa los campos obligatorios');
-            return;
-        }
-
-        const nuevo = {
-            id: Date.now(),
-            nombre, puesto, departamento: depto, salario: parseFloat(salario), telefono, email
-        };
-
-        datosLocales.empleados.push(nuevo);
-        guardarEmpleados();
-        cargarDatos();
-
-        // Limpiar form
-        document.getElementById('empNombre').value = '';
-        document.getElementById('empPuesto').value = '';
-        document.getElementById('empSalario').value = '';
-        document.getElementById('empTelefono').value = '';
-        document.getElementById('empEmail').value = '';
-    }
-
-    // ============ CRUD PROVEEDORES ============
-    function crearProveedor() {
-        const nombre = document.getElementById('provNombre').value;
-        const contacto = document.getElementById('provContacto').value;
-        const telefono = document.getElementById('provTelefono').value;
-        const email = document.getElementById('provEmail').value;
-        const tipo = document.getElementById('provTipo').value;
-        const detalle = document.getElementById('provDetalle').value;
-
-        if (!nombre) {
-            alert('El nombre es obligatorio');
-            return;
-        }
-
-        const nuevo = {
-            id: Date.now(), nombre, contacto, telefono, email, tipo, detalle
-        };
-
-        datosLocales.proveedores.push(nuevo);
-        guardarProveedores();
-        cargarDatos();
-
-        // Limpiar form
-        document.getElementById('provNombre').value = '';
-        document.getElementById('provContacto').value = '';
-        document.getElementById('provTelefono').value = '';
-        document.getElementById('provEmail').value = '';
-        document.getElementById('provDetalle').value = '';
-    }
-
-    // ============ CRUD PRODUCTOS ============
-    function crearProducto() {
-        const nombre = document.getElementById('prodNombre').value;
-        const categoria = document.getElementById('prodCategoria').value;
-        const precio = document.getElementById('prodPrecio').value;
-        const estrategia = document.getElementById('prodEstrategia').value;
-        const desc = document.getElementById('prodDesc').value;
-
-        if (!nombre || !precio) {
-            alert('Completa los campos obligatorios');
-            return;
-        }
-
-        const nuevo = {
-            id: Date.now(), nombre, categoria, precio: parseFloat(precio), estrategia, descripcion: desc
-        };
-
-        datosLocales.productos.push(nuevo);
-        guardarProductos();
-        cargarDatos();
-
-        // Limpiar form
-        document.getElementById('prodNombre').value = '';
-        document.getElementById('prodPrecio').value = '';
-        document.getElementById('prodDesc').value = '';
-    }
-
-    // ============ FACTURAS ============
-    function calcIVA() {
-        const subtotal = parseFloat(document.getElementById('factSubtotal').value) || 0;
-        const total = subtotal * 1.16;
-        document.getElementById('factTotal').value = total.toFixed(2);
-    }
-
-    function crearFactura() {
-        const cliente = document.getElementById('factCliente').value;
-        const concepto = document.getElementById('factConcepto').value;
-        const total = document.getElementById('factTotal').value;
-
-        if (!cliente || !concepto || !total) {
-            alert('Completa todos los campos');
-            return;
-        }
-
-        alert('Factura generada con éxito');
-        document.getElementById('factCliente').value = '';
-        document.getElementById('factConcepto').value = '';
-        document.getElementById('factSubtotal').value = '';
-        document.getElementById('factTotal').value = '';
-    }
-
-    // ============ ENTER PARA LOGIN ============
-    document.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter' && document.getElementById('loginModal').style.display === 'flex') {
-            handleLogin();
-        }
-    });
-
-    // ============ INIT ============
-    ocultarTodasSecciones();
-    document.getElementById('mainLayout').style.display = 'none';
+function handleLogout() {
+    usuarioActual = null;
     document.getElementById('welcomeScreen').style.display = 'flex';
+    document.getElementById('mainLayout').style.display = 'none';
+}
+
+function inicializarSistema() {
+    document.getElementById('welcomeScreen').style.display = 'none';
+    document.getElementById('mainLayout').style.display = 'flex';
+    document.getElementById('sidebarUser').innerHTML = '<div class="sidebar-user-name">' + usuarioActual.name + '</div><span class="sidebar-user-role" style="background:#667eea;padding:3px 8px;border-radius:10px;font-size:0.7rem;">' + usuarioActual.role + '</span>';
+    aplicarRestriccionesRol();
+    cargarDatos();
+    mostrarModulo('dashboard');
+}
+
+function aplicarRestriccionesRol() {
+    var rol = usuarioActual.role;
+    document.getElementById('sectionCRM').style.display = 'none';
+    document.getElementById('sectionSCM').style.display = 'none';
+    document.getElementById('sectionRH').style.display = 'none';
+    document.getElementById('sectionFinanzas').style.display = 'none';
+    document.getElementById('sectionAdmin').style.display = 'none';
+
+    if (rol === 'administrador') {
+        document.getElementById('sectionCRM').style.display = 'block';
+        document.getElementById('sectionSCM').style.display = 'block';
+        document.getElementById('sectionRH').style.display = 'block';
+        document.getElementById('sectionFinanzas').style.display = 'block';
+        document.getElementById('sectionAdmin').style.display = 'block';
+    } else if (rol === 'rh') {
+        document.getElementById('sectionRH').style.display = 'block';
+    } else if (rol === 'compras') {
+        document.getElementById('sectionSCM').style.display = 'block';
+    } else if (rol === 'proveedores') {
+        document.getElementById('sectionSCM').style.display = 'block';
+    }
+}
+
+function mostrarModulo(modulo, btn) {
+    var modulos = document.querySelectorAll('.module-content');
+    for (var i = 0; i < modulos.length; i++) {
+        modulos[i].classList.remove('active');
+    }
+    var mod = document.getElementById('mod' + modulo.charAt(0).toUpperCase() + modulo.slice(1));
+    if (mod) mod.classList.add('active');
+
+    var items = document.querySelectorAll('.sidebar-item');
+    for (var i = 0; i < items.length; i++) {
+        items[i].classList.remove('active');
+    }
+    if (btn) btn.classList.add('active');
+}
+
+function cargarDatos() {
+    var empGuardados = localStorage.getItem('fototec_empleados');
+    if (empGuardados) datosLocales.empleados = JSON.parse(empGuardados);
+    var provGuardados = localStorage.getItem('fototec_proveedores');
+    if (provGuardados) datosLocales.proveedores = JSON.parse(provGuardados);
+    var prodGuardados = localStorage.getItem('fototec_productos');
+    if (prodGuardados) datosLocales.productos = JSON.parse(prodGuardados);
+
+    document.getElementById('badgeEmpleados').textContent = datosLocales.empleados.length;
+    document.getElementById('badgeProveedores').textContent = datosLocales.proveedores.length;
+    document.getElementById('badgeProductos').textContent = datosLocales.productos.length;
+    document.getElementById('cardEmpleados').textContent = datosLocales.empleados.length;
+    document.getElementById('cardProveedores').textContent = datosLocales.proveedores.length;
+    document.getElementById('cardProductos').textContent = datosLocales.productos.length;
+
+    var nominaTotal = 0;
+    for (var i = 0; i < datosLocales.empleados.length; i++) {
+        nominaTotal += parseFloat(datosLocales.empleados[i].salario) || 0;
+    }
+    document.getElementById('nominaTotal').textContent = '$' + nominaTotal.toFixed(0);
+    document.getElementById('nominaCount').textContent = datosLocales.empleados.length;
+
+    renderizarTablas();
+}
+
+function guardarEmpleados() {
+    localStorage.setItem('fototec_empleados', JSON.stringify(datosLocales.empleados));
+}
+function guardarProveedores() {
+    localStorage.setItem('fototec_proveedores', JSON.stringify(datosLocales.proveedores));
+}
+function guardarProductos() {
+    localStorage.setItem('fototec_productos', JSON.stringify(datosLocales.productos));
+}
+
+function renderizarTablas() {
+    var htmlEmp = '';
+    for (var i = 0; i < datosLocales.empleados.length; i++) {
+        var e = datosLocales.empleados[i];
+        htmlEmp += '<tr><td>' + e.id + '</td><td>' + e.nombre + '</td><td>' + e.puesto + '</td><td>' + e.departamento + '</td><td>$' + parseFloat(e.salario).toFixed(2) + '</td><td><span class="badge-success">Activo</span></td></tr>';
+    }
+    if (htmlEmp === '') htmlEmp = '<tr><td colspan="6" style="text-align:center;color:#666;">Sin empleados</td></tr>';
+    document.getElementById('empleadosTable').innerHTML = htmlEmp;
+
+    var htmlProv = '';
+    for (var i = 0; i < datosLocales.proveedores.length; i++) {
+        var p = datosLocales.proveedores[i];
+        htmlProv += '<tr><td>' + p.id + '</td><td>' + p.nombre + '</td><td>' + p.contacto + '</td><td>' + p.telefono + '</td><td>' + p.tipo + '</td><td><span class="badge-success">Activo</span></td></tr>';
+    }
+    if (htmlProv === '') htmlProv = '<tr><td colspan="6" style="text-align:center;color:#666;">Sin proveedores</td></tr>';
+    document.getElementById('proveedoresTable').innerHTML = htmlProv;
+
+    var htmlProd = '';
+    for (var i = 0; i < datosLocales.productos.length; i++) {
+        var p = datosLocales.productos[i];
+        var badge = p.estrategia === 'push' ? '<span class="badge-warning">PUSH</span>' : 'PULL';
+        htmlProd += '<tr><td>' + p.id + '</td><td>' + p.nombre + '</td><td>' + p.categoria + '</td><td>$' + parseFloat(p.precio).toFixed(2) + '</td><td>' + badge + '</td></tr>';
+    }
+    if (htmlProd === '') htmlProd = '<tr><td colspan="5" style="text-align:center;color:#666;">Sin productos</td></tr>';
+    document.getElementById('productosTable').innerHTML = htmlProd;
+
+    var htmlNomina = '';
+    for (var i = 0; i < datosLocales.empleados.length; i++) {
+        var e = datosLocales.empleados[i];
+        htmlNomina += '<tr><td>' + e.nombre + '</td><td>' + e.puesto + '</td><td>$' + parseFloat(e.salario).toFixed(2) + '</td></tr>';
+    }
+    if (htmlNomina === '') htmlNomina = '<tr><td colspan="3" style="text-align:center;color:#666;">Sin datos</td></tr>';
+    document.getElementById('nominaTable').innerHTML = htmlNomina;
+}
+
+function crearEmpleado() {
+    var nombre = document.getElementById('empNombre').value;
+    var puesto = document.getElementById('empPuesto').value;
+    var depto = document.getElementById('empDepto').value;
+    var salario = document.getElementById('empSalario').value;
+    if (!nombre || !puesto || !salario) { alert('Completa los campos'); return; }
+    datosLocales.empleados.push({ id: Date.now(), nombre: nombre, puesto: puesto, departamento: depto, salario: parseFloat(salario) });
+    guardarEmpleados();
+    cargarDatos();
+    document.getElementById('empNombre').value = '';
+    document.getElementById('empPuesto').value = '';
+    document.getElementById('empSalario').value = '';
+}
+
+function crearProveedor() {
+    var nombre = document.getElementById('provNombre').value;
+    var contacto = document.getElementById('provContacto').value;
+    var telefono = document.getElementById('provTelefono').value;
+    var tipo = document.getElementById('provTipo').value;
+    if (!nombre) { alert('El nombre es obligatorio'); return; }
+    datosLocales.proveedores.push({ id: Date.now(), nombre: nombre, contacto: contacto, telefono: telefono, tipo: tipo });
+    guardarProveedores();
+    cargarDatos();
+    document.getElementById('provNombre').value = '';
+    document.getElementById('provContacto').value = '';
+    document.getElementById('provTelefono').value = '';
+}
+
+function crearProducto() {
+    var nombre = document.getElementById('prodNombre').value;
+    var categoria = document.getElementById('prodCategoria').value;
+    var precio = document.getElementById('prodPrecio').value;
+    var estrategia = document.getElementById('prodEstrategia').value;
+    if (!nombre || !precio) { alert('Completa los campos'); return; }
+    datosLocales.productos.push({ id: Date.now(), nombre: nombre, categoria: categoria, precio: parseFloat(precio), estrategia: estrategia });
+    guardarProductos();
+    cargarDatos();
+    document.getElementById('prodNombre').value = '';
+    document.getElementById('prodPrecio').value = '';
+}
+
+document.getElementById('btnEntrar').addEventListener('click', handleLogin);
+document.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter' && document.getElementById('loginModal').style.display === 'flex') {
+        handleLogin();
+    }
+});
+
+document.getElementById('welcomeScreen').style.display = 'flex';
 </script>
 </body>
 </html>
