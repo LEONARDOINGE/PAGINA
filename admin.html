@@ -758,7 +758,120 @@
 
         <div id="modConfiguracion" class="module-content">
             <div class="content-header"><h1>Configuración</h1><p>Configuración del sistema</p></div>
-            <div class="form-card"><p style="text-align:center;color:#666;">Módulo en desarrollo</p></div>
+
+            <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;">
+                <button class="btn btn-primary" onclick="mostrarTabConfig('empresa')" id="btnTabEmpresa">Empresa</button>
+                <button class="btn" onclick="mostrarTabConfig('horarios')" id="btnTabHorarios">Horarios</button>
+                <button class="btn" onclick="mostrarTabConfig('notificaciones')" id="btnTabNotif">Notificaciones</button>
+                <button class="btn" onclick="mostrarTabConfig('respaldo')" id="btnTabRespaldo">Respaldo BD</button>
+            </div>
+
+            <div id="configEmpresa" class="config-tab">
+                <div class="form-card">
+                    <h3>📋 Datos de la Empresa</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Nombre de la Empresa</label>
+                            <input type="text" id="cfgEmpresaNombre" value="FotoTec" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;">
+                        </div>
+                        <div class="form-group">
+                            <label>RFC / Tax ID</label>
+                            <input type="text" id="cfgEmpresaRFC" placeholder="XAXX010101000" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Teléfono</label>
+                            <input type="tel" id="cfgEmpresaTel" placeholder="+52 1 899 217 6136" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;">
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" id="cfgEmpresaEmail" placeholder="contacto@fototec.com" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Dirección</label>
+                        <textarea id="cfgEmpresaDir" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;" rows="2"></textarea>
+                    </div>
+                    <button class="btn btn-primary" onclick="guardarConfigEmpresa()">Guardar</button>
+                </div>
+            </div>
+
+            <div id="configHorarios" class="config-tab" style="display:none;">
+                <div class="form-card">
+                    <h3>🕐 Horarios de Atención</h3>
+                    <p style="color:#666;font-size:0.85rem;margin-bottom:15px;">Define el horario de trabajo de tu estudio fotográfico</p>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Lunes - Viernes</label>
+                            <div style="display:flex;gap:10px;align-items:center;">
+                                <input type="time" id="cfgHoraApertura" value="09:00" style="padding:8px;border:1px solid #ddd;border-radius:6px;">
+                                <span>a</span>
+                                <input type="time" id="cfgHoraCierre" value="18:00" style="padding:8px;border:1px solid #ddd;border-radius:6px;">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Sábado</label>
+                            <div style="display:flex;gap:10px;align-items:center;">
+                                <input type="time" id="cfgSabadoApertura" value="10:00" style="padding:8px;border:1px solid #ddd;border-radius:6px;">
+                                <span>a</span>
+                                <input type="time" id="cfgSabadoCierre" value="14:00" style="padding:8px;border:1px solid #ddd;border-radius:6px;">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Domingo</label>
+                            <select id="cfgDomingoAbierto" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;">
+                                <option value="cerrado">Cerrado</option>
+                                <option value="abierto">Abierto</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" onclick="guardarConfigHorarios()">Guardar</button>
+                </div>
+            </div>
+
+            <div id="configNotificaciones" class="config-tab" style="display:none;">
+                <div class="form-card">
+                    <h3>🔔 Notificaciones</h3>
+                    <div style="margin-bottom:15px;">
+                        <label style="display:flex;align-items:center;gap:10px;padding:10px;background:#f8f9fa;border-radius:6px;cursor:pointer;">
+                            <input type="checkbox" id="cfgNotifStock" checked>
+                            <span>Alertas de stock bajo</span>
+                        </label>
+                        <label style="display:flex;align-items:center;gap:10px;padding:10px;background:#f8f9fa;border-radius:6px;cursor:pointer;">
+                            <input type="checkbox" id="cfgNotifCumple" checked>
+                            <span>Recordatorios de cumpleaños</span>
+                        </label>
+                        <label style="display:flex;align-items:center;gap:10px;padding:10px;background:#f8f9fa;border-radius:6px;cursor:pointer;">
+                            <input type="checkbox" id="cfgNotifGastos">
+                            <span>Reportes de gastos diarios</span>
+                        </label>
+                        <label style="display:flex;align-items:center;gap:10px;padding:10px;background:#f8f9fa;border-radius:6px;cursor:pointer;">
+                            <input type="checkbox" id="cfgNotifNomina" checked>
+                            <span>Recordatorio de nómina (cada fin de mes)</span>
+                        </label>
+                    </div>
+                    <button class="btn btn-primary" onclick="guardarConfigNotif()">Guardar</button>
+                </div>
+            </div>
+
+            <div id="configRespaldo" class="config-tab" style="display:none;">
+                <div class="form-card">
+                    <h3>💾 Respaldo de Base de Datos</h3>
+                    <p style="color:#666;font-size:0.85rem;margin-bottom:15px;">Descarga una copia de seguridad de todos tus datos</p>
+                    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                        <button class="btn btn-success" onclick="exportarDatos()">📥 Exportar Todos los Datos</button>
+                        <button class="btn" onclick="exportarCSV()">📊 Exportar CSV</button>
+                    </div>
+                    <div style="margin-top:20px;padding:15px;background:#f8f9fa;border-radius:8px;">
+                        <h4 style="margin-bottom:10px;">Último Respaldo</h4>
+                        <p style="color:#666;font-size:0.85rem;">Fecha: <span id="cfgUltimoRespaldo">No disponible</span></p>
+                        <p style="color:#666;font-size:0.85rem;">Tamaño aprox: <span id="cfgTamanoBD">Calculando...</span></p>
+                    </div>
+                </div>
+            </div>
         </div>
     </main>
 </div>
@@ -923,6 +1036,7 @@ function mostrarModulo(modulo, btn) {
         case 'nomina': cargarNomina(); break;
         case 'asistencia': initCalendario(); cargarAsistencia(); break;
         case 'usuarios': cargarUsuarios(); break;
+        case 'configuracion': cargarConfiguracion(); break;
     }
 }
 
@@ -2958,6 +3072,116 @@ async function guardarNuevoProducto() {
         } else {
             showToast('Error: ' + (result.error || 'Desconocido'), 'error');
         }
+    } catch (e) {
+        showToast('Error: ' + e.message, 'error');
+    }
+}
+
+// ============ CONFIGURACION ============
+function mostrarTabConfig(tab) {
+    document.querySelectorAll('.config-tab').forEach(t => t.style.display = 'none');
+    document.querySelectorAll('[id^="btnTab"]').forEach(b => b.classList.remove('btn-primary'));
+
+    document.getElementById('config' + tab.charAt(0).toUpperCase() + tab.slice(1)).style.display = 'block';
+    document.getElementById('btnTab' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('btn-primary');
+}
+
+function guardarConfigEmpresa() {
+    const nombre = document.getElementById('cfgEmpresaNombre').value;
+    localStorage.setItem('cfgEmpresa', JSON.stringify({
+        nombre,
+        rfc: document.getElementById('cfgEmpresaRFC').value,
+        tel: document.getElementById('cfgEmpresaTel').value,
+        email: document.getElementById('cfgEmpresaEmail').value,
+        dir: document.getElementById('cfgEmpresaDir').value
+    }));
+    showToast('Datos de empresa guardados', 'success');
+}
+
+function guardarConfigHorarios() {
+    localStorage.setItem('cfgHorarios', JSON.stringify({
+        semanaApertura: document.getElementById('cfgHoraApertura').value,
+        semanaCierre: document.getElementById('cfgHoraCierre').value,
+        sabadoApertura: document.getElementById('cfgSabadoApertura').value,
+        sabadoCierre: document.getElementById('cfgSabadoCierre').value,
+        domingoAbierto: document.getElementById('cfgDomingoAbierto').value
+    }));
+    showToast('Horarios guardados', 'success');
+}
+
+function guardarConfigNotif() {
+    localStorage.setItem('cfgNotif', JSON.stringify({
+        stock: document.getElementById('cfgNotifStock').checked,
+        cumple: document.getElementById('cfgNotifCumple').checked,
+        gastos: document.getElementById('cfgNotifGastos').checked,
+        nomina: document.getElementById('cfgNotifNomina').checked
+    }));
+    showToast('Notificaciones guardadas', 'success');
+}
+
+function cargarConfiguracion() {
+    const cfgEmpresa = JSON.parse(localStorage.getItem('cfgEmpresa') || '{}');
+    if (cfgEmpresa.nombre) document.getElementById('cfgEmpresaNombre').value = cfgEmpresa.nombre;
+    if (cfgEmpresa.rfc) document.getElementById('cfgEmpresaRFC').value = cfgEmpresa.rfc;
+    if (cfgEmpresa.tel) document.getElementById('cfgEmpresaTel').value = cfgEmpresa.tel;
+    if (cfgEmpresa.email) document.getElementById('cfgEmpresaEmail').value = cfgEmpresa.email;
+    if (cfgEmpresa.dir) document.getElementById('cfgEmpresaDir').value = cfgEmpresa.dir;
+
+    const cfgHorarios = JSON.parse(localStorage.getItem('cfgHorarios') || '{}');
+    if (cfgHorarios.semanaApertura) document.getElementById('cfgHoraApertura').value = cfgHorarios.semanaApertura;
+    if (cfgHorarios.semanaCierre) document.getElementById('cfgHoraCierre').value = cfgHorarios.semanaCierre;
+    if (cfgHorarios.sabadoApertura) document.getElementById('cfgSabadoApertura').value = cfgHorarios.sabadoApertura;
+    if (cfgHorarios.sabadoCierre) document.getElementById('cfgSabadoCierre').value = cfgHorarios.sabadoCierre;
+    if (cfgHorarios.domingoAbierto) document.getElementById('cfgDomingoAbierto').value = cfgHorarios.domingoAbierto;
+
+    const cfgNotif = JSON.parse(localStorage.getItem('cfgNotif') || '{}');
+    if (cfgNotif.stock !== undefined) document.getElementById('cfgNotifStock').checked = cfgNotif.stock;
+    if (cfgNotif.cumple !== undefined) document.getElementById('cfgNotifCumple').checked = cfgNotif.cumple;
+    if (cfgNotif.gastos !== undefined) document.getElementById('cfgNotifGastos').checked = cfgNotif.gastos;
+    if (cfgNotif.nomina !== undefined) document.getElementById('cfgNotifNomina').checked = cfgNotif.nomina;
+}
+
+async function exportarDatos() {
+    try {
+        showToast('Preparando exportación...', 'info');
+        const datos = {
+            fecha: new Date().toISOString(),
+            empresa: JSON.parse(localStorage.getItem('cfgEmpresa') || '{}'),
+            horarios: JSON.parse(localStorage.getItem('cfgHorarios') || '{}'),
+            productos: await (await fetch('/api/products')).json(),
+            clientes: await (await fetch('/api/erp/clientes')).json(),
+            empleados: await (await fetch('/api/erp/empleados')).json()
+        };
+
+        const blob = new Blob([JSON.stringify(datos, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'fototec_respaldo_' + new Date().toISOString().split('T')[0] + '.json';
+        a.click();
+        URL.revokeObjectURL(url);
+
+        document.getElementById('cfgUltimoRespaldo').textContent = new Date().toLocaleString('es-MX');
+        showToast('Exportación completada', 'success');
+    } catch (e) {
+        showToast('Error al exportar: ' + e.message, 'error');
+    }
+}
+
+async function exportarCSV() {
+    try {
+        const productos = await (await fetch('/api/products')).json();
+        const csv = 'SKU,Nombre,Stock,Precio,Categoria\n' +
+            productos.products.map(p => `${p.sku || ''},${p.nombre || p.name || ''},${p.stock || 0},${p.precio || 0},${p.categoria || ''}`).join('\n');
+
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'productos_' + new Date().toISOString().split('T')[0] + '.csv';
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast('CSV exportado', 'success');
     } catch (e) {
         showToast('Error: ' + e.message, 'error');
     }
