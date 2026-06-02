@@ -76,6 +76,160 @@
         .back-link { display: inline-block; margin-bottom: 20px; color: rgba(255,255,255,0.6); text-decoration: none; font-size: 0.85rem; }
         .back-link:hover { color: white; }
 
+        /* ========== MODAL AUTH ========== */
+        .auth-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(4px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            padding: 20px;
+        }
+        .auth-modal.active {
+            display: flex;
+        }
+        .auth-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+        }
+        .auth-split {
+            display: flex;
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.3);
+            position: relative;
+            max-width: 380px;
+            width: 95%;
+            min-height: auto;
+        }
+        .auth-close-btn {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            background: rgba(255,255,255,0.9);
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            z-index: 10;
+        }
+        .auth-close-btn:hover {
+            background: #ff6b6b;
+            color: white;
+            transform: rotate(90deg);
+        }
+        .auth-side {
+            flex: 1;
+            padding: 20px 25px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            transition: all 0.4s ease;
+        }
+        .auth-login-side {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .auth-side-hidden {
+            display: none;
+        }
+        .auth-side-header {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        .auth-logo {
+            font-size: 2rem;
+            margin-bottom: 8px;
+        }
+        .auth-side-header h2 {
+            font-size: 1.3rem;
+            margin: 0 0 5px 0;
+            font-weight: 700;
+        }
+        .auth-side-header p {
+            opacity: 0.85;
+            font-size: 0.8rem;
+            margin: 0;
+        }
+        .auth-side-form {
+            max-width: 100%;
+            margin: 0 auto;
+            width: 100%;
+        }
+        .auth-input-group {
+            position: relative;
+            margin-bottom: 8px;
+        }
+        .auth-input-icon {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.9rem;
+            z-index: 1;
+        }
+        .auth-error {
+            color: #ffeb3b;
+            font-size: 0.85rem;
+            margin-bottom: 12px;
+            text-align: center;
+            min-height: 22px;
+        }
+        .auth-submit-btn {
+            width: 100%;
+            padding: 16px;
+            background: white;
+            color: #667eea;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.05rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+            margin-top: 8px;
+        }
+        .auth-submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+        .auth-input-group input {
+            width: 100%;
+            padding: 10px 40px 10px 35px;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+            background: rgba(0,0,0,0.3);
+            color: #fff;
+        }
+        .auth-input-group input:focus {
+            outline: none;
+            border-color: white;
+            background: rgba(255,255,255,0.25);
+        }
+        .auth-input-group input::placeholder {
+            color: rgba(255,255,255,0.6);
+            font-size: 0.85rem;
+        }
+        /* ========== FIN MODAL AUTH ========== */
+
         @media (max-width: 768px) {
             .sidebar { width: 200px; }
             .main-content { margin-left: 200px; }
@@ -86,63 +240,69 @@
 </head>
 <body>
 
+    <!-- MODAL DE LOGIN -->
+    <div id="loginModal" class="auth-modal" style="display:none;">
+        <div class="auth-container">
+            <div class="auth-split">
+                <button class="auth-close-btn" onclick="cerrarLoginModal()">×</button>
+                <div class="auth-side auth-login-side">
+                    <div class="auth-side-header">
+                        <div class="auth-logo">📸</div>
+                        <h2>FotoTec</h2>
+                        <p>Iniciar Sesión</p>
+                    </div>
+                    <form class="auth-side-form" onsubmit="return handleLogin(event)">
+                        <div class="auth-input-group">
+                            <span class="auth-input-icon">👤</span>
+                            <input type="text" id="loginUsername" placeholder="Usuario" required>
+                        </div>
+                        <div class="auth-input-group">
+                            <span class="auth-input-icon">🔒</span>
+                            <input type="password" id="loginPassword" placeholder="Contraseña" required>
+                        </div>
+                        <div class="auth-error" id="loginError"></div>
+                        <button type="submit" class="auth-submit-btn">Entrar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="sidebar">
-        <h2>FotoTec Admin</h2>
+        <h2>📸 FotoTec</h2>
 
         <div class="sidebar-section">
-            <div class="sidebar-section-title">Auditoria Escolar</div>
-            <button class="menu-btn active" onclick="mostrarVista('escuela', this)">📦 Proveedores (SCM)</button>
-            <button class="menu-btn" onclick="mostrarVista('escuela-rh', this)">👥 Recursos Humanos</button>
-            <button class="menu-btn" onclick="mostrarVista('escuela-log', this)">⚙️ Estrategia Push/Pull</button>
+            <div class="sidebar-section-title">Módulos</div>
+            <button class="menu-btn" data-modulo="dashboard" onclick="mostrarVista('admin', this)">📊 Dashboard</button>
+            <button class="menu-btn" data-modulo="productos" onclick="mostrarTabAdmin('productos')">📦 Productos</button>
+            <button class="menu-btn" data-modulo="pedidos" onclick="mostrarTabAdmin('pedidos')">🛒 Pedidos</button>
+            <button class="menu-btn" data-modulo="reservas" onclick="mostrarTabAdmin('reservas')">📅 Reservas</button>
+            <button class="menu-btn" data-modulo="compras" onclick="mostrarTabAdmin('compras')">📥 Ped. Compra</button>
+            <button class="menu-btn" data-modulo="proveedores" onclick="mostrarTabAdmin('proveedores')">🚚 Proveedores</button>
+            <button class="menu-btn" data-modulo="empleados" onclick="mostrarTabAdmin('empleados')">👔 RRHH</button>
+            <button class="menu-btn" data-modulo="usuarios" onclick="mostrarTabAdmin('usuarios')">👥 Usuarios</button>
         </div>
 
         <div class="sidebar-section">
-            <div class="sidebar-section-title">Panel de Administracion</div>
-            <button class="menu-btn admin-btn" onclick="mostrarVista('admin', this)">🔧 Abrir Panel Admin</button>
+            <div class="sidebar-section-title">Herramientas</div>
+            <button class="menu-btn" data-modulo="pipeline" onclick="mostrarTabAdmin('pipeline')">🔄 Pipeline CRM</button>
+            <button class="menu-btn" data-modulo="facturas" onclick="mostrarTabAdmin('facturas')">🧾 Facturas</button>
+            <button class="menu-btn" data-modulo="reportes" onclick="mostrarTabAdmin('reportes')">📈 Reportes</button>
         </div>
 
         <div style="margin-top: 30px; padding: 15px 10px; border-top: 1px solid rgba(255,255,255,0.1);">
             <div id="userStatus" style="font-size: 0.75rem; color: rgba(255,255,255,0.5); text-align: center;">
-                Sesion: No iniciada
+                <div id="userStatusName">Sesión: No iniciada</div>
+                <div id="userStatusBadge" style="margin-top:5px;"></div>
             </div>
+            <button class="menu-btn" id="btnLogin" onclick="abrirLoginModal()" style="margin-top: 10px; font-size: 0.75rem; text-align: center;">🔐 Iniciar Sesión</button>
+            <button class="menu-btn" id="btnLogout" onclick="handleLogout()" style="margin-top: 10px; font-size: 0.75rem; text-align: center; display:none;">🚪 Cerrar Sesión</button>
             <button class="menu-btn" onclick="window.close()" style="margin-top: 10px; font-size: 0.75rem; text-align: center;">❌ Cerrar Ventana</button>
         </div>
     </div>
 
     <div class="main-content">
         <a href="index.html" class="back-link">← Volver al sitio principal</a>
-
-        <!-- VISTA ESCUELA: PROVEEDORES -->
-        <div id="vista-escuela" class="school-card">
-            <h2>📦 Catálogo Oficial de Proveedores (Módulo SCM)</h2>
-            <p>Gestion de cadena de suministro para compras de insumos del estudio fotografico.</p>
-            <table>
-                <tr><th>Empresa</th><th>Contacto</th><th>Telefono</th><th>Insumo Clave</th><th>Detalle</th></tr>
-                <tr><td>Distribuidora de Insumos Fotograficos</td><td>Juan Perez</td><td>8991234567</td><td>Papel Fotografico</td><td>Papel Glossy, Mate y Fine Art</td></tr>
-                <tr><td>Tech Photo Equipment</td><td>Maria Lopez</td><td>8999876543</td><td>Hardware y Opticas</td><td>Camaras, lentes y accesorios de iluminacion</td></tr>
-            </table>
-        </div>
-
-        <div id="vista-escuela-rh" class="school-card" style="display:none;">
-            <h2>👥 Estructura de Recursos Humanos (Modulo ERP - RH)</h2>
-            <p>Registro organizacional de los empleados activos y nomina de FotoTec.</p>
-            <table>
-                <tr><th>Nombre del Empleado</th><th>Puesto</th><th>Area</th><th>Telefono</th><th>Salario Base</th><th>Estado</th></tr>
-                <tr><td>Carlos Rodriguez</td><td>Fotografo Principal</td><td>Produccion</td><td>8991112233</td><td>$15,000 MXN</td><td><span style="color:green;font-weight:bold;">🟢 Activo</span></td></tr>
-                <tr><td>Ana Martinez</td><td>Editor Fotografico</td><td>Post-produccion</td><td>8992223344</td><td>$12,000 MXN</td><td><span style="color:green;font-weight:bold;">🟢 Activo</span></td></tr>
-            </table>
-        </div>
-
-        <div id="vista-escuela-log" class="school-card" style="display:none;">
-            <h2>⚙️ Logistica de Reabastecimiento Automatizado</h2>
-            <p>Diferenciacion de ordenes de compra segun el comportamiento de la demanda real del mercado.</p>
-            <div style="margin-bottom: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
-                <span style="background:rgba(255,179,102,0.2);padding:4px 10px;border-radius:4px;font-size:0.8em;color:#e67e22;font-weight:bold;">📦 PUSH = Basado en Pronostico (reabastecimiento automatico)</span>
-                <span style="background:rgba(255,107,107,0.2);padding:4px 10px;border-radius:4px;font-size:0.8em;color:#c0392b;font-weight:bold;">🔄 PULL = Basado en Demanda Real del Mercado</span>
-            </div>
-            <button onclick="cargarLogisticaPushPull()" style="background:#5165ff;color:white;border:none;padding:10px 20px;border-radius:8px;cursor:pointer;font-weight:bold;margin-bottom:15px;">🔄 Cargar datos desde Turso</button>
-            <div id="logisticaTabla"></div>
-        </div>
 
         <!-- PANEL ADMIN MORADO -->
         <div id="adminPanel" class="admin-panel">
@@ -434,21 +594,24 @@
                     <div id="facturasListaDiv" style="overflow-x:auto;"></div>
                 </div>
             </div>
-
-            <button onclick="mostrarVista('escuela', document.querySelectorAll('.menu-btn')[0])" style="width:100%;margin-top:20px;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);color:white;padding:10px;border-radius:5px;cursor:pointer;">← Volver a Auditoria Escolar</button>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="database.js" onerror="console.error('database.js no cargo')"></script>
     <script>
+        // ============ SISTEMA DE AUTENTICACIÓN CON ROLES ============
         window.authSystem = window.authSystem || {};
         Object.assign(window.authSystem, {
             currentUser: JSON.parse(localStorage.getItem('fotovecCurrentUser')) || null,
             token: localStorage.getItem('fotovecToken') || null,
             setUser(data) {
                 const userData = data.user || data;
-                const userType = userData.role === 'admin' ? 'administrador' : 'cliente';
+                let userType = 'cliente';
+                if (userData.role === 'admin' || userData.role === 'administrador') userType = 'administrador';
+                else if (userData.role === 'rh') userType = 'rh';
+                else if (userData.role === 'compras') userType = 'compras';
+                else if (userData.role === 'proveedores') userType = 'proveedores';
                 this.currentUser = { ...userData, userType };
                 this.token = data.token || this.token;
                 localStorage.setItem('fotovecToken', this.token);
@@ -462,23 +625,97 @@
             }
         });
         const authSystem = window.authSystem;
+
+        // Usuarios de prueba (en producción esto vendría del backend)
+        const demoUsers = [
+            { id: 1, username: 'admin', password: 'admin123', name: 'Administrador', role: 'administrador' },
+            { id: 2, username: 'rh', password: 'rh123', name: 'Recursos Humanos', role: 'rh' },
+            { id: 3, username: 'compras', password: 'compras123', name: 'Compras', role: 'compras' },
+            { id: 4, username: 'proveedores', password: 'proveedores123', name: 'Proveedores', role: 'proveedores' }
+        ];
+
+        function abrirLoginModal() {
+            document.getElementById('loginModal').style.display = 'flex';
+            document.getElementById('loginUsername').focus();
+        }
+
+        function cerrarLoginModal() {
+            document.getElementById('loginModal').style.display = 'none';
+            document.getElementById('loginError').textContent = '';
+        }
+
+        function handleLogin(event) {
+            event.preventDefault();
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+            const errorDiv = document.getElementById('loginError');
+
+            const user = demoUsers.find(u => u.username === username && u.password === password);
+
+            if (user) {
+                authSystem.setUser(user);
+                cerrarLoginModal();
+                actualizarIUDespuesLogin();
+                alert('¡Bienvenido, ' + user.name + '! (' + permissionSystem.obtenerNombreRol(user.role) + ')');
+            } else {
+                errorDiv.textContent = 'Usuario o contraseña incorrectos';
+            }
+            return false;
+        }
+
+        function handleLogout() {
+            authSystem.logout();
+            actualizarIUDespuesLogout();
+            alert('Sesión cerrada');
+        }
+
+        function actualizarIUDespuesLogin() {
+            const user = authSystem.currentUser;
+            if (!user) return;
+
+            document.getElementById('btnLogin').style.display = 'none';
+            document.getElementById('btnLogout').style.display = 'block';
+
+            const nombreRol = permissionSystem.obtenerNombreRol(user.userType);
+            const colorRol = permissionSystem.obtenerColorRol(user.userType);
+            document.getElementById('userStatusName').innerHTML = '<strong>' + user.name + '</strong><br><span style="font-size:0.6rem;">' + nombreRol + '</span>';
+            document.getElementById('userStatusBadge').innerHTML = '<span style="background:' + colorRol + ';padding:2px 6px;border-radius:3px;font-size:0.6rem;">' + nombreRol + '</span>';
+
+            // Aplicar RBAC
+            if (typeof aplicarRBACAlDOM === 'function') {
+                aplicarRBACAlDOM();
+            }
+
+            // Mostrar dashboard
+            document.getElementById('adminPanel').classList.add('active');
+            actualizarDashboard();
+        }
+
+        function actualizarIUDespuesLogout() {
+            document.getElementById('btnLogin').style.display = 'block';
+            document.getElementById('btnLogout').style.display = 'none';
+            document.getElementById('userStatusName').textContent = 'Sesión: No iniciada';
+            document.getElementById('userStatusBadge').innerHTML = '';
+
+            document.getElementById('adminPanel').classList.remove('active');
+        }
+
+        function mostrarVista(vista, btn) {
+            document.getElementById('adminPanel').classList.remove('active');
+            document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+            if (vista === 'admin') {
+                document.getElementById('adminPanel').classList.add('active');
+                actualizarDashboard();
+            }
+        }
     </script>
     <script src="permissions.js" onerror="console.error('permissions.js no cargo')"></script>
     <script>
         function verificarPermiso(userType, permiso) {
+            if (!userType) return false;
             if (userType === 'administrador') return true;
-            return false;
-        }
-
-        function mostrarVista(vista, btn) {
-            document.querySelectorAll('#vista-escuela, #vista-escuela-rh, #vista-escuela-log, #adminPanel').forEach(el => el.style.display = 'none');
-            const vistas = { 'escuela': 'vista-escuela', 'escuela-rh': 'vista-escuela-rh', 'escuela-log': 'vista-escuela-log', 'admin': 'adminPanel' };
-            if (vistas[vista]) document.getElementById(vistas[vista]).style.display = 'block';
-            if (vista === 'admin') document.getElementById('adminPanel').classList.add('active');
-            document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('active'));
-            if (btn) btn.classList.add('active');
-            if (vista === 'admin') actualizarDashboard();
-            if (vista === 'escuela-log') cargarLogisticaPushPull();
+            return permissionSystem ? permissionSystem.tienePermiso(userType, permiso) : false;
         }
 
         function mostrarTabAdmin(tabName, event) {
@@ -668,14 +905,92 @@
         }
 
         function cargarReservas() {
+            const userType = authSystem.currentUser?.userType;
+            if (!verificarPermiso(userType, 'ver_reservas')) {
+                document.getElementById('reservasListaDiv').innerHTML = '<p style="color:#ff6b6b;text-align:center;">⛔ No tienes permiso para ver reservas.</p>';
+                return;
+            }
+
             document.getElementById('reservasListaDiv').innerHTML = '<p style="opacity:0.7;text-align:center;">Cargando reservas...</p>';
             fetch('/api/reservas').then(r => r.json()).then(data => {
-                if (!data.success || !data.reservas.length) { document.getElementById('reservasListaDiv').innerHTML = '<p style="opacity:0.7;text-align:center;">Sin reservas.</p>'; return; }
-                let html = '<table class="admin-table"><thead><tr><th>ID</th><th>Cliente</th><th>Tipo</th><th>Fecha</th><th>Hora</th><th>Estado</th></tr></thead><tbody>';
-                data.reservas.forEach(r => { html += '<tr><td>' + r.id + '</td><td>' + (r.cliente_nombre || '-') + '</td><td>' + (r.tipo_sesion || '-') + '</td><td>' + (r.fecha_sesion || '-') + '</td><td>' + (r.hora_sesion || '-') + '</td><td>' + (r.estado || 'pendiente') + '</td></tr>'; });
+                if (!data.success || !data.reservas.length) {
+                    document.getElementById('reservasListaDiv').innerHTML = '<p style="opacity:0.7;text-align:center;">Sin reservas registradas.</p>';
+                    return;
+                }
+                const puedeGestionar = verificarPermiso(userType, 'gestionar_reservas');
+                let html = '<table class="admin-table"><thead><tr>';
+                html += '<th>ID</th><th>Cliente</th><th>Email</th><th>Teléfono</th>';
+                html += '<th>Tipo Sesión</th><th>Fecha</th><th>Hora</th><th>Estado</th>';
+                if (puedeGestionar) html += '<th>Acciones</th>';
+                html += '</tr></thead><tbody>';
+
+                data.reservas.forEach(r => {
+                    const estadoColors = { 'pendiente': '#ffd700', 'confirmada': '#4caf50', 'completada': '#2196f3', 'cancelada': '#ff6b6b' };
+                    const estadoColor = estadoColors[r.estado] || '#666';
+                    html += '<tr>';
+                    html += '<td><strong>' + r.id + '</strong></td>';
+                    html += '<td>' + (r.cliente_nombre || '-') + '</td>';
+                    html += '<td>' + (r.cliente_email || '-') + '</td>';
+                    html += '<td>' + (r.cliente_telefono || '-') + '</td>';
+                    html += '<td>' + (r.tipo_sesion || '-') + '</td>';
+                    html += '<td>' + (r.fecha_sesion || '-') + '</td>';
+                    html += '<td>' + (r.hora_sesion || '-') + '</td>';
+                    html += '<td><select onchange="actualizarEstadoReserva(' + r.id + ', this.value)" style="background:' + estadoColor + ';color:white;border:none;padding:4px 8px;border-radius:4px;font-size:0.8em;">';
+                    html += '<option value="pendiente"' + (r.estado === 'pendiente' ? ' selected' : '') + '>Pendiente</option>';
+                    html += '<option value="confirmada"' + (r.estado === 'confirmada' ? ' selected' : '') + '>Confirmada</option>';
+                    html += '<option value="completada"' + (r.estado === 'completada' ? ' selected' : '') + '>Completada</option>';
+                    html += '<option value="cancelada"' + (r.estado === 'cancelada' ? ' selected' : '') + '>Cancelada</option>';
+                    html += '</select></td>';
+                    if (puedeGestionar) {
+                        html += '<td><button onclick="verDetalleReserva(' + r.id + ')" style="background:#5165ff;color:white;border:none;padding:4px 8px;border-radius:4px;cursor:pointer;font-size:0.75em;">Ver</button></td>';
+                    }
+                    html += '</tr>';
+                });
                 html += '</tbody></table>';
-                document.getElementById('reservasListaDiv').innerHTML = html;
-            }).catch(e => { document.getElementById('reservasListaDiv').innerHTML = '<p style="color:#ff6b6b;">Error de conexion</p>'; });
+                const totalReservas = data.reservas.length;
+                const pendientes = data.reservas.filter(r => r.estado === 'pendiente').length;
+                document.getElementById('reservasListaDiv').innerHTML = '<div style="margin-bottom:15px;padding:10px;background:rgba(102,126,234,0.1);border:1px solid rgba(102,126,234,0.3);border-radius:6px;font-size:0.85rem;"><strong>📊 Total:</strong> ' + totalReservas + ' reservas | <strong>Pendientes:</strong> ' + pendientes + ' | <strong>Fuente:</strong> Turso SQLite</div>' + html;
+            }).catch(e => {
+                document.getElementById('reservasListaDiv').innerHTML = '<p style="color:#ff6b6b;text-align:center;">Error de conexión: ' + e.message + '</p>';
+            });
+        }
+
+        function actualizarEstadoReserva(id, estado) {
+            fetch('/api/reservas/' + id, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ estado })
+            }).then(r => r.json()).then(data => {
+                if (data.success) {
+                    alert('Estado de reserva actualizado a: ' + estado);
+                    cargarReservas();
+                } else {
+                    alert('Error: ' + (data.error || 'No se actualizó'));
+                }
+            }).catch(e => alert('Error: ' + e.message));
+        }
+
+        function verDetalleReserva(id) {
+            fetch('/api/reservas').then(r => r.json()).then(data => {
+                const r = data.reservas.find(x => x.id === id);
+                if (r) {
+                    alert('📋 Detalle de Reserva #' + r.id +
+                        '\n\n👤 Cliente: ' + (r.cliente_nombre || '-') +
+                        '\n📧 Email: ' + (r.cliente_email || '-') +
+                        '\n📞 Teléfono: ' + (r.cliente_telefono || '-') +
+                        '\n📅 Fecha Cumpleaños: ' + (r.fecha_cumpleanos || '-') +
+                        '\n\n📷 Tipo Sesión: ' + (r.tipo_sesion || '-') +
+                        '\n🎨 Estilo: ' + (r.estilo || '-') +
+                        '\n👥 Personas: ' + (r.cantidad_personas || '-') +
+                        '\n📆 Fecha: ' + (r.fecha_sesion || '-') +
+                        '\n⏰ Hora: ' + (r.hora_sesion || '-') +
+                        '\n📝 Notas: ' + (r.notas || '-') +
+                        '\n\n🖨️ Interés Impresión: ' + (r.interes_impresion ? 'Sí' : 'No') +
+                        '\n📄 Tipo Papel: ' + (r.tipo_papel || '-') +
+                        '\n\nEstado: ' + (r.estado || 'pendiente')
+                    );
+                }
+            });
         }
 
         async function crearNuevoProveedor() {
@@ -928,12 +1243,6 @@
                 div.innerHTML = '<p style="color:#ff6b6b;">Error de conexion: ' + err.message + '</p>';
             }
         }
-                    html += '</tr>';
-                });
-                html += '</tbody></table>';
-                tablaDiv.innerHTML = '<div style="margin-bottom:10px;padding:10px;background:rgba(255,215,0,0.1);border:1px solid rgba(255,215,0,0.3);border-radius:6px;font-size:0.85rem;"><strong>Modulo:</strong> ' + config.titulo + ' | <strong>Registros:</strong> ' + total + ' | <strong>Fuente:</strong> Turso SQLite (Nube)</div>' + html;
-            } catch (err) { tablaDiv.innerHTML = '<p style="color:#ff6b6b;">Error de conexion: ' + err.message + '</p>'; }
-        }
 
         async function crearLeadPipeline() {
             const nombre = document.getElementById('pipeNombre').value;
@@ -1128,8 +1437,7 @@
 
         window.addEventListener('load', async function() {
             if (authSystem.currentUser) {
-                const u = authSystem.currentUser;
-                document.getElementById('userStatus').innerHTML = '<strong>' + u.name + '</strong><br><span style="font-size:0.7rem;">' + (u.userType === 'administrador' ? 'Administrador' : 'Cliente') + '</span>';
+                actualizarIUDespuesLogin();
             }
             try {
                 const res = await fetch('/api/me', { headers: { 'Authorization': 'Bearer ' + (authSystem.token || '') } });
@@ -1137,8 +1445,7 @@
                     const data = await res.json();
                     authSystem.setUser(data);
                     if (authSystem.currentUser) {
-                        const u = authSystem.currentUser;
-                        document.getElementById('userStatus').innerHTML = '<strong>' + u.name + '</strong><br><span style="font-size:0.7rem;">' + (u.userType === 'administrador' ? 'Administrador' : 'Cliente') + '</span>';
+                        actualizarIUDespuesLogin();
                     }
                 }
             } catch(e) {}
